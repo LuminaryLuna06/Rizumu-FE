@@ -6,7 +6,7 @@ function PomodoroPage() {
   return (
     <>
       <ResponsiveButton leftSection={<IconPlayCard />} onClick={() => null}>
-        Start
+        Start .......
       </ResponsiveButton>
     </>
   );
