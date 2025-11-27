@@ -7,7 +7,7 @@ import { ToastProvider } from "./utils/toast.tsx";
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ToastProvider>
-      <App />
+      <App/>
     </ToastProvider>
   </StrictMode>
 );

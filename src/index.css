@@ -10,7 +10,7 @@
   --color-primary-hover: rgba(0, 0, 0, 0.5);
 
   --color-secondary: #ffffff;
-  --color-secondary-hover: rgba(255, 255, 255, 0.95);
+  --color-secondary-hover: rgba(255, 255, 255, 0.85);
 
   --color-modal-overlay: rgba(0, 0, 0, 0.9);
   --color-text-inactive: rgba(255, 255, 255, 0.5);
@@ -22,6 +22,7 @@
   --radius-lg: 0.75rem; /* 12px - Bo góc lớn */
   --radius-xl: 1rem; /* 16px - Bo góc rất lớn */
   --radius-2xl: 1.5rem; /* 24px - Bo góc cực lớn */
+  --radius-3xl: 20px; /* 24px - Bo góc cực lớn */
   --radius-full: 9999px; /* Bo tròn hoàn toàn */
 
   /* Spacing - Padding & Margin */
@@ -45,7 +46,7 @@
   --font-size-2xl: 1.5rem; /* 24px */
   --font-size-3xl: 1.875rem; /* 30px */
   --font-size-4xl: 2.25rem; /* 36px */
-  --font-size-5xl: 3rem; /* 48px */
+  --font-size-5xl: 5rem;
 
   /* Typography - Line Heights */
   --leading-tight: 1.25;
