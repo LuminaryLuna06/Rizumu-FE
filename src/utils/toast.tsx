@@ -19,13 +19,13 @@ import "./toast.css";
 // ========================
 
 export type ToastType = "success" | "error" | "warning" | "info";
-export type ToastPosition =
-  | "top-left"
-  | "top-right"
-  | "top-center"
-  | "bottom-left"
-  | "bottom-right"
-  | "bottom-center";
+export type ToastPosition = "top-right";
+// | "top-left"
+// | "top-right"
+// | "top-center"
+// | "bottom-left"
+// | "bottom-right"
+// | "bottom-center";
 
 export interface Toast {
   id: string;
@@ -203,8 +203,8 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({
     const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const newToast: Toast = {
       id,
-      duration: 5000, // Default 5 seconds
-      position: "top-right", // Default position
+      duration: 5000,
+      position: "top-right",
       ...toast,
     };
 
