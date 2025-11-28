@@ -1,7 +1,20 @@
+import axiosClient from "@rizumu/api/config/axiosClient";
 import { useToast } from "@rizumu/utils/toast";
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 function TestTranh() {
+  const [data, setData] = useState();
+  const getData = async () => {
+    const response = await axiosClient.post("/profile", {
+      search: "John",
+      status: "active",
+    });
+    setData(response as any);
+  };
+  useEffect(() => {
+    getData();
+  }, []);
+  console.log(data);
   const toast = useToast();
   return (
     <div

@@ -1,17 +1,16 @@
 import axios, { type AxiosInstance, type InternalAxiosRequestConfig, type AxiosResponse } from 'axios';
 
 const axiosClient: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL, // Lấy từ biến môi trường
+  baseURL: import.meta.env.VITE_API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000, // Timeout sau 10s
+  timeout: 10000,
 });
 
 // --- Interceptor cho Request (Gửi đi) ---
 axiosClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // Lấy token từ localStorage (hoặc nơi bạn lưu trữ)
     const token = localStorage.getItem('access_token');
     
     if (token && config.headers) {
@@ -28,16 +27,12 @@ axiosClient.interceptors.request.use(
 // --- Interceptor cho Response (Nhận về) ---
 axiosClient.interceptors.response.use(
   (response: AxiosResponse) => {
-    // Chỉ lấy phần data trả về để code gọn hơn
-    // Thay vì gọi response.data.data thì chỉ cần gọi response.data
     return response.data;
   },
   (error) => {
-    // Xử lý lỗi chung (Global Error Handling)
     if (error.response) {
       switch (error.response.status) {
         case 401:
-          // Token hết hạn -> Xóa token và redirect về trang login
           localStorage.removeItem('access_token');
           // window.location.href = '/login'; 
           console.error("Lỗi 401: Unauthorized");
