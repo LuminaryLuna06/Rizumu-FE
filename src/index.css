@@ -83,3 +83,9 @@
 .animate-dropdown {
   animation: dropdown 0.3s ease-out forwards;
 }
+
+body {
+  font-family: "Poppins", sans-serif;
+  margin: 0;
+  padding: 0;
+}

@@ -1,22 +1,78 @@
-import axios, { type AxiosInstance, type InternalAxiosRequestConfig, type AxiosResponse } from 'axios';
+import axios, {
+  type AxiosInstance,
+  type InternalAxiosRequestConfig,
+  type AxiosResponse,
+  type AxiosError,
+} from "axios";
 
 const axiosClient: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
   timeout: 10000,
 });
 
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (value?: unknown) => void;
+  reject: (reason?: unknown) => void;
+}> = [];
+
+const processQueue = (
+  error: AxiosError | null,
+  token: string | null = null
+) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+
+  failedQueue = [];
+};
+
+const refreshAccessToken = async (): Promise<string> => {
+  const refreshToken = localStorage.getItem("refresh_token");
+
+  if (!refreshToken) {
+    throw new Error("No refresh token available");
+  }
+
+  try {
+    const response = await axios.post(
+      `${import.meta.env.VITE_API_URL}/auth/refresh`,
+      { refresh_token: refreshToken }
+    );
+    const { access_token, refresh_token: newRefreshToken } = response.data;
+    localStorage.setItem("access_token", access_token);
+    if (newRefreshToken) {
+      localStorage.setItem("refresh_token", newRefreshToken);
+    }
+
+    return access_token;
+  } catch (error) {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+
+    // Chuyển hướng về trang login
+    // window.location.href = "/login";
+
+    throw error;
+  }
+};
+
 // --- Interceptor cho Request (Gửi đi) ---
 axiosClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = localStorage.getItem('access_token');
-    
+    const token = localStorage.getItem("access_token");
+
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
+
     return config;
   },
   (error) => {
@@ -27,16 +83,52 @@ axiosClient.interceptors.request.use(
 // --- Interceptor cho Response (Nhận về) ---
 axiosClient.interceptors.response.use(
   (response: AxiosResponse) => {
-    return response.data;
+    return response;
   },
-  (error) => {
+  async (error: AxiosError) => {
+    const originalRequest = error.config as InternalAxiosRequestConfig & {
+      _retry?: boolean;
+    };
+
     if (error.response) {
+      if (error.response.status === 401 && !originalRequest._retry) {
+        if (isRefreshing) {
+          return new Promise((resolve, reject) => {
+            failedQueue.push({ resolve, reject });
+          })
+            .then((token) => {
+              if (originalRequest.headers) {
+                originalRequest.headers.Authorization = `Bearer ${token}`;
+              }
+              return axiosClient(originalRequest);
+            })
+            .catch((err) => {
+              return Promise.reject(err);
+            });
+        }
+
+        originalRequest._retry = true;
+        isRefreshing = true;
+
+        try {
+          const newToken = await refreshAccessToken();
+
+          if (originalRequest.headers) {
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          }
+
+          processQueue(null, newToken);
+
+          return axiosClient(originalRequest);
+        } catch (refreshError) {
+          processQueue(refreshError as AxiosError, null);
+          return Promise.reject(refreshError);
+        } finally {
+          isRefreshing = false;
+        }
+      }
+
       switch (error.response.status) {
-        case 401:
-          localStorage.removeItem('access_token');
-          // window.location.href = '/login'; 
-          console.error("Lỗi 401: Unauthorized");
-          break;
         case 403:
           console.error("Lỗi 403: Forbidden");
           break;
@@ -47,6 +139,7 @@ axiosClient.interceptors.response.use(
           console.error("Lỗi khác:", error.message);
       }
     }
+
     return Promise.reject(error);
   }
 );

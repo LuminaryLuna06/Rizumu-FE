@@ -1,55 +1,58 @@
-import axiosClient from "@rizumu/api/config/axiosClient";
-import { useToast } from "@rizumu/utils/toast";
-import React, { useEffect, useState } from "react";
+import LoginModal from "@rizumu/components/Auth/LoginModal";
+import SigninModal from "@rizumu/components/Auth/SigninModal";
+import ResponsiveButton from "@rizumu/components/ResponsiveButton";
+import { useAuth } from "@rizumu/context/AuthContext";
+import { useToast } from "@rizumu/utils/toast/toast";
+import { useState } from "react";
 
 function TestTranh() {
-  const [data, setData] = useState();
-  const getData = async () => {
-    const response = await axiosClient.post("/profile", {
-      search: "John",
-      status: "active",
-    });
-    setData(response as any);
-  };
-  useEffect(() => {
-    getData();
-  }, []);
-  console.log(data);
+  const { user, isAuthenticated, logout, isLoading } = useAuth();
   const toast = useToast();
+  const [loginOpened, setLoginOpened] = useState(false);
+  const [signinOpened, setSigninOpened] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    toast.info("Loged out");
+  };
+
+  if (isLoading) {
+    return <div className="p-xl">Loading...</div>;
+  }
+
   return (
     <div
+      className="p-xl"
       style={{
-        padding: "20px",
-        display: "flex",
-        gap: "10px",
-        flexWrap: "wrap",
+        backgroundImage:
+          "url(https://cdn-media.sforum.vn/storage/app/media/ctv_seo3/mau-background-dep-5.jpg)",
+        height: "100vh",
       }}
     >
-      <button
-        onClick={() =>
-          toast.success("Your data has been saved successfully!", "Hello")
-        }
-      >
-        Show Success
-      </button>
-      <button
-        onClick={() =>
-          toast.error("Something went wrong. Please try again.", "Error")
-        }
-      >
-        Show Error
-      </button>
-      <button
-        onClick={() => toast.warning("You have unsaved changes!", "Warning")}
-      >
-        Show Warning
-      </button>
-      <button onClick={() => toast.info("A new version is available.", "Info")}>
-        Show Info
-      </button>
-      <button onClick={() => toast.success("No title example")}>
-        Success (No Title)
-      </button>
+      {isAuthenticated ? (
+        <div className="flex flex-col gap-lg">
+          <p className="text-xl text-secondary">
+            Hello, {user?.name || "User"}!
+          </p>
+          <ResponsiveButton onClick={handleLogout}>Logout</ResponsiveButton>
+        </div>
+      ) : (
+        <div className="flex gap-lg">
+          <ResponsiveButton onClick={() => setSigninOpened(true)}>
+            Register
+          </ResponsiveButton>
+          <ResponsiveButton onClick={() => setLoginOpened(true)}>
+            Login
+          </ResponsiveButton>
+        </div>
+      )}
+
+      {/* Modals */}
+      <LoginModal opened={loginOpened} onClose={() => setLoginOpened(false)} />
+      <SigninModal
+        opened={signinOpened}
+        onClose={() => setSigninOpened(false)}
+      />
     </div>
   );
 }

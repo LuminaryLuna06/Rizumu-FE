@@ -25,11 +25,11 @@ const Modal: React.FC<ModalProps> = ({
       <div
         className={`${(
           className || ""
-        ).trim()} mx-xl w-[800px] max-w-[90%] max-h-[80%] bg-modal-overlay text-secondary rounded-3xl shadow-2xl p-xl border border-gray-800 relative animate-dropdown`}
+        ).trim()} mx-xl w-[800px] max-w-[90%] max-h-[80%] bg-modal-overlay text-secondary rounded-3xl shadow-2xl p-xl border border-gray-800 relative animate-dropdown  font-poppins`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-lg">
-          <h2 className="md:text-2xl text-lg font-bold">{title}</h2>
+          <h2 className="md:text-2xl text-lg font-semibold">{title}</h2>
           <IconX
             size={20}
             onClick={onClose}
