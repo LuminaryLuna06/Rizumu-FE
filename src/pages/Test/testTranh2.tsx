@@ -1,5 +1,6 @@
 import { IconClock, IconMusic, IconCheck, IconX } from "@tabler/icons-react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
+import Popover from "../../components/Popover";
 
 function testTranh2() {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
@@ -13,7 +14,6 @@ function testTranh2() {
     type: "youtube" | "spotify" | null;
     embedUrl: string;
   }>({ type: null, embedUrl: "" });
-  const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!inputUrl.trim() || !isEditing) {
@@ -79,106 +79,93 @@ function testTranh2() {
     setIsEditing(true);
   };
 
+  const handleRecentClick = () => {
+    console.log("Recent clicked");
+  };
+
   return (
     <div className="p-xl">
       <h1 className="text-3xl mb-lg">Test Tranh 2</h1>
+      <Popover
+        opened={isPopoverOpen}
+        onClose={() => setIsPopoverOpen(!isPopoverOpen)}
+        trigger={
+          <button className="bg-primary text-secondary px-lg py-md rounded-md hover:bg-primary-hover transition-all duration-base">
+            Thêm Iframe
+          </button>
+        }
+      >
+        <div className="flex items-center justify-between px-lg py-md bg-black bg-opacity-40 border-b border-opacity-10">
+          <h3 className="text-secondary capitalize">
+            {previewData.type || "YouTube, Spotify"}
+          </h3>
 
-      <div className="relative inline-block">
-        <button
-          ref={buttonRef}
-          onClick={() => setIsPopoverOpen(!isPopoverOpen)}
-          className="bg-primary text-secondary px-lg py-md rounded-md hover:bg-primary-hover transition-all duration-base"
-        >
-          Thêm Iframe
-        </button>
-
-        <>
-          <div
-            className={`fixed inset-0 z-modal transition-opacity duration-base ${
-              isPopoverOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-            }`}
-            onClick={() => setIsPopoverOpen(false)}
-          />
-
-          <div
-            className={`absolute left-0 top-full mt-sm z-popover w-96 transition-all duration-base ${
-              isPopoverOpen
-                ? "opacity-100 translate-y-0"
-                : "opacity-0 -translate-y-2 pointer-events-none"
-            }`}
-          >
-            <div className="bg-modal-overlay backdrop-blur-xl rounded-xl overflow-hidden shadow-2xl border border-white border-opacity-20">
-              <div className="flex items-center justify-between px-lg py-md bg-black bg-opacity-40 border-b  border-opacity-10">
-                <h3 className="text-secondary capitalize">
-                  {previewData.type || "YouTube, Spotify"}
-                </h3>
-
-                {isEditing ? (
-                  <div className="flex items-center gap-sm flex-1 ml-md">
-                    <input
-                      type="text"
-                      value={inputUrl}
-                      onChange={(e) => setInputUrl(e.target.value)}
-                      placeholder="URL from YT, Spotify, Apple Music"
-                      className="flex-1 px-md py-xs rounded-md bg-secondary text-primary outline-none focus:ring-2 focus:ring-primary transition-all duration-base text-xs"
-                      autoFocus
-                    />
-                    <button
-                      onClick={handleSetIframe}
-                      disabled={!tempPreviewData.type}
-                      className="p-xs rounded-md bg-green-600 text-secondary hover:bg-green-700 transition-all duration-base disabled:opacity-30 disabled:cursor-not-allowed"
-                      title="Set iframe"
-                    >
-                      <IconCheck size={18} />
-                    </button>
-                    <button
-                      onClick={handleCancelEdit}
-                      className="p-xs rounded-md bg-red-600 text-secondary hover:bg-red-700 transition-all duration-base"
-                      title="Cancel"
-                    >
-                      <IconX size={18} />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-md">
-                    <button className="flex items-center gap-xs text-secondary text-sm opacity-70 hover:opacity-100 transition-opacity duration-base">
-                      <IconClock size={20} />
-                      <span>Recent</span>
-                    </button>
-                    <button
-                      onClick={handleChangeClick}
-                      className="flex items-center gap-xs text-secondary text-sm opacity-70 hover:opacity-100 transition-opacity duration-base"
-                    >
-                      <IconMusic size={20} />
-                      <span>Change</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              <div className="p-lg">
-                {previewData.type && previewData.embedUrl ? (
-                  <div className="bg-black rounded-md overflow-hidden">
-                    <iframe
-                      src={previewData.embedUrl}
-                      width="100%"
-                      height={previewData.type === "youtube" ? "200" : "152"}
-                      frameBorder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      className="w-full"
-                    />
-                  </div>
-                ) : (
-                  <div className="text-center text-secondary opacity-50 py-xl">
-                    Click "Change" to add YouTube or Spotify
-                  </div>
-                )}
-              </div>
+          {isEditing ? (
+            <div className="flex items-center gap-sm flex-1 ml-md">
+              <input
+                type="text"
+                value={inputUrl}
+                onChange={(e) => setInputUrl(e.target.value)}
+                placeholder="URL from YT, Spotify, Apple Music"
+                className="flex-1 px-md py-xs rounded-md bg-secondary text-primary outline-none focus:ring-2 focus:ring-primary transition-all duration-base text-xs"
+                autoFocus
+              />
+              <button
+                onClick={handleSetIframe}
+                disabled={!tempPreviewData.type}
+                className="p-xs rounded-md bg-green-600 text-secondary hover:bg-green-700 transition-all duration-base disabled:opacity-30 disabled:cursor-not-allowed"
+                title="Set iframe"
+              >
+                <IconCheck size={18} />
+              </button>
+              <button
+                onClick={handleCancelEdit}
+                className="p-xs rounded-md bg-red-600 text-secondary hover:bg-red-700 transition-all duration-base"
+                title="Cancel"
+              >
+                <IconX size={18} />
+              </button>
             </div>
-          </div>
-        </>
-      </div>
+          ) : (
+            <div className="flex items-center gap-md">
+              <button
+                onClick={handleRecentClick}
+                className="flex items-center gap-xs text-secondary text-sm opacity-70 hover:opacity-100 transition-opacity duration-base"
+              >
+                <IconClock size={20} />
+                <span>Recent</span>
+              </button>
+              <button
+                onClick={handleChangeClick}
+                className="flex items-center gap-xs text-secondary text-sm opacity-70 hover:opacity-100 transition-opacity duration-base"
+              >
+                <IconMusic size={20} />
+                <span>Change</span>
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div className="p-lg">
+          {previewData.type && previewData.embedUrl ? (
+            <div className="bg-black rounded-md overflow-hidden">
+              <iframe
+                src={previewData.embedUrl}
+                width="100%"
+                height={previewData.type === "youtube" ? "200" : "152"}
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full"
+              />
+            </div>
+          ) : (
+            <div className="text-center text-secondary opacity-50 py-xl">
+              Click "Change" to add YouTube or Spotify
+            </div>
+          )}
+        </div>
+      </Popover>
     </div>
   );
 }
