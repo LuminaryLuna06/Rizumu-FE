@@ -3,6 +3,9 @@
 @theme {
   /* Fonts */
   --font-poppins: Poppins, sans-serif;
+  --font-quicksand: Quicksand, sans-serif;
+  --font-lato: Lato, sans-serif;
+  --font-inter: Inter, sans-serif;
 
   /* Custom Color Palette */
   --color-primary: #000000;
