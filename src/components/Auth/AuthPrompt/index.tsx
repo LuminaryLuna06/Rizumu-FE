@@ -34,6 +34,19 @@ const AuthPrompt = () => {
     }
   }, [showOverlay, authModalOpened]);
 
+  // Listen for custom event to open auth modal (e.g., when refresh token fails)
+  useEffect(() => {
+    const handleOpenAuthModal = () => {
+      setAuthModalOpened(true);
+      // Also show the overlay if it was dismissed
+      setShowOverlay(true);
+    };
+
+    window.addEventListener("open-auth-modal", handleOpenAuthModal);
+    return () =>
+      window.removeEventListener("open-auth-modal", handleOpenAuthModal);
+  }, []);
+
   const handleOverlayClick = () => {
     setAuthModalOpened(true);
   };

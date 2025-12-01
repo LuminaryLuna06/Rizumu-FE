@@ -15,7 +15,7 @@ const axiosClient: AxiosInstance = axios.create({
 
 let isRefreshing = false;
 let failedQueue: Array<{
-  resolve: (value?: unknown) => void;
+  resolve: (value?: string) => void;
   reject: (reason?: unknown) => void;
 }> = [];
 
@@ -26,7 +26,7 @@ const processQueue = (
   failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
-    } else {
+    } else if (token) {
       prom.resolve(token);
     }
   });
@@ -44,14 +44,28 @@ const refreshAccessToken = async (): Promise<string> => {
   try {
     const response = await axios.post(
       `${import.meta.env.VITE_API_URL}/auth/refresh`,
-      { refresh_token: refreshToken }
+      { refresh_token: refreshToken },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
     );
+
     const { access_token } = response.data;
+
+    if (!access_token) {
+      throw new Error("No access token in response");
+    }
+
     localStorage.setItem("access_token", access_token);
     return access_token;
   } catch (error) {
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
+
+    window.dispatchEvent(new CustomEvent("open-auth-modal"));
+
     throw error;
   }
 };
@@ -123,6 +137,7 @@ axiosClient.interceptors.response.use(
       switch (error.response.status) {
         case 403:
           console.error("Lỗi 403: Forbidden");
+          window.dispatchEvent(new CustomEvent("open-auth-modal"));
           break;
         case 500:
           console.error("Lỗi 500: Server Error");
