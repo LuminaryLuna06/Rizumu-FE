@@ -18,6 +18,7 @@ import {
 import fujiImg from "@rizumu/assets/image/fuji2.jpg";
 import { useNavigate } from "react-router-dom";
 import IframePopover from "./components/IframePopover";
+import UserMenu from "@rizumu/components/UserMenu";
 
 function PomodoroPage() {
   const navigate = useNavigate();
@@ -52,6 +53,7 @@ function PomodoroPage() {
           <ResponsiveButton className="md:py-sm truncate">
             Leaving room
           </ResponsiveButton>
+          <UserMenu />
         </div>
       </div>
 

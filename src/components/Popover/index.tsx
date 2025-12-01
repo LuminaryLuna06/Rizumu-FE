@@ -20,7 +20,7 @@ const Popover: React.FC<PopoverProps> = ({
   position = "bottom",
 }) => {
   const positionClasses = {
-    bottom: "left-0 top-full mt-sm",
+    bottom: "right-0 top-full mt-sm",
     top: "left-0 bottom-full mb-sm",
     left: "right-full top-0 mr-sm",
     right: "left-full top-0 ml-sm",

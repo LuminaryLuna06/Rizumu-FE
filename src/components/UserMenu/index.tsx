@@ -24,10 +24,11 @@ function UserMenu() {
         opened={isPopoverOpen}
         onClose={() => setIsPopoverOpen(!isPopoverOpen)}
         trigger={
-          <button className="bg-primary text-secondary px-lg py-md rounded-md hover:bg-primary-hover transition-all duration-base">
-            Thêm Iframe
-          </button>
+          <div className="flex justify-center items-center rounded-full border-2 p-sm border-secondary bg-primary hover:bg-primary-hover cursor-pointer">
+            <IconUser className="text-secondary" />
+          </div>
         }
+        className="w-[18rem]"
       >
         <div className="font-light">
           <p className="text-white px-md py-md">UserName</p>
