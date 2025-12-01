@@ -25,7 +25,7 @@ const Modal: React.FC<ModalProps> = ({
       <div
         className={`${(
           className || ""
-        ).trim()} mx-xl w-[800px] max-w-[90%] max-h-[80%] bg-modal-overlay text-secondary rounded-3xl shadow-2xl p-xl border border-gray-800 relative animate-dropdown  font-poppins`}
+        ).trim()} mx-xl w-[800px] max-w-[90%] max-h-[80%] bg-modal-overlay text-secondary rounded-3xl shadow-2xl p-xl border border-gray-800 relative animate-dropdown font-poppins`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-lg">
