@@ -40,3 +40,9 @@
 .read-the-docs {
   color: #888;
 }
+
+.truncate {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}

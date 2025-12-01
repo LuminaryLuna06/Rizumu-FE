@@ -34,13 +34,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const initAuth = async () => {
       const token = localStorage.getItem("access_token");
       if (token) {
-        try {
-          const response = await axiosClient.get("/auth/profile");
-          setUser(response.data.data);
-        } catch (error) {
-          localStorage.removeItem("access_token");
-          localStorage.removeItem("refresh_token");
-        }
+        const response = await axiosClient.get("/auth/profile");
+        setUser(response.data.data);
+        // localStorage.removeItem("access_token");
+        // localStorage.removeItem("refresh_token");
       }
       setIsLoading(false);
     };

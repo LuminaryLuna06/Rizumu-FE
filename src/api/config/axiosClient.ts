@@ -46,20 +46,12 @@ const refreshAccessToken = async (): Promise<string> => {
       `${import.meta.env.VITE_API_URL}/auth/refresh`,
       { refresh_token: refreshToken }
     );
-    const { access_token, refresh_token: newRefreshToken } = response.data;
+    const { access_token } = response.data;
     localStorage.setItem("access_token", access_token);
-    if (newRefreshToken) {
-      localStorage.setItem("refresh_token", newRefreshToken);
-    }
-
     return access_token;
   } catch (error) {
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
-
-    // Chuyển hướng về trang login
-    // window.location.href = "/login";
-
     throw error;
   }
 };

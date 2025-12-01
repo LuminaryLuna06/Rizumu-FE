@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+import ResponsiveButton from "../ResponsiveButton";
+import { IconX } from "@tabler/icons-react";
 
 type PopoverProps = {
   opened: boolean;
@@ -26,8 +28,15 @@ const Popover: React.FC<PopoverProps> = ({
 
   return (
     <div className="relative inline-block">
-      <div onClick={onClose}>{trigger}</div>
-
+      <div onClick={onClose}>
+        {opened ? (
+          <ResponsiveButton>
+            <IconX size={20} />
+          </ResponsiveButton>
+        ) : (
+          trigger
+        )}
+      </div>
       <>
         <div
           className={`fixed inset-0 z-modal transition-opacity duration-base ${
@@ -46,7 +55,7 @@ const Popover: React.FC<PopoverProps> = ({
           } ${className || ""}`}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="bg-modal-overlay backdrop-blur-xl rounded-xl overflow-hidden shadow-2xl border border-white border-opacity-20">
+          <div className="bg-modal-overlay backdrop-blur-xl rounded-xl overflow-hidden shadow-2xl">
             {children}
           </div>
         </div>
