@@ -28,15 +28,7 @@ const Popover: React.FC<PopoverProps> = ({
 
   return (
     <div className="relative inline-block">
-      <div onClick={onClose}>
-        {opened ? (
-          <ResponsiveButton>
-            <IconX size={20} />
-          </ResponsiveButton>
-        ) : (
-          trigger
-        )}
-      </div>
+      <div onClick={onClose}>{trigger}</div>
       <>
         <div
           className={`fixed inset-0 z-modal transition-opacity duration-base ${
