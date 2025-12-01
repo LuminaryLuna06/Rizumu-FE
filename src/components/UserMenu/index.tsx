@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Popover from "../Popover";
 import {
   IconArrowRight,
+  IconChevronRight,
   IconFriends,
   IconMessage,
   IconSettings,
@@ -11,10 +12,10 @@ import {
 function UserMenu() {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const menuItems = [
-    { icon: <IconUser />, label: "Public Profile" },
-    { icon: <IconMessage />, label: "Find study room" },
-    { icon: <IconSettings />, label: "App settings" },
-    { icon: <IconFriends />, label: "Manage friends" },
+    { icon: <IconUser size={16} />, label: "Public Profile" },
+    { icon: <IconMessage size={16} />, label: "Find study room" },
+    { icon: <IconSettings size={16} />, label: "App settings" },
+    { icon: <IconFriends size={16} />, label: "Manage friends" },
   ];
 
   return (
@@ -28,7 +29,7 @@ function UserMenu() {
           </button>
         }
       >
-        <div>
+        <div className="font-light">
           <p className="text-white px-md py-md">UserName</p>
           <div className="h-[1px] bg-oklch(70.7% 0.022 261.325)"></div>
 
@@ -44,14 +45,12 @@ function UserMenu() {
 }
 
 const MenuItem = ({ icon, label }: { icon: any; label: String }) => (
-  <li className="flex justify-between px-md py-md hover:bg-primary-hover cursor-pointer border-t-1 border-slate-300/30">
+  <li className="flex justify-between items-center px-md py-md hover:bg-primary-hover cursor-pointer border-t-1 border-slate-300/30">
     <div className="flex items-center gap-2">
       {icon}
       {label}
     </div>
-    <div>
-      <IconArrowRight />
-    </div>
+    <IconChevronRight size={16} />
   </li>
 );
 
