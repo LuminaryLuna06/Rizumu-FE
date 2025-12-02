@@ -29,7 +29,9 @@ function EditProfileModal({ opened, onClose }: EditProfileModalProps) {
     fileInputRef.current?.click();
   };
 
-  const uploadFile = async () => {
+  const uploadFile = async (e: any) => {
+    e.preventDefault();
+
     if (!selectedFile) return;
     console.log(selectedFile);
     let form_data = new FormData();
