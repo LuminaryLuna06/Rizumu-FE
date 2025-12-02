@@ -19,7 +19,7 @@ function EditProfileModal({ opened, onClose }: EditProfileModalProps) {
   const uploadFile = async () => {
     if (!selectedFile) return;
     let form_data = new FormData();
-    form_data.append("file", selectedFile);
+    form_data.append("avatar", selectedFile);
     try {
       const response = await axiosClient.post("/auth/avatar", form_data, {
         headers: {
