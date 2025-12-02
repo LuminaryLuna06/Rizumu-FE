@@ -16,7 +16,8 @@
   --color-secondary: #ffffff;
   --color-secondary-hover: rgba(255, 255, 255, 0.85);
 
-  --color-modal-overlay: rgba(0, 0, 0, 0.9);
+  --color-popover-overlay: rgba(0, 0, 0, 0.5);
+  --color-modal-overlay: rgba(0, 0, 0, 0.85);
   --color-text-inactive: rgba(255, 255, 255, 0.5);
   --color-text-active: rgba(255, 255, 255, 1);
 
@@ -114,6 +115,12 @@
 
 .animate-slideUp {
   animation: slideUp 0.4s ease-out forwards;
+}
+
+.truncate {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 body {

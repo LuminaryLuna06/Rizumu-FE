@@ -12,6 +12,10 @@ interface User {
   username: string;
   name: string;
   status: "online" | "offline";
+  avatar: string | null;
+  current_room_id: string;
+  default_room_id: string;
+
   //   email: string;
 }
 

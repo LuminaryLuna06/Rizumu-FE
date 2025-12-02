@@ -1,4 +1,5 @@
 import Modal from "@rizumu/components/Modal";
+import TextInput from "@rizumu/components/TextInput";
 import { useAuth } from "@rizumu/context/AuthContext";
 import { useToast } from "@rizumu/utils/toast/toast";
 import {
@@ -20,42 +21,59 @@ const AuthModal: React.FC<AuthModalProps> = ({
   onClose,
   defaultMode = "login",
 }) => {
-  const { login, register } = useAuth();
   const toast = useToast();
+  const { login, register } = useAuth();
   const [mode, setMode] = useState<"login" | "register">(defaultMode);
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [username, setUsername] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [confirmPassword, setConfirmPassword] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [usernameError, setUsernameError] = useState<string>("");
+  const [passwordError, setPasswordError] = useState<string>("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState<string>("");
 
-  // Reset form when switching modes
   const switchMode = (newMode: "login" | "register") => {
     setMode(newMode);
     setUsername("");
     setPassword("");
     setConfirmPassword("");
+    setUsernameError("");
+    setPasswordError("");
+    setConfirmPasswordError("");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!username.trim() || !password.trim()) {
+    let hasError = false;
+    if (!username.trim()) {
+      setUsernameError("Username is required");
+      hasError = true;
+    }
+    if (!password.trim()) {
+      setPasswordError("Password is required");
+      hasError = true;
+    }
+    if (hasError) {
       toast.warning("Please fill in all fields!", "Warning");
       return;
     }
 
     if (mode === "register") {
       if (!confirmPassword.trim()) {
+        setConfirmPasswordError("Confirm is required");
         toast.warning("Please confirm your password!", "Warning");
         return;
       }
 
       if (password !== confirmPassword) {
+        setConfirmPasswordError("Passwords do not match!");
         toast.error("Passwords do not match!", "Error");
         return;
       }
 
       if (password.length < 6) {
+        setPasswordError("Password must be at least 6 characters!");
         toast.warning("Password must be at least 6 characters!", "Warning");
         return;
       }
@@ -94,86 +112,58 @@ const AuthModal: React.FC<AuthModalProps> = ({
       title={mode === "login" ? "Login" : "Create Account"}
     >
       <form onSubmit={handleSubmit} autoComplete="off" className="space-y-lg">
-        {/* Username Field */}
-        <div className="flex flex-col gap-sm">
-          <label htmlFor="auth-username" className="text-sm font-medium">
-            Username
-          </label>
-          <div className="relative">
-            <div className="absolute left-md top-1/2 -translate-y-1/2 text-text-inactive">
-              <IconUser size={20} />
-            </div>
-            <input
-              id="auth-username"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter username"
-              autoComplete="off"
-              className="w-full pl-[48px] pr-lg py-md bg-primary-light text-secondary rounded-xl border border-gray-800 focus:border-secondary focus:outline-none transition-colors"
-              disabled={isLoading}
-            />
-          </div>
-        </div>
+        <TextInput
+          required
+          size="md"
+          label="Username"
+          placeholder="Enter username"
+          leftSection={<IconUser size={20} />}
+          onChange={(e) => {
+            setUsername(e.target.value);
+            if (usernameError) setUsernameError("");
+          }}
+          disabled={isLoading}
+          autoComplete="false"
+          error={usernameError}
+        />
+        <TextInput
+          required
+          size="md"
+          label="Password"
+          placeholder="Enter password"
+          leftSection={<IconLock size={20} />}
+          onChange={(e) => {
+            setPassword(e.target.value);
+            if (passwordError) setPasswordError("");
+          }}
+          disabled={isLoading}
+          type="password"
+          autoComplete="false"
+          error={passwordError}
+        />
 
-        {/* Password Field */}
-        <div className="flex flex-col gap-sm">
-          <label htmlFor="auth-password" className="text-sm font-medium">
-            Password
-          </label>
-          <div className="relative">
-            <div className="absolute left-md top-1/2 -translate-y-1/2 text-text-inactive">
-              <IconLock size={20} />
-            </div>
-            <input
-              id="auth-password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder={
-                mode === "register"
-                  ? "Enter password (minimum 6 characters)"
-                  : "Enter password"
-              }
-              autoComplete="new-password"
-              className="w-full pl-[48px] pr-lg py-md bg-primary-light text-secondary rounded-xl border border-gray-800 focus:border-secondary focus:outline-none transition-colors"
-              disabled={isLoading}
-            />
-          </div>
-        </div>
-
-        {/* Confirm Password Field - Only for Register */}
         {mode === "register" && (
-          <div className="flex flex-col gap-sm">
-            <label
-              htmlFor="auth-confirm-password"
-              className="text-sm font-medium"
-            >
-              Confirm Password
-            </label>
-            <div className="relative">
-              <div className="absolute left-md top-1/2 -translate-y-1/2 text-text-inactive">
-                <IconLock size={20} />
-              </div>
-              <input
-                id="auth-confirm-password"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Re-enter password"
-                autoComplete="new-password"
-                className="w-full pl-[48px] pr-lg py-md bg-primary-light text-secondary rounded-xl border border-gray-800 focus:border-secondary focus:outline-none transition-colors"
-                disabled={isLoading}
-              />
-            </div>
-          </div>
+          <TextInput
+            required
+            size="md"
+            label="Confirm Password"
+            placeholder="Confirm password"
+            leftSection={<IconLock size={20} />}
+            onChange={(e) => {
+              setConfirmPassword(e.target.value);
+              if (confirmPasswordError) setConfirmPasswordError("");
+            }}
+            disabled={isLoading}
+            type="password"
+            autoComplete="false"
+            error={confirmPasswordError}
+          />
         )}
 
-        {/* Submit Button */}
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full flex items-center justify-center gap-sm bg-secondary text-primary py-md px-lg rounded-xl border border-gray-800 hover:bg-secondary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full flex items-center justify-center gap-sm bg-secondary text-primary py-md px-lg rounded-md border border-gray-800 hover:bg-secondary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {mode === "login" ? (
             <IconLogin size={20} />
@@ -189,7 +179,6 @@ const AuthModal: React.FC<AuthModalProps> = ({
             : "Register"}
         </button>
 
-        {/* Toggle Mode */}
         <div className="text-center pt-sm border-t border-gray-800">
           <p className="text-sm text-text-inactive">
             {mode === "login"
@@ -203,7 +192,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
               className="text-secondary hover:underline transition-colors font-medium"
               disabled={isLoading}
             >
-              {mode === "login" ? "Create one" : "Login"}
+              {mode === "login" ? "Create one" : "Login now"}
             </button>
           </p>
         </div>

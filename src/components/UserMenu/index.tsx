@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import Popover from "../Popover";
 import {
-  IconArrowRight,
   IconChevronRight,
   IconFriends,
   IconMessage,
@@ -30,8 +29,8 @@ function UserMenu() {
         }
         className="w-[18rem]"
       >
-        <div className="font-light">
-          <p className="text-white px-md py-md">UserName</p>
+        <div className="font-light text-sm">
+          <p className="text-white px-lg py-md font-semibold">UserName</p>
           <div className="h-[1px] bg-oklch(70.7% 0.022 261.325)"></div>
 
           <ul className="text-secondary">

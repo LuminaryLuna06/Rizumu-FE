@@ -47,7 +47,7 @@ const Popover: React.FC<PopoverProps> = ({
           } ${className || ""}`}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="bg-modal-overlay backdrop-blur-xl rounded-xl overflow-hidden shadow-2xl">
+          <div className="bg-popover-overlay backdrop-blur-xl rounded-xl overflow-hidden shadow-2xl">
             {children}
           </div>
         </div>
