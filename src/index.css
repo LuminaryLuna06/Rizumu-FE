@@ -21,6 +21,8 @@
   --color-text-inactive: rgba(255, 255, 255, 0.5);
   --color-text-active: rgba(255, 255, 255, 1);
 
+  --color-copy: #34d399;
+
   /* Border Radius */
   --radius-sm: 0.25rem; /* 4px - Bo góc nhỏ */
   --radius-md: 0.5rem; /* 8px - Bo góc vừa (default) */
