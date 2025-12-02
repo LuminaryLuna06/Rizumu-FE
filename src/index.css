@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap");
 @import "tailwindcss";
 
 @theme {
@@ -15,7 +16,8 @@
   --color-secondary: #ffffff;
   --color-secondary-hover: rgba(255, 255, 255, 0.85);
 
-  --color-modal-overlay: rgba(0, 0, 0, 0.9);
+  --color-popover-overlay: rgba(0, 0, 0, 0.5);
+  --color-modal-overlay: rgba(0, 0, 0, 0.85);
   --color-text-inactive: rgba(255, 255, 255, 0.5);
   --color-text-active: rgba(255, 255, 255, 1);
 
@@ -87,8 +89,42 @@
   animation: dropdown 0.3s ease-out forwards;
 }
 
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+@keyframes slideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slideUp {
+  animation: slideUp 0.4s ease-out forwards;
+}
+
+.truncate {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
 body {
-  font-family: "Poppins", sans-serif;
+  font-family: "Inter", sans-serif;
   margin: 0;
   padding: 0;
 }

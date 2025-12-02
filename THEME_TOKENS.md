@@ -127,7 +127,8 @@ Tài liệu này chứa toàn bộ design tokens đã được setup trong `src/
 | Primary Hover   | `--color-primary-hover`   | `rgba(0,0,0,0.5)`        | `bg-primary-hover`               |
 | Secondary       | `--color-secondary`       | `#ffffff`                | `bg-secondary`, `text-secondary` |
 | Secondary Hover | `--color-secondary-hover` | `rgba(255,255,255,0.85)` | `bg-secondary-hover`             |
-| Modal Overlay   | `--color-modal-overlay`   | `rgba(0,0,0,0.9)`        | `bg-modal-overlay`               |
+| Popover Overlay | `--color-popover-overlay` | `rgba(0,0,0,0.5)`        | `bg-popover-overlay`             |
+| Modal Overlay   | `--color-modal-overlay`   | `rgba(0,0,0,0.85)`       | `bg-modal-overlay`               |
 | Text Inactive   | `--color-text-inactive`   | `rgba(255,255,255,0.5)`  | `text-text-inactive`             |
 | Text Active     | `--color-text-active`     | `rgba(255,255,255,1)`    | `text-text-active`               |
 

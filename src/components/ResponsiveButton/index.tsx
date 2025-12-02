@@ -14,9 +14,9 @@ function ResponsiveButton({
   return (
     <button
       onClick={onClick}
-      className={`flex items-center p-sm md:p-md bg-primary-light text-white hover:bg-primary-hover cursor-pointer rounded-xl gap-x-sm ${
+      className={`${
         className ?? ""
-      }`.trim()}
+      } flex items-center p-sm md:p-md bg-primary-light text-white hover:bg-primary-hover cursor-pointer rounded-lg gap-x-sm`.trim()}
     >
       {leftSection}
       {children}
