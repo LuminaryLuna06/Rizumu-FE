@@ -7,7 +7,6 @@ function TestHieu() {
   const { user } = useAuth();
   const [opened, setOpened] = useState(false);
   const [profileOpened, setProfileOpened] = useState(false);
-
   return (
     <div>
       <button
@@ -35,7 +34,6 @@ function TestHieu() {
         user={user}
         onClose={() => setProfileOpened(false)}
       ></ProfileModal>
-
     </div>
   );
 }
