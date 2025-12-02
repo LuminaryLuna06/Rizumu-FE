@@ -29,7 +29,7 @@ function BoxStatistic({
       <div className="flex justify-between items-start relative z-10">
         <div>
           <p className={`text-base mb-xs`}>{header}</p>
-          <p className="text-2xl font-bold">{detail}</p>
+          <div className="text-2xl font-bold">{detail}</div>
           <p className={`text-sm opacity-80`}>{note}</p>
         </div>
       </div>

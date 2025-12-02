@@ -10,6 +10,7 @@ import {
   IconChartLine,
   IconGift,
   IconMap,
+  IconDoorExit,
 } from "@tabler/icons-react";
 import Modal from "../Modal";
 import ResponsiveButton from "../ResponsiveButton";
@@ -18,6 +19,8 @@ import { useState } from "react";
 import EditProfileModal from "./components/EditProfileModal";
 import HeatMap from "./components/HeatMap";
 import { data as heatmapData } from "@rizumu/pages/Test/TestHieu";
+import { useAuth } from "@rizumu/context/AuthContext";
+import { useToast } from "@rizumu/utils/toast/toast";
 
 interface ProfileModalProps {
   opened: boolean;
@@ -27,6 +30,9 @@ interface ProfileModalProps {
 
 function ProfileModal({ opened, user, onClose }: ProfileModalProps) {
   const [editOpened, setEditOpened] = useState(false);
+  const { logout, isLoading } = useAuth();
+  const toast = useToast();
+
   const getAvatar = (userAvatar: any) => {
     if (!userAvatar) {
       return (
@@ -40,6 +46,10 @@ function ProfileModal({ opened, user, onClose }: ProfileModalProps) {
     );
   };
 
+  const handleLogout = () => {
+    logout();
+    toast.info("Loged out");
+  };
   return (
     <>
       <Modal
@@ -56,21 +66,36 @@ function ProfileModal({ opened, user, onClose }: ProfileModalProps) {
           </div>
           <div className="flex-5 flex-col">
             <div className="flex items-center gap-sm w-full h-10 mb-xs">
-              <h1 className="text-xl font-bold">Wazzup</h1>
+              <h1 className="text-xl font-bold">
+                {user?.name?.length > 0 ? `${user?.name}` : "User"}
+              </h1>
               <ResponsiveButton
                 className="bg-white/10 hover:bg-white/20 h-1/3 gap-x-xs text-sm"
                 onClick={() => {
                   setEditOpened(true);
                   onClose();
                 }}
+                leftSection={<IconPencil size={16} />}
               >
-                <IconPencil size={16} /> Edit
+                Edit
               </ResponsiveButton>
-              <ResponsiveButton className="bg-white/10 hover:bg-white/20 h-1/3 gap-x-xs text-sm">
-                <IconShare2 size={16} /> Copy link
+              <ResponsiveButton
+                className="bg-emerald-500 hover:bg-emerald-600 h-1/3 gap-x-xs text-sm"
+                leftSection={<IconShare2 size={16} />}
+              >
+                Copy link
+              </ResponsiveButton>
+              <ResponsiveButton
+                onClick={handleLogout}
+                className="bg-red-500 hover:bg-red-600 h-1/3 gap-x-xs text-sm"
+                leftSection={<IconDoorExit size={16} />}
+              >
+                Logout
               </ResponsiveButton>
             </div>
-            <p className="mb-sm">Bio here</p>
+            <p className="mb-sm">
+              {user?.bio?.length > 0 ? `${user?.bio}` : ""}
+            </p>
             <div>
               <div className="flex justify-between text-sm font-bold mb-xs">
                 <p>Lv. 6</p>
