@@ -80,7 +80,7 @@ function ProfileModal({ opened, user, onClose }: ProfileModalProps) {
                 Edit
               </ResponsiveButton>
               <ResponsiveButton
-                className="bg-emerald-500 hover:bg-emerald-600 h-1/3 gap-x-xs text-sm"
+                className="bg-white/10 hover:bg-white/20 h-1/3 gap-x-xs text-sm"
                 leftSection={<IconShare2 size={16} />}
               >
                 Copy link
