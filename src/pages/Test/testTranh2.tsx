@@ -1,8 +1,15 @@
 import axiosClient from "@rizumu/api/config/axiosClient";
+import SelectInput from "@rizumu/components/SelectInput";
+import TextArea from "@rizumu/components/TextArea";
 import TextInput from "@rizumu/components/TextInput";
 import { useAuth } from "@rizumu/context/AuthContext";
 import { useEffect, useState } from "react";
-
+const data = [
+  { value: "react", label: "React" },
+  { value: "vue", label: "Vue.js" },
+  { value: "angular", label: "Angular" },
+  { value: "svelte", label: "Svelte", disabled: true },
+];
 function testTranh2() {
   const [room, setRoom] = useState();
   // const { user, isLoading } = useAuth();
@@ -19,8 +26,10 @@ function testTranh2() {
   //   getRoom();
   // }, [user]);
   return (
-    <div className="bg-primary h-[30vh]">
+    <div className="bg-primary h-[80vh]">
       <TextInput label="Hello World" placeholder="Hello there" />
+      <TextArea label="Hello world" placeholder="Hello There" />
+      <SelectInput data={data} />
     </div>
   );
 }
