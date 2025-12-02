@@ -20,7 +20,7 @@ function TextInput({
   label,
   description,
   error,
-  size = "sm",
+  size = "md",
   radius = "md",
   variant = "default",
   leftSection,

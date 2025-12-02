@@ -1,6 +1,4 @@
 import type { ReactNode } from "react";
-import ResponsiveButton from "../ResponsiveButton";
-import { IconX } from "@tabler/icons-react";
 
 type PopoverProps = {
   opened: boolean;

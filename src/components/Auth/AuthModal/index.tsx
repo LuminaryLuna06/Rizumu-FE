@@ -9,6 +9,7 @@ import {
   IconLock,
 } from "@tabler/icons-react";
 import { useState } from "react";
+import { string, object } from "@rizumu/utils/validate";
 
 interface AuthModalProps {
   opened: boolean;
@@ -27,58 +28,77 @@ const AuthModal: React.FC<AuthModalProps> = ({
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [usernameError, setUsernameError] = useState<string>("");
   const [passwordError, setPasswordError] = useState<string>("");
   const [confirmPasswordError, setConfirmPasswordError] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const switchMode = (newMode: "login" | "register") => {
-    setMode(newMode);
+  const loginSchema = object().shape({
+    username: string("Email").required().email(),
+    password: string("Password")
+      .required()
+      .min(6, "Password must be at least 6 characters"),
+  });
+
+  const registerSchema = object().shape({
+    username: string("Username")
+      .required()
+      .min(3, "Username must be at least 3 characters"),
+    password: string("Password")
+      .required()
+      .min(6, "Password must be at least 6 characters"),
+    confirmPassword: string("Confirm Password").required(),
+  });
+  const handleReset = () => {
     setUsername("");
     setPassword("");
     setConfirmPassword("");
+  };
+  const handleErrorReset = () => {
     setUsernameError("");
     setPasswordError("");
     setConfirmPasswordError("");
+  };
+  const switchMode = (newMode: "login" | "register") => {
+    setMode(newMode);
+    handleReset();
+    handleErrorReset();
+  };
+
+  const handleValidate = (): boolean => {
+    handleErrorReset();
+    const schema = mode === "login" ? loginSchema : registerSchema;
+    const formData = {
+      username,
+      password,
+      ...(mode === "register" && { confirmPassword }),
+    };
+
+    const { isValid, errors } = schema.validate(formData);
+
+    if (!isValid) {
+      if (errors.username) setUsernameError(errors.username);
+      if (errors.password) setPasswordError(errors.password);
+      if (errors.confirmPassword)
+        setConfirmPasswordError(errors.confirmPassword);
+
+      toast.warning("Please fix the errors!", "Validation Error");
+      return false;
+    }
+    if (mode === "register" && password !== confirmPassword) {
+      setConfirmPasswordError("Passwords do not match!");
+      toast.error("Passwords do not match!", "Error");
+      return false;
+    }
+    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    let hasError = false;
-    if (!username.trim()) {
-      setUsernameError("Username is required");
-      hasError = true;
-    }
-    if (!password.trim()) {
-      setPasswordError("Password is required");
-      hasError = true;
-    }
-    if (hasError) {
-      toast.warning("Please fill in all fields!", "Warning");
+    if (!handleValidate()) {
       return;
     }
-
-    if (mode === "register") {
-      if (!confirmPassword.trim()) {
-        setConfirmPasswordError("Confirm is required");
-        toast.warning("Please confirm your password!", "Warning");
-        return;
-      }
-
-      if (password !== confirmPassword) {
-        setConfirmPasswordError("Passwords do not match!");
-        toast.error("Passwords do not match!", "Error");
-        return;
-      }
-
-      if (password.length < 6) {
-        setPasswordError("Password must be at least 6 characters!");
-        toast.warning("Password must be at least 6 characters!", "Warning");
-        return;
-      }
-    }
-
     setIsLoading(true);
     try {
       if (mode === "login") {
@@ -89,9 +109,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
         toast.success("Registration successful!", "Success");
       }
       onClose();
-      setUsername("");
-      setPassword("");
-      setConfirmPassword("");
+      handleReset();
     } catch (error: any) {
       const message =
         error?.response?.data?.message ||
@@ -114,7 +132,6 @@ const AuthModal: React.FC<AuthModalProps> = ({
       <form onSubmit={handleSubmit} autoComplete="off" className="space-y-lg">
         <TextInput
           required
-          size="md"
           label="Username"
           placeholder="Enter username"
           leftSection={<IconUser size={20} />}
@@ -123,12 +140,10 @@ const AuthModal: React.FC<AuthModalProps> = ({
             if (usernameError) setUsernameError("");
           }}
           disabled={isLoading}
-          autoComplete="false"
           error={usernameError}
         />
         <TextInput
           required
-          size="md"
           label="Password"
           placeholder="Enter password"
           leftSection={<IconLock size={20} />}
@@ -138,14 +153,12 @@ const AuthModal: React.FC<AuthModalProps> = ({
           }}
           disabled={isLoading}
           type="password"
-          autoComplete="false"
           error={passwordError}
         />
 
         {mode === "register" && (
           <TextInput
             required
-            size="md"
             label="Confirm Password"
             placeholder="Confirm password"
             leftSection={<IconLock size={20} />}
@@ -155,7 +168,6 @@ const AuthModal: React.FC<AuthModalProps> = ({
             }}
             disabled={isLoading}
             type="password"
-            autoComplete="false"
             error={confirmPasswordError}
           />
         )}
