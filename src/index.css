@@ -124,6 +124,24 @@
   white-space: nowrap;
   overflow: hidden;
 }
+
+@layer utilities {
+      /* Chrome, Safari and Opera */
+      .scrollbar-hidden::-webkit-scrollbar {
+        display: none;
+      }
+
+      /* Firefox */
+      .scrollbar-hidden {
+        scrollbar-width: none;
+      }
+
+      /* IE and Edge */
+      .scrollbar-hidden {
+        -ms-overflow-style: none;
+      }
+    }
+
 body {
   font-family: "Inter", sans-serif;
   margin: 0;
