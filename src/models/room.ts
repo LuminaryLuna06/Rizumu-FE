@@ -1,5 +1,5 @@
 export type ModelRoom = {
-  id: string;
+  _id: string;
   slug: string;
   owner_id: string;
   name: string;

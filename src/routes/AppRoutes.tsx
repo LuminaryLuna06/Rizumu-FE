@@ -5,7 +5,6 @@ import TestHieu from "@rizumu/pages/Test/TestHieu";
 import TestHung from "@rizumu/pages/Test/TestHung";
 import TestTranh from "@rizumu/pages/Test/TestTranh";
 import TestTranh2 from "@rizumu/pages/Test/testTranh2";
-// Import các page (Ví dụ)
 
 const AppRoutes = () => {
   return (
