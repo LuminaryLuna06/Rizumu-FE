@@ -22,9 +22,9 @@ function Footer() {
         <ResponsiveButton>
           <IconPhoto size={20} />
         </ResponsiveButton>
-        <ResponsiveButton>
+        {/* <ResponsiveButton>
           <IconSticker2 size={20} />
-        </ResponsiveButton>
+        </ResponsiveButton> */}
       </div>
 
       {/* Footer Right */}

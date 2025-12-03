@@ -8,7 +8,7 @@ function ResponsiveButton({
 }: {
   children?: React.ReactNode;
   className?: string;
-  onClick?: () => void;
+  onClick?: (e: any) => void;
   leftSection?: React.ReactNode;
 }) {
   return (
@@ -16,7 +16,7 @@ function ResponsiveButton({
       onClick={onClick}
       className={`${
         className ?? ""
-      } flex items-center p-sm md:p-md bg-primary-light text-white hover:bg-primary-hover cursor-pointer rounded-lg gap-x-sm`.trim()}
+      } flex items-center p-sm md:p-md bg-primary-light text-secondary hover:bg-primary-hover cursor-pointer rounded-lg gap-x-sm`.trim()}
     >
       {leftSection}
       {children}

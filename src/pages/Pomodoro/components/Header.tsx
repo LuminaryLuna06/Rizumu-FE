@@ -3,6 +3,7 @@ import ResponsiveButton from "@rizumu/components/ResponsiveButton";
 import UserMenu from "@rizumu/components/UserMenu";
 import { IconChartColumn, IconClock, IconMusicCode } from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
+import RoomPopover from "./RoomPopover";
 
 function Header() {
   const navigate = useNavigate();
@@ -30,9 +31,7 @@ function Header() {
         <ResponsiveButton className="md:py-sm">
           <IconChartColumn size={22} />
         </ResponsiveButton>
-        <ResponsiveButton className="md:py-sm truncate">
-          Leaving room
-        </ResponsiveButton>
+        <RoomPopover />
         <UserMenu />
       </div>
     </div>
