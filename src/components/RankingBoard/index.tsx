@@ -74,9 +74,9 @@ const LeaderboardModal = () => {
         <IconChartBarPopular />
       </button>
       <Modal opened={opened} onClose={() => setOpened(false)} title="">
-        <div className="bg-modal-lay px-4 pt-2 pb-6">
-          <div className="flex justify-between items-center">
-            <div className="flex justify-between items-center">
+        <div className="bg-modal-layout">
+          <div className="flex flex-col sm:flex-row  justify-between items-center">
+            <div className="flex items-center w-full md:w-auto mb-4">
               <button
                 onClick={() => setActiveTab("global")}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
@@ -100,7 +100,7 @@ const LeaderboardModal = () => {
               </button>
             </div>
 
-            <div className="flex justify-between items-center">
+            <div className="flex items-center w-full md:w-auto">
               <button
                 onClick={() => setTimeFilter("daily")}
                 className={`gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
@@ -214,7 +214,7 @@ const LeaderboardModal = () => {
                             </span>
                           </div>
                           {user.status && (
-                            <p className="text-xs text-gray-500 truncate">
+                            <p className="text-xs text-gray-500 truncate hidden sm:block">
                               {user.status}
                             </p>
                           )}
