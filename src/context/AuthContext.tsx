@@ -6,21 +6,22 @@ import {
   type ReactNode,
 } from "react";
 import axiosClient from "@rizumu/api/config/axiosClient";
+import type { ModelUserProfile } from "@rizumu/models/userProfile";
 
-interface User {
-  id: string;
-  username: string;
-  name: string;
-  status: "online" | "offline";
-  avatar: string | null;
-  current_room_id: string;
-  default_room_id: string;
+// interface User {
+//   id: string;
+//   username: string;
+//   name: string;
+//   status: "online" | "offline";
+//   avatar: string | null;
+//   current_room_id: string;
+//   default_room_id: string;
 
-  //   email: string;
-}
+//   //   email: string;
+// }
 
 interface AuthContextType {
-  user: User | null;
+  user: ModelUserProfile | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   authModalOpened: boolean;
@@ -35,7 +36,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<ModelUserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [authModalOpened, setAuthModalOpened] = useState(false);
 
