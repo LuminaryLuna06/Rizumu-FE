@@ -1,12 +1,14 @@
 import Modal from "@rizumu/components/Modal";
 import ProfileModal from "@rizumu/components/ProfileModal";
 import { useAuth } from "@rizumu/context/AuthContext";
+import type { ModelUserProfile } from "@rizumu/models/userProfile";
 import { useState } from "react";
 
 function TestHieu() {
   const { user } = useAuth();
   const [opened, setOpened] = useState(false);
   const [profileOpened, setProfileOpened] = useState(false);
+
   return (
     <div>
       <button
@@ -31,7 +33,7 @@ function TestHieu() {
       </button>
       <ProfileModal
         opened={profileOpened}
-        user={user}
+        user={user as ModelUserProfile}
         onClose={() => setProfileOpened(false)}
       ></ProfileModal>
     </div>

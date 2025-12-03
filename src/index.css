@@ -124,7 +124,12 @@
   white-space: nowrap;
   overflow: hidden;
 }
-
+.btn-share {
+  background-color: #10b981;
+}
+.btn-share:hover {
+  background-color: #059669;
+}
 body {
   font-family: "Inter", sans-serif;
   margin: 0;

@@ -21,10 +21,11 @@ import HeatMap from "./components/HeatMap";
 import { data as heatmapData } from "@rizumu/pages/Test/TestHieu";
 import { useAuth } from "@rizumu/context/AuthContext";
 import { useToast } from "@rizumu/utils/toast/toast";
+import type { ModelUserProfile } from "@rizumu/models/userProfile";
 
 interface ProfileModalProps {
   opened: boolean;
-  user: any;
+  user: ModelUserProfile;
   onClose: () => void;
 }
 
@@ -33,16 +34,71 @@ function ProfileModal({ opened, user, onClose }: ProfileModalProps) {
   const { logout, isLoading } = useAuth();
   const toast = useToast();
 
+  const months = [
+    {
+      name: "Jan",
+      days: 31,
+    },
+    {
+      name: "Feb",
+      days: 28,
+    },
+    {
+      name: "Mar",
+      days: 31,
+    },
+    {
+      name: "Apr",
+      days: 30,
+    },
+    {
+      name: "May",
+      days: 31,
+    },
+    {
+      name: "Jun",
+      days: 30,
+    },
+    {
+      name: "Jul",
+      days: 31,
+    },
+    {
+      name: "Aug",
+      days: 31,
+    },
+    {
+      name: "Sep",
+      days: 30,
+    },
+    {
+      name: "Oct",
+      days: 31,
+    },
+    {
+      name: "Nov",
+      days: 30,
+    },
+    {
+      name: "Dec",
+      days: 31,
+    },
+  ];
+
   const getAvatar = (userAvatar: any) => {
     if (!userAvatar) {
       return (
-        <div className="w-24 h-24 rounded-full bg-primary flex items-center justify-center text-4xl font-bold shadow-2xl">
+        <div className="w-30 h-30 lg:w-24 lg:h-24 rounded-full bg-primary flex items-center justify-center text-4xl font-bold shadow-2xl">
           U
         </div>
       );
     }
     return (
-      <img src={userAvatar} alt="Avatar" className="rounded-full w-24 h-24" />
+      <img
+        src={userAvatar}
+        alt="Avatar"
+        className="w-30 h-30 lg:w-24 lg:h-24 rounded-full"
+      />
     );
   };
 
@@ -50,48 +106,64 @@ function ProfileModal({ opened, user, onClose }: ProfileModalProps) {
     logout();
     toast.info("Loged out");
   };
+
   return (
     <>
       <Modal
         opened={opened}
         onClose={onClose}
         title={
-          user?.name?.length > 0 ? `${user?.name}'s Profile` : "User's Profile"
+          user?.name?.length > 0 ? `${user.name}'s Profile` : "User's Profile"
         }
-        className="w-[1000px] overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+        className="w-full max-w-[1000px] max-h-[70vh] overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+        more={
+          <div className="flex items-center h-20 lg:h-10 gap-2 md:gap-xl lg:gap-sm hidden md:flex">
+            <ResponsiveButton
+              className="bg-white/10 hover:bg-white/20 h-11 md:h-8 lg:h-5 gap-x-xs text-sm"
+              onClick={() => {
+                setEditOpened(true);
+                onClose();
+              }}
+              leftSection={<IconPencil size={16} />}
+            >
+              Edit
+            </ResponsiveButton>
+            <ResponsiveButton
+              className="h-11 md:h-8 lg:h-5 gap-x-xs text-sm btn-share"
+              leftSection={<IconShare2 size={16} />}
+            >
+              Copy link
+            </ResponsiveButton>
+          </div>
+        }
       >
-        <div className="flex items-center mb-xl">
-          <div className="flex-1 flex justify-center items-center">
+        <div className="flex flex-col md:flex-row items-center mb-xl h-1/3">
+          <div className="flex-1 flex justify-center items-center mb-md md:mb-0">
             {getAvatar(user?.avatar)}
           </div>
-          <div className="flex-5 flex-col">
-            <div className="flex items-center gap-sm w-full h-10 mb-xs">
-              <h1 className="text-xl font-bold">
+          <div className="flex-5 flex-col w-full">
+            <div className="flex flex-col-reverse md:flex-row items-center gap-sm w-full h-25 md:h-20 lg:h-10 mb-xs">
+              <h1 className="text-2xl md:text-xl font-bold">
                 {user?.name?.length > 0 ? `${user?.name}` : "User"}
               </h1>
-              <ResponsiveButton
-                className="bg-white/10 hover:bg-white/20 h-1/3 gap-x-xs text-sm"
-                onClick={() => {
-                  setEditOpened(true);
-                  onClose();
-                }}
-                leftSection={<IconPencil size={16} />}
-              >
-                Edit
-              </ResponsiveButton>
-              <ResponsiveButton
-                className="bg-white/10 hover:bg-white/20 h-1/3 gap-x-xs text-sm"
-                leftSection={<IconShare2 size={16} />}
-              >
-                Copy link
-              </ResponsiveButton>
-              <ResponsiveButton
-                onClick={handleLogout}
-                className="bg-red-500 hover:bg-red-600 h-1/3 gap-x-xs text-sm"
-                leftSection={<IconDoorExit size={16} />}
-              >
-                Logout
-              </ResponsiveButton>
+              <div className="flex items-center h-20 lg:h-10 gap-2 md:gap-xl lg:gap-sm md:hidden flex">
+                <ResponsiveButton
+                  className="flex justify-center h-11 md:h-8 lg:h-5 bg-white/10 hover:bg-white/20 gap-x-xs text-sm min-w-[100px]"
+                  onClick={() => {
+                    setEditOpened(true);
+                    onClose();
+                  }}
+                  leftSection={<IconPencil size={16} />}
+                >
+                  Edit
+                </ResponsiveButton>
+                <ResponsiveButton
+                  className="h-11 md:h-8 lg:h-5 gap-x-xs text-sm btn-share min-w-[100px]"
+                  leftSection={<IconShare2 size={16} />}
+                >
+                  Copy link
+                </ResponsiveButton>
+              </div>
             </div>
             <p className="mb-sm">
               {user?.bio?.length > 0 ? `${user?.bio}` : ""}
@@ -124,7 +196,7 @@ function ProfileModal({ opened, user, onClose }: ProfileModalProps) {
             <IconChartColumn />
             <h1>Study Statistics</h1>
           </div>
-          <div className="grid grid-cols-4 gap-md">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-md">
             <BoxStatistic
               className="from-orange-400 to-pink-500"
               header="Current Streak"
@@ -187,91 +259,16 @@ function ProfileModal({ opened, user, onClose }: ProfileModalProps) {
             <IconMap />
             <h1>Study Activity</h1>
           </div>
-          <div className="grid grid-cols-6 w-full overflow-visible relative [&_text]:fill-white/80">
-            <HeatMap
-              month="Jan"
-              monthNumber={1}
-              day={31}
-              year={2025}
-              data={heatmapData}
-            />
-            <HeatMap
-              month="Feb"
-              monthNumber={2}
-              day={28}
-              year={2025}
-              data={heatmapData}
-            />
-            <HeatMap
-              month="Mar"
-              monthNumber={3}
-              day={31}
-              year={2025}
-              data={heatmapData}
-            />
-            <HeatMap
-              month="Apr"
-              monthNumber={4}
-              day={30}
-              year={2025}
-              data={heatmapData}
-            />
-            <HeatMap
-              month="May"
-              monthNumber={5}
-              day={31}
-              year={2025}
-              data={heatmapData}
-            />
-            <HeatMap
-              month="Jun"
-              monthNumber={6}
-              day={30}
-              year={2025}
-              data={heatmapData}
-            />
-            <HeatMap
-              month="Jul"
-              monthNumber={7}
-              day={31}
-              year={2025}
-              data={heatmapData}
-            />
-            <HeatMap
-              month="Aug"
-              monthNumber={8}
-              day={31}
-              year={2025}
-              data={heatmapData}
-            />
-            <HeatMap
-              month="Sep"
-              monthNumber={9}
-              day={30}
-              year={2025}
-              data={heatmapData}
-            />
-            <HeatMap
-              month="Oct"
-              monthNumber={10}
-              day={31}
-              year={2025}
-              data={heatmapData}
-            />
-            <HeatMap
-              month="Nov"
-              monthNumber={11}
-              day={30}
-              year={2025}
-              data={heatmapData}
-            />
-            <HeatMap
-              month="Dec"
-              monthNumber={12}
-              day={31}
-              year={2025}
-              data={heatmapData}
-            />
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 w-full overflow-visible relative [&_text]:fill-white/80">
+            {months.map((month, index) => (
+              <HeatMap
+                month={month.name}
+                monthNumber={index + 1}
+                day={month.days}
+                year={new Date().getFullYear()}
+                data={heatmapData}
+              />
+            ))}
           </div>
         </div>
 
@@ -284,10 +281,21 @@ function ProfileModal({ opened, user, onClose }: ProfileModalProps) {
             <p>Total: 0</p>
           </div>
         </div>
+
+        <div className="flex justify-center ">
+          <ResponsiveButton
+            onClick={handleLogout}
+            className="bg-red-500 hover:bg-red-600 h-11 min-w-[100px] gap-x-xs text-sm justify-center"
+            leftSection={<IconDoorExit size={16} />}
+          >
+            Logout
+          </ResponsiveButton>
+        </div>
       </Modal>
       <EditProfileModal
         opened={editOpened}
         onClose={() => setEditOpened(false)}
+        user={user}
       />
     </>
   );
