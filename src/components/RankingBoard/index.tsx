@@ -2,12 +2,8 @@ import React, { useState } from "react";
 import {
   IconWorld,
   IconUsers,
-  IconChevronLeft,
-  IconChevronRight,
   IconTrendingUp,
   IconGift,
-  IconClock,
-  IconInfoCircle,
   IconChartBarPopular,
   IconArrowLeft,
   IconArrowRight,
@@ -77,12 +73,7 @@ const LeaderboardModal = () => {
       <button onClick={() => setOpened(true)} className="">
         <IconChartBarPopular />
       </button>
-      <Modal
-        opened={opened}
-        onClose={() => setOpened(false)}
-        className="!bg-[#0f0f0f] !text-white !p-0 overflow-hidden border border-gray-800 relative"
-        title=""
-      >
+      <Modal opened={opened} onClose={() => setOpened(false)} title="">
         <div className="bg-modal-lay px-4 pt-2 pb-6">
           <div className="flex justify-between items-center">
             <div className="flex justify-between items-center">
@@ -158,18 +149,19 @@ const LeaderboardModal = () => {
           </div>
 
           {/* Table */}
-          <div className="max-h-[400px] overflow-y-auto custom-scrollbar px-2">
-            <table className="w-full">
+          <div className="max-h-[150px] overflow-y-auto custom-scrollbar scrollbar-hidden px-2">
+            <table className="w-full relative">
               {/* Hàng 1 */}
               <thead className="sticky t-0 z-10">
                 <tr>
                   <th className="pb-4 pt-2 text-center w-[10%]">#</th>
                   <th className="pb-4 pt-2 text-left pl-2 w-[60%]">User</th>
-                  <th className="pb-4 pt-2 text-right pr-4 w-[30%]">
+                  <th className="pb-4 pt-2 pr-4 w-[20%]">
                     <div className="flex justify-end">
                       <IconClockHour3 />
                     </div>
                   </th>
+                  <th className="pb-4 pt-2 text-center w-[10%]"></th>
                 </tr>
 
                 <tr>
@@ -236,12 +228,16 @@ const LeaderboardModal = () => {
                         <span className="font-medium text-gray-200">
                           {user.time}
                         </span>
-                        <div className="flex items-center gap-1 text-gray-300">
-                          <IconGift size={18} />
-                          <span className="font-bold text-white">
-                            {user.gifts}
-                          </span>
-                        </div>
+                      </div>
+                    </td>
+
+                    {/* Cột 4 */}
+                    <td>
+                      <div className="flex items-center gap-1 text-gray-300">
+                        <IconGift size={18} />
+                        <span className="font-bold text-white">
+                          {user.gifts}
+                        </span>
                       </div>
                     </td>
                   </tr>
