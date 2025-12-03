@@ -8,9 +8,7 @@ const AuthPrompt = () => {
   const [authModalOpened, setAuthModalOpened] = useState(false);
 
   useEffect(() => {
-    // Only show overlay if auth check is complete and user is not authenticated
     if (!isLoading && !isAuthenticated) {
-      // Check if user has dismissed the overlay before
       const dismissed = sessionStorage.getItem("auth_overlay_dismissed");
       if (!dismissed) {
         setShowOverlay(true);
@@ -34,11 +32,9 @@ const AuthPrompt = () => {
     }
   }, [showOverlay, authModalOpened]);
 
-  // Listen for custom event to open auth modal (e.g., when refresh token fails)
   useEffect(() => {
     const handleOpenAuthModal = () => {
       setAuthModalOpened(true);
-      // Also show the overlay if it was dismissed
       setShowOverlay(true);
     };
 
@@ -53,13 +49,11 @@ const AuthPrompt = () => {
 
   const handleDismiss = () => {
     setShowOverlay(false);
-    // Remember dismissal for this session
     sessionStorage.setItem("auth_overlay_dismissed", "true");
   };
 
   const handleModalClose = () => {
     setAuthModalOpened(false);
-    // Also dismiss the overlay when modal is closed
     handleDismiss();
   };
 
@@ -67,13 +61,11 @@ const AuthPrompt = () => {
 
   return (
     <>
-      {/* Clickable Overlay - Hidden when modal is open */}
       {!authModalOpened && (
         <div
           className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs animate-fadeIn cursor-pointer group"
           onClick={handleOverlayClick}
         >
-          {/* Centered Hint Text */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="text-center space-y-md animate-slideUp">
               <h2 className="text-4xl font-bold text-secondary drop-shadow-lg group-hover:scale-105 transition-transform">
@@ -90,7 +82,6 @@ const AuthPrompt = () => {
         </div>
       )}
 
-      {/* Auth Modal */}
       <AuthModal
         opened={authModalOpened}
         onClose={handleModalClose}

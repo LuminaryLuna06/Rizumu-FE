@@ -1,5 +1,6 @@
 import axiosClient from "@rizumu/api/config/axiosClient";
 import Modal from "@rizumu/components/Modal";
+import ResponsiveButton from "@rizumu/components/ResponsiveButton";
 import SelectInput from "@rizumu/components/SelectInput";
 import TextArea from "@rizumu/components/TextArea";
 import TextInput from "@rizumu/components/TextInput";
@@ -13,15 +14,20 @@ interface EditProfileModalProps {
   opened: boolean;
   onClose: () => void;
   user: ModelUserProfile;
+  onOpenProfile: () => void;
 }
-function EditProfileModal({ opened, onClose, user }: EditProfileModalProps) {
-  // const { refreshUser } = useAuth();
+function EditProfileModal({
+  opened,
+  onClose,
+  user,
+  onOpenProfile,
+}: EditProfileModalProps) {
   const toast = useToast();
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [formData, setFormData] = useState({ name: "", bio: "", country: "" });
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [formData, setFormData] = useState({ name: "", bio: "", country: "" });
 
   useEffect(() => {
     if (user) {
@@ -64,10 +70,10 @@ function EditProfileModal({ opened, onClose, user }: EditProfileModalProps) {
         });
       }
       await axiosClient.patch(`/auth/profile`, formData);
-      toast.success("Update profile successful!");
+      toast.success("Update profile successful!", "Success");
       // refreshUser();
     } catch (e: any) {
-      toast.error("Update profile failed!");
+      toast.error("Update profile failed!", "Error");
     }
 
     setIsLoading(false);
@@ -110,6 +116,17 @@ function EditProfileModal({ opened, onClose, user }: EditProfileModalProps) {
       opened={opened}
       onClose={onClose}
       title="Edit Profile"
+      more={
+        <ResponsiveButton
+          className="bg-white/10 hover:bg-white/20 h-11 md:h-8 lg:h-5 gap-x-xs text-sm"
+          onClick={() => {
+            onOpenProfile();
+          }}
+          leftSection={<IconUser size={16} />}
+        >
+          View Profile
+        </ResponsiveButton>
+      }
       className="w-[900px] overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
     >
       <form className="space-y-lg">
@@ -184,7 +201,7 @@ function EditProfileModal({ opened, onClose, user }: EditProfileModalProps) {
         <div className="flex gap-sm">
           <button
             onClick={() => {
-              onClose();
+              onOpenProfile();
               setPreviewUrl(null);
             }}
             className="flex-1 px-6 py-3 border border-white rounded-lg font-medium cursor-pointer hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"

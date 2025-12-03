@@ -76,6 +76,10 @@ function RoomPopover() {
     }
   }, [room]);
 
+  if (!room) {
+    return null;
+  }
+
   return (
     <Popover
       trigger={
@@ -85,14 +89,15 @@ function RoomPopover() {
       }
       opened={roomOpened}
       onClose={() => setRoomOpened(!roomOpened)}
+      position="top-right"
     >
       <div className="p-lg space-y-md">
-        <div className="flex justify-between text-secondary items-center">
+        <div className="flex justify-between text-secondary items-center overflow-hidden">
           <div className="flex items-center gap-x-xs">
             <IconHome size={20} />
             <p>{room?.name || `${user?.name || "User"}'s Room`}</p>
             <ResponsiveButton
-              className="bg-white/10 hover:bg-white/20 gap-x-xs text-sm md:p-xs"
+              className="bg-secondary/10 hover:bg-secondary/20 gap-x-xs text-sm md:p-xs"
               leftSection={<IconShare2 size={16} />}
             >
               Copy link

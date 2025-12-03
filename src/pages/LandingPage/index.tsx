@@ -1,28 +1,12 @@
-import ResponsiveButton from "@rizumu/components/ResponsiveButton";
-import {
-  IconChartInfographic,
-  IconClock,
-  IconClockHour11Filled,
-  IconClockPlay,
-  IconCloudFilled,
-  IconFlagFilled,
-  IconGift,
-  IconLamp2,
-  IconMessage,
-  IconMusic,
-  IconPhoto,
-  IconPlayerSkipForwardFilled,
-  IconSticker2,
-  IconUsers,
-} from "@tabler/icons-react";
-import React from "react";
+import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 function LandingPage() {
-  return (
-   <div className="div">
-    
-   </div>
-  );
+  const navigate = useNavigate();
+  useEffect(() => {
+    navigate("/pomodoro");
+  }, []);
+  return <div className="div"></div>;
 }
 
 export default LandingPage;

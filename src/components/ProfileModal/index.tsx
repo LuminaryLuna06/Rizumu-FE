@@ -15,7 +15,7 @@ import {
 import Modal from "../Modal";
 import ResponsiveButton from "../ResponsiveButton";
 import BoxStatistic from "./components/BoxStatistic";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import EditProfileModal from "./components/EditProfileModal";
 import HeatMap from "./components/HeatMap";
 import { data as heatmapData } from "@rizumu/pages/Test/TestHieu";
@@ -25,15 +25,14 @@ import type { ModelUserProfile } from "@rizumu/models/userProfile";
 
 interface ProfileModalProps {
   opened: boolean;
-  user: ModelUserProfile;
   onClose: () => void;
+  onOpenProfile: () => void;
 }
 
-function ProfileModal({ opened, user, onClose }: ProfileModalProps) {
+function ProfileModal({ opened, onClose, onOpenProfile }: ProfileModalProps) {
+  const { logout, user, refreshUser } = useAuth();
   const [editOpened, setEditOpened] = useState(false);
-  const { logout } = useAuth();
   const toast = useToast();
-
   const months = [
     {
       name: "Jan",
@@ -101,20 +100,22 @@ function ProfileModal({ opened, user, onClose }: ProfileModalProps) {
       />
     );
   };
+  useEffect(() => {
+    if (opened === true) {
+      refreshUser();
+    }
+  }, [opened]);
 
   const handleLogout = () => {
     logout();
     toast.info("Loged out");
   };
-
   return (
     <>
       <Modal
         opened={opened}
         onClose={onClose}
-        title={
-          user?.name?.length > 0 ? `${user.name}'s Profile` : "User's Profile"
-        }
+        title={user?.name ? `${user?.name}'s Profile` : "User's Profile"}
         className="w-full max-w-[1000px] max-h-[70vh] overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
         more={
           <div className="flex items-center h-20 lg:h-10 gap-2 md:gap-xl lg:gap-sm hidden md:flex">
@@ -144,7 +145,7 @@ function ProfileModal({ opened, user, onClose }: ProfileModalProps) {
           <div className="flex-5 flex-col w-full">
             <div className="flex flex-col-reverse md:flex-row items-center gap-sm w-full h-25 md:h-20 lg:h-10 mb-xs">
               <h1 className="text-2xl md:text-xl font-bold">
-                {user?.name?.length > 0 ? `${user?.name}` : "User"}
+                {user?.name ? `${user?.name}` : "User"}
               </h1>
               <div className="flex items-center h-20 lg:h-10 gap-2 md:gap-xl lg:gap-sm md:hidden flex">
                 <ResponsiveButton
@@ -165,9 +166,7 @@ function ProfileModal({ opened, user, onClose }: ProfileModalProps) {
                 </ResponsiveButton>
               </div>
             </div>
-            <p className="mb-sm">
-              {user?.bio?.length > 0 ? `${user?.bio}` : ""}
-            </p>
+            <p className="mb-sm">{user?.bio ? `${user?.bio}` : ""}</p>
             <div>
               <div className="flex justify-between text-sm font-bold mb-xs">
                 <p>Lv. 6</p>
@@ -295,7 +294,11 @@ function ProfileModal({ opened, user, onClose }: ProfileModalProps) {
       <EditProfileModal
         opened={editOpened}
         onClose={() => setEditOpened(false)}
-        user={user}
+        user={user as ModelUserProfile}
+        onOpenProfile={() => {
+          setEditOpened(false);
+          onOpenProfile();
+        }}
       />
     </>
   );

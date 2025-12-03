@@ -149,7 +149,7 @@ const LeaderboardModal = ({
         </div>
 
         {/* Table */}
-        <div className="max-h-[500px] overflow-y-auto custom-scrollbar scrollbar-hidden px-2">
+        <div className="max-h-[600px] overflow-y-auto custom-scrollbar scrollbar-hidden px-2">
           <table className="w-full relative">
             {/* Hàng 1 */}
             <thead className="sticky t-0 z-10">
