@@ -15,7 +15,7 @@ import {
 import Modal from "../Modal";
 import ResponsiveButton from "../ResponsiveButton";
 import BoxStatistic from "./components/BoxStatistic";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import EditProfileModal from "./components/EditProfileModal";
 import HeatMap from "./components/HeatMap";
 import { data as heatmapData } from "@rizumu/pages/Test/TestHieu";
@@ -30,9 +30,8 @@ interface ProfileModalProps {
 }
 
 function ProfileModal({ opened, user, onClose }: ProfileModalProps) {
-  useEffect(() => console.log("Hehe"), [user]);
   const [editOpened, setEditOpened] = useState(false);
-  const { logout, isLoading } = useAuth();
+  const { logout } = useAuth();
   const toast = useToast();
 
   const months = [
@@ -130,7 +129,7 @@ function ProfileModal({ opened, user, onClose }: ProfileModalProps) {
               Edit
             </ResponsiveButton>
             <ResponsiveButton
-              className="h-11 md:h-8 lg:h-5 gap-x-xs text-sm btn-share"
+              className="!bg-emerald-500 hover:bg-emarald-600 h-11 md:h-8 lg:h-5 gap-x-xs text-sm"
               leftSection={<IconShare2 size={16} />}
             >
               Copy link
@@ -159,7 +158,7 @@ function ProfileModal({ opened, user, onClose }: ProfileModalProps) {
                   Edit
                 </ResponsiveButton>
                 <ResponsiveButton
-                  className="h-11 md:h-8 lg:h-5 gap-x-xs text-sm btn-share min-w-[100px]"
+                  className="!bg-emerald-500 hover:bg-emarald-600 h-11 md:h-8 lg:h-5 gap-x-xs text-sm min-w-[100px]"
                   leftSection={<IconShare2 size={16} />}
                 >
                   Copy link
@@ -197,7 +196,7 @@ function ProfileModal({ opened, user, onClose }: ProfileModalProps) {
             <IconChartColumn />
             <h1>Study Statistics</h1>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-md">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-md">
             <BoxStatistic
               className="from-orange-400 to-pink-500"
               header="Current Streak"

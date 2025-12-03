@@ -5,9 +5,10 @@ import type { ModelUserProfile } from "@rizumu/models/userProfile";
 import { useState } from "react";
 
 function TestHieu() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [opened, setOpened] = useState(false);
   const [profileOpened, setProfileOpened] = useState(false);
+  console.log(user);
 
   return (
     <div>
@@ -27,7 +28,10 @@ function TestHieu() {
 
       <button
         className="px-4 py-2 bg-blue-600 text-white rounded"
-        onClick={() => setProfileOpened(true)}
+        onClick={() => {
+          setProfileOpened(true);
+          refreshUser();
+        }}
       >
         Test Profile
       </button>
