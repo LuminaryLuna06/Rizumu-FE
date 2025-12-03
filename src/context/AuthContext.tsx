@@ -8,18 +8,6 @@ import {
 import axiosClient from "@rizumu/api/config/axiosClient";
 import type { ModelUserProfile } from "@rizumu/models/userProfile";
 
-// interface User {
-//   id: string;
-//   username: string;
-//   name: string;
-//   status: "online" | "offline";
-//   avatar: string | null;
-//   current_room_id: string;
-//   default_room_id: string;
-
-//   //   email: string;
-// }
-
 interface AuthContextType {
   user: ModelUserProfile | null;
   isAuthenticated: boolean;
@@ -62,12 +50,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       password,
     });
 
-    const { access_token, refresh_token, user } = response.data;
+    const { access_token, refresh_token, data } = response.data;
     localStorage.setItem("access_token", access_token);
     localStorage.setItem("refresh_token", refresh_token);
-    setUser(user);
-    // const userResponse = await axiosClient.get("/auth/profile");
-    // setUser(userResponse.data.data);
+    setUser(data);
   };
 
   const register = async (username: string, password: string) => {
@@ -76,12 +62,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       password,
     });
 
-    const { access_token, refresh_token, user } = response.data;
+    const { access_token, refresh_token, data } = response.data;
     localStorage.setItem("access_token", access_token);
     localStorage.setItem("refresh_token", refresh_token);
-    setUser(user);
-    // const userResponse = await axiosClient.get("/auth/profile");
-    // setUser(userResponse.data.data);
+    setUser(data);
   };
 
   const logout = async () => {

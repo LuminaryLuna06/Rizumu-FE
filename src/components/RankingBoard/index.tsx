@@ -149,7 +149,7 @@ const LeaderboardModal = ({
         </div>
 
         {/* Table */}
-        <div className="max-h-[150px] overflow-y-auto custom-scrollbar scrollbar-hidden px-2">
+        <div className="max-h-[500px] overflow-y-auto custom-scrollbar scrollbar-hidden px-2">
           <table className="w-full relative">
             {/* Hàng 1 */}
             <thead className="sticky t-0 z-10">
@@ -172,7 +172,7 @@ const LeaderboardModal = ({
             </thead>
 
             <tbody>
-              {MOCK_DATA.map((user) => (
+              {[...MOCK_DATA, ...MOCK_DATA].map((user) => (
                 <tr
                   key={user.rank}
                   className="group hover:bg-primary-hover cursor-pointer last:border-none"
