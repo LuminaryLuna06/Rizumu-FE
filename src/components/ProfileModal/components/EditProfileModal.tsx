@@ -1,6 +1,7 @@
 import axiosClient from "@rizumu/api/config/axiosClient";
 import Modal from "@rizumu/components/Modal";
 import TextInput from "@rizumu/components/TextInput";
+import { useAuth } from "@rizumu/context/AuthContext";
 import type { ModelUserProfile } from "@rizumu/models/userProfile";
 import { IconCamera, IconNote, IconUser } from "@tabler/icons-react";
 import { useRef, useState } from "react";
@@ -11,10 +12,10 @@ interface EditProfileModalProps {
   user: ModelUserProfile;
 }
 function EditProfileModal({ opened, onClose, user }: EditProfileModalProps) {
+  const { refreshUser } = useAuth();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  console.log("Edit: ", user);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -49,6 +50,8 @@ function EditProfileModal({ opened, onClose, user }: EditProfileModalProps) {
       console.log(response);
     } catch (e: any) {
       console.error(e.message);
+    } finally {
+      refreshUser();
     }
   };
 
@@ -79,7 +82,6 @@ function EditProfileModal({ opened, onClose, user }: EditProfileModalProps) {
             )}
             <div
               onClick={handleCameraClick}
-              onChange={uploadFile}
               className="flex items-center justify-center rounded-full bg-blue-500 text-xl h-8 w-8 absolute bottom-0 right-0 cursor-pointer"
             >
               <IconCamera />

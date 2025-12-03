@@ -15,7 +15,7 @@ import {
 import Modal from "../Modal";
 import ResponsiveButton from "../ResponsiveButton";
 import BoxStatistic from "./components/BoxStatistic";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import EditProfileModal from "./components/EditProfileModal";
 import HeatMap from "./components/HeatMap";
 import { data as heatmapData } from "@rizumu/pages/Test/TestHieu";
@@ -30,6 +30,7 @@ interface ProfileModalProps {
 }
 
 function ProfileModal({ opened, user, onClose }: ProfileModalProps) {
+  useEffect(() => console.log("Hehe"), [user]);
   const [editOpened, setEditOpened] = useState(false);
   const { logout, isLoading } = useAuth();
   const toast = useToast();
