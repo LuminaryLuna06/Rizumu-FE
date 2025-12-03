@@ -18,29 +18,27 @@ function UserMenu() {
   ];
 
   return (
-    <div>
-      <Popover
-        opened={isPopoverOpen}
-        onClose={() => setIsPopoverOpen(!isPopoverOpen)}
-        trigger={
-          <div className="flex justify-center items-center rounded-full border-2 p-sm border-secondary bg-primary hover:bg-primary-hover cursor-pointer">
-            <IconUser className="text-secondary" />
-          </div>
-        }
-        className="w-[18rem]"
-      >
-        <div className="font-light text-sm">
-          <p className="text-white px-lg py-md font-semibold">UserName</p>
-          <div className="h-[1px] bg-oklch(70.7% 0.022 261.325)"></div>
-
-          <ul className="text-secondary">
-            {menuItems.map((item, index) => (
-              <MenuItem key={index} icon={item.icon} label={item.label} />
-            ))}
-          </ul>
+    <Popover
+      opened={isPopoverOpen}
+      onClose={() => setIsPopoverOpen(!isPopoverOpen)}
+      trigger={
+        <div className="flex justify-center items-center rounded-full border-2 p-sm border-secondary bg-primary hover:bg-primary-hover cursor-pointer">
+          <IconUser className="text-secondary" />
         </div>
-      </Popover>
-    </div>
+      }
+      className="w-[18rem]"
+    >
+      <div className="font-light text-sm">
+        <p className="text-white px-lg py-md font-semibold">UserName</p>
+        <div className="h-[1px] bg-oklch(70.7% 0.022 261.325)"></div>
+
+        <ul className="text-secondary">
+          {menuItems.map((item, index) => (
+            <MenuItem key={index} icon={item.icon} label={item.label} />
+          ))}
+        </ul>
+      </div>
+    </Popover>
   );
 }
 
