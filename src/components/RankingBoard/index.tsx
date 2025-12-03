@@ -73,7 +73,12 @@ const LeaderboardModal = ({
   );
 
   return (
-    <Modal opened={opened} onClose={() => setOpened(false)} title="">
+    <Modal
+      opened={opened}
+      onClose={() => setOpened(false)}
+      title=""
+      className="overflow-y-hidden overflow-x-hidden"
+    >
       <div className="bg-modal-layout">
         <div className="flex flex-col sm:flex-row  justify-between items-center">
           <div className="flex items-center w-full md:w-auto mb-4">
@@ -149,10 +154,10 @@ const LeaderboardModal = ({
         </div>
 
         {/* Table */}
-        <div className="max-h-[600px] overflow-y-auto custom-scrollbar scrollbar-hidden px-2">
-          <table className="w-full relative">
+        <div className="max-h-[600px] overflow-y-auto overflow-x-hidden custom-scrollbar scrollbar-hidden px-2">
+          <table className="w-full relative mb-md">
             {/* Hàng 1 */}
-            <thead className="sticky t-0 z-10">
+            <thead>
               <tr>
                 <th className="pb-4 pt-2 text-center w-[10%]">#</th>
                 <th className="pb-4 pt-2 text-left pl-2 w-[60%]">User</th>
@@ -172,7 +177,7 @@ const LeaderboardModal = ({
             </thead>
 
             <tbody>
-              {[...MOCK_DATA, ...MOCK_DATA].map((user) => (
+              {[...MOCK_DATA, ...MOCK_DATA, ...MOCK_DATA].map((user) => (
                 <tr
                   key={user.rank}
                   className="group hover:bg-primary-hover cursor-pointer last:border-none"
