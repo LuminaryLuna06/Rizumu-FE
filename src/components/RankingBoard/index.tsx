@@ -73,13 +73,18 @@ const LeaderboardModal = ({
   );
 
   return (
-    <Modal opened={opened} onClose={() => setOpened(false)} title="">
+    <Modal
+      opened={opened}
+      onClose={() => setOpened(false)}
+      title=""
+      className="overflow-y-hidden overflow-x-hidden"
+    >
       <div className="bg-modal-layout">
         <div className="flex flex-col sm:flex-row  justify-between items-center">
-          <div className="flex items-center w-full md:w-auto mb-4">
+          <div className="flex items-center justify-center sm:justify-start w-full md:w-auto mb-xl sm:mb-0 gap-0 sm:gap-1">
             <button
               onClick={() => setActiveTab("global")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+              className={`flex items-center justify-center sm:justify-start gap-2 px-4 py-2 rounded-lg text-sm font-semibold w-1/2 sm:w-auto transition-all ${
                 activeTab === "global"
                   ? "bg-white text-black shadow-lg"
                   : "text-gray-400 hover:text-white"
@@ -90,7 +95,7 @@ const LeaderboardModal = ({
 
             <button
               onClick={() => setActiveTab("friends")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+              className={`flex items-center justify-center sm:justify-start gap-2 px-4 py-2 rounded-lg text-sm font-semibold w-1/2 sm:w-auto transition-all ${
                 activeTab === "friends"
                   ? "bg-white text-black shadow-lg"
                   : "text-gray-400 hover:text-white"
@@ -100,7 +105,7 @@ const LeaderboardModal = ({
             </button>
           </div>
 
-          <div className="flex items-center w-full md:w-auto">
+          <div className="flex items-center justify-between sm:justify-start w-full md:w-auto pl-md sm:pl-0 pr-md sm:pr-0 gap-0 sm:gap-1">
             <button
               onClick={() => setTimeFilter("daily")}
               className={`gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
@@ -149,10 +154,10 @@ const LeaderboardModal = ({
         </div>
 
         {/* Table */}
-        <div className="max-h-[600px] overflow-y-auto custom-scrollbar scrollbar-hidden px-2">
-          <table className="w-full relative">
+        <div className="max-h-[600px] overflow-y-auto overflow-x-hidden custom-scrollbar scrollbar-hidden px-2">
+          <table className="w-full relative mb-md">
             {/* Hàng 1 */}
-            <thead className="sticky t-0 z-10">
+            <thead>
               <tr>
                 <th className="pb-4 pt-2 text-center w-[10%]">#</th>
                 <th className="pb-4 pt-2 text-left pl-2 w-[60%]">User</th>
@@ -172,7 +177,7 @@ const LeaderboardModal = ({
             </thead>
 
             <tbody>
-              {[...MOCK_DATA, ...MOCK_DATA].map((user) => (
+              {[...MOCK_DATA, ...MOCK_DATA, ...MOCK_DATA].map((user, index) => (
                 <tr
                   key={user.rank}
                   className="group hover:bg-primary-hover cursor-pointer last:border-none"
@@ -184,7 +189,7 @@ const LeaderboardModal = ({
                         <IconTrendingUp size={14} className="text-green-500" />
                       )}
                       <span className="font-bold text-lg text-white">
-                        {user.rank}
+                        {index + 1}
                       </span>
                     </div>
                   </td>

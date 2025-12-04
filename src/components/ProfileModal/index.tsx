@@ -116,7 +116,7 @@ function ProfileModal({ opened, onClose, onOpenProfile }: ProfileModalProps) {
         opened={opened}
         onClose={onClose}
         title={user?.name ? `${user?.name}'s Profile` : "User's Profile"}
-        className="w-full max-w-[1000px] max-h-[70vh] overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+        className="w-full max-w-[1000px] max-h-[70vh] overflow-y-auto overflow-x-hidden custom-scrollbar scrollbar-hidden"
         more={
           <div className="flex items-center h-20 lg:h-10 gap-2 md:gap-xl lg:gap-sm hidden md:flex">
             <ResponsiveButton
