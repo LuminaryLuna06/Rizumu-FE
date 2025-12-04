@@ -1,3 +1,4 @@
+import ActivitiesModal from "@rizumu/components/ActivitiesModal";
 import Modal from "@rizumu/components/Modal";
 import ProfileModal from "@rizumu/components/ProfileModal";
 import { useAuth } from "@rizumu/context/AuthContext";
@@ -8,7 +9,7 @@ function TestHieu() {
   const { user, refreshUser } = useAuth();
   const [opened, setOpened] = useState(false);
   const [profileOpened, setProfileOpened] = useState(false);
-  console.log(user);
+  const [activitiesOpened, setActivitiesOpened] = useState(false);
 
   return (
     <div>
@@ -35,11 +36,25 @@ function TestHieu() {
       >
         Test Profile
       </button>
+
+      <button
+        className="px-4 py-2 bg-blue-600 text-white rounded"
+        onClick={() => {
+          setActivitiesOpened(true);
+          refreshUser();
+        }}
+      >
+        Test Activity
+      </button>
       <ProfileModal
         opened={profileOpened}
-        user={user as ModelUserProfile}
         onClose={() => setProfileOpened(false)}
-      ></ProfileModal>
+        onOpenProfile={() => setProfileOpened(true)}
+      />
+      <ActivitiesModal
+        opened={activitiesOpened}
+        onClose={() => setActivitiesOpened(false)}
+      />
     </div>
   );
 }

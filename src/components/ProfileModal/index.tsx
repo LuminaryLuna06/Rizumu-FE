@@ -100,6 +100,7 @@ function ProfileModal({ opened, onClose, onOpenProfile }: ProfileModalProps) {
       />
     );
   };
+  
   useEffect(() => {
     if (opened === true) {
       refreshUser();

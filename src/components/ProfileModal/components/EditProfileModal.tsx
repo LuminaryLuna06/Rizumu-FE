@@ -1,7 +1,7 @@
 import axiosClient from "@rizumu/api/config/axiosClient";
 import Modal from "@rizumu/components/Modal";
 import ResponsiveButton from "@rizumu/components/ResponsiveButton";
-import SelectInput from "@rizumu/components/SelectInput";
+// import SelectInput from "@rizumu/components/SelectInput";
 import TextArea from "@rizumu/components/TextArea";
 import TextInput from "@rizumu/components/TextInput";
 // import { useAuth } from "@rizumu/context/AuthContext";
@@ -79,38 +79,38 @@ function EditProfileModal({
     setIsLoading(false);
   };
 
-  const countryData = [
-    { value: "VN", label: "Vietnam" },
-    { value: "US", label: "United States" },
-    { value: "GB", label: "United Kingdom" },
-    { value: "CA", label: "Canada" },
-    { value: "AU", label: "Australia" },
-    { value: "JP", label: "Japan" },
-    { value: "KR", label: "South Korea" },
-    { value: "CN", label: "China" },
-    { value: "TW", label: "Taiwan" },
-    { value: "SG", label: "Singapore" },
-    { value: "MY", label: "Malaysia" },
-    { value: "TH", label: "Thailand" },
-    { value: "ID", label: "Indonesia" },
-    { value: "PH", label: "Philippines" },
-    { value: "IN", label: "India" },
-    { value: "FR", label: "France" },
-    { value: "DE", label: "Germany" },
-    { value: "IT", label: "Italy" },
-    { value: "ES", label: "Spain" },
-    { value: "NL", label: "Netherlands" },
-    { value: "SE", label: "Sweden" },
-    { value: "NO", label: "Norway" },
-    { value: "DK", label: "Denmark" },
-    { value: "FI", label: "Finland" },
-    { value: "BR", label: "Brazil" },
-    { value: "MX", label: "Mexico" },
-    { value: "AR", label: "Argentina" },
-    { value: "CL", label: "Chile" },
-    { value: "NZ", label: "New Zealand" },
-    { value: "RU", label: "Russia" },
-  ];
+  // const countryData = [
+  //   { value: "VN", label: "Vietnam" },
+  //   { value: "US", label: "United States" },
+  //   { value: "GB", label: "United Kingdom" },
+  //   { value: "CA", label: "Canada" },
+  //   { value: "AU", label: "Australia" },
+  //   { value: "JP", label: "Japan" },
+  //   { value: "KR", label: "South Korea" },
+  //   { value: "CN", label: "China" },
+  //   { value: "TW", label: "Taiwan" },
+  //   { value: "SG", label: "Singapore" },
+  //   { value: "MY", label: "Malaysia" },
+  //   { value: "TH", label: "Thailand" },
+  //   { value: "ID", label: "Indonesia" },
+  //   { value: "PH", label: "Philippines" },
+  //   { value: "IN", label: "India" },
+  //   { value: "FR", label: "France" },
+  //   { value: "DE", label: "Germany" },
+  //   { value: "IT", label: "Italy" },
+  //   { value: "ES", label: "Spain" },
+  //   { value: "NL", label: "Netherlands" },
+  //   { value: "SE", label: "Sweden" },
+  //   { value: "NO", label: "Norway" },
+  //   { value: "DK", label: "Denmark" },
+  //   { value: "FI", label: "Finland" },
+  //   { value: "BR", label: "Brazil" },
+  //   { value: "MX", label: "Mexico" },
+  //   { value: "AR", label: "Argentina" },
+  //   { value: "CL", label: "Chile" },
+  //   { value: "NZ", label: "New Zealand" },
+  //   { value: "RU", label: "Russia" },
+  // ];
   return (
     <Modal
       opened={opened}
