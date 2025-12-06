@@ -9,6 +9,7 @@ import type { ModelUserProfile } from "@rizumu/models/userProfile";
 import { useToast } from "@rizumu/utils/toast/toast";
 import { IconCamera, IconUser } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
+import { countries } from "../data/countries";
 
 interface EditProfileModalProps {
   opened: boolean;
@@ -79,38 +80,37 @@ function EditProfileModal({
     setIsLoading(false);
   };
 
-  const countryData = [
-    { value: "VN", label: "Vietnam" },
-    { value: "US", label: "United States" },
-    { value: "GB", label: "United Kingdom" },
-    { value: "CA", label: "Canada" },
-    { value: "AU", label: "Australia" },
-    { value: "JP", label: "Japan" },
-    { value: "KR", label: "South Korea" },
-    { value: "CN", label: "China" },
-    { value: "TW", label: "Taiwan" },
-    { value: "SG", label: "Singapore" },
-    { value: "MY", label: "Malaysia" },
-    { value: "TH", label: "Thailand" },
-    { value: "ID", label: "Indonesia" },
-    { value: "PH", label: "Philippines" },
-    { value: "IN", label: "India" },
-    { value: "FR", label: "France" },
-    { value: "DE", label: "Germany" },
-    { value: "IT", label: "Italy" },
-    { value: "ES", label: "Spain" },
-    { value: "NL", label: "Netherlands" },
-    { value: "SE", label: "Sweden" },
-    { value: "NO", label: "Norway" },
-    { value: "DK", label: "Denmark" },
-    { value: "FI", label: "Finland" },
-    { value: "BR", label: "Brazil" },
-    { value: "MX", label: "Mexico" },
-    { value: "AR", label: "Argentina" },
-    { value: "CL", label: "Chile" },
-    { value: "NZ", label: "New Zealand" },
-    { value: "RU", label: "Russia" },
-  ];
+  //   { value: "VN", label: "Vietnam" },
+  //   { value: "US", label: "United States" },
+  //   { value: "GB", label: "United Kingdom" },
+  //   { value: "CA", label: "Canada" },
+  //   { value: "AU", label: "Australia" },
+  //   { value: "JP", label: "Japan" },
+  //   { value: "KR", label: "South Korea" },
+  //   { value: "CN", label: "China" },
+  //   { value: "TW", label: "Taiwan" },
+  //   { value: "SG", label: "Singapore" },
+  //   { value: "MY", label: "Malaysia" },
+  //   { value: "TH", label: "Thailand" },
+  //   { value: "ID", label: "Indonesia" },
+  //   { value: "PH", label: "Philippines" },
+  //   { value: "IN", label: "India" },
+  //   { value: "FR", label: "France" },
+  //   { value: "DE", label: "Germany" },
+  //   { value: "IT", label: "Italy" },
+  //   { value: "ES", label: "Spain" },
+  //   { value: "NL", label: "Netherlands" },
+  //   { value: "SE", label: "Sweden" },
+  //   { value: "NO", label: "Norway" },
+  //   { value: "DK", label: "Denmark" },
+  //   { value: "FI", label: "Finland" },
+  //   { value: "BR", label: "Brazil" },
+  //   { value: "MX", label: "Mexico" },
+  //   { value: "AR", label: "Argentina" },
+  //   { value: "CL", label: "Chile" },
+  //   { value: "NZ", label: "New Zealand" },
+  //   { value: "RU", label: "Russia" },
+  // ];
   return (
     <Modal
       opened={opened}
@@ -185,37 +185,38 @@ function EditProfileModal({
           disabled={isLoading}
         />
 
-        {/* <SelectInput
+        <SelectInput
           label="Country"
-          data={countryData}
+          data={countries.map((c) => ({ value: c.code, label: c.name }))}
+          placeholder="Select country"
           value={formData.country}
-          onChange={(e: any) =>
-            setFormData({ ...formData, country: e })
+          onChange={(value) =>
+            setFormData({ ...formData, country: value || "" })
           }
-          searchable
-          clearable
           disabled={isLoading}
-        /> */}
+          searchable
+          className="w-1/3"
+        />
         <div className="flex flex-col gap-sm"></div>
         <hr />
         <div className="flex gap-sm">
-          <button
+          <ResponsiveButton
             onClick={() => {
               onOpenProfile();
               setPreviewUrl(null);
             }}
-            className="flex-1 px-6 py-3 border border-white rounded-lg font-medium cursor-pointer hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 flex justify-center px-6 py-3 border border-white rounded-lg font-semibold"
             disabled={isLoading}
           >
             Cancel
-          </button>
-          <button
+          </ResponsiveButton>
+          <ResponsiveButton
             onClick={handleSave}
-            className="flex-1 px-6 py-3 bg-secondary text-primary rounded-lg font-medium cursor-pointer hover:bg-secondary-hover disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 flex justify-center px-6 py-3 bg-secondary hover:bg-secondary !text-primary rounded-lg font-semibold"
             disabled={isLoading}
           >
             {isLoading ? "Saving..." : "Save"}
-          </button>
+          </ResponsiveButton>
         </div>
       </form>
     </Modal>

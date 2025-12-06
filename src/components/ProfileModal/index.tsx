@@ -87,7 +87,7 @@ function ProfileModal({ opened, onClose, onOpenProfile }: ProfileModalProps) {
   const getAvatar = (userAvatar: any) => {
     if (!userAvatar) {
       return (
-        <div className="w-30 h-30 lg:w-24 lg:h-24 rounded-full bg-primary flex items-center justify-center text-4xl font-bold shadow-2xl">
+        <div className="w-30 h-30 md:w-24 md:h-24 rounded-full bg-primary flex items-center justify-center text-4xl font-bold shadow-2xl">
           U
         </div>
       );
@@ -96,10 +96,11 @@ function ProfileModal({ opened, onClose, onOpenProfile }: ProfileModalProps) {
       <img
         src={userAvatar}
         alt="Avatar"
-        className="w-30 h-30 lg:w-24 lg:h-24 rounded-full"
+        className="w-30 h-30 md:w-24 md:h-24 rounded-full"
       />
     );
   };
+
   useEffect(() => {
     if (opened === true) {
       refreshUser();
@@ -143,7 +144,7 @@ function ProfileModal({ opened, onClose, onOpenProfile }: ProfileModalProps) {
             {getAvatar(user?.avatar)}
           </div>
           <div className="flex-5 flex-col w-full">
-            <div className="flex flex-col-reverse md:flex-row items-center gap-sm w-full h-25 md:h-20 lg:h-10 mb-xs">
+            <div className="flex flex-col-reverse md:flex-row items-center gap-sm w-full h-25 md:h-10 mb-xs">
               <h1 className="text-2xl md:text-xl font-bold">
                 {user?.name ? `${user?.name}` : "User"}
               </h1>
@@ -193,9 +194,9 @@ function ProfileModal({ opened, onClose, onOpenProfile }: ProfileModalProps) {
         <div className="flex flex-col mb-xl">
           <div className="flex font-bold items-center text-xl gap-sm h-8 mb-md">
             <IconChartColumn />
-            <h1>Study Statistics</h1>
+            <h1>Stats</h1>
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-md">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-md">
             <BoxStatistic
               className="from-orange-400 to-pink-500"
               header="Current Streak"
@@ -256,9 +257,9 @@ function ProfileModal({ opened, onClose, onOpenProfile }: ProfileModalProps) {
         <div className="flex flex-col mb-xl">
           <div className="flex font-bold items-center text-xl gap-sm h-8 mb-md">
             <IconMap />
-            <h1>Study Activity</h1>
+            <h1>Heatmap</h1>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 w-full overflow-visible relative [&_text]:fill-white/80">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 w-full overflow-visible relative [&_text]:fill-white/80">
             {months.map((month, index) => (
               <HeatMap
                 month={month.name}
