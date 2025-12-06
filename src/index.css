@@ -126,21 +126,21 @@
 }
 
 @layer utilities {
-      /* Chrome, Safari and Opera */
-      .scrollbar-hidden::-webkit-scrollbar {
-        display: none;
-      }
+  /* Chrome, Safari and Opera */
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+  }
 
-      /* Firefox */
-      .scrollbar-hidden {
-        scrollbar-width: none;
-      }
+  /* Firefox */
+  .scrollbar-hidden {
+    scrollbar-width: none;
+  }
 
-      /* IE and Edge */
-      .scrollbar-hidden {
-        -ms-overflow-style: none;
-      }
-    }
+  /* IE and Edge */
+  .scrollbar-hidden {
+    -ms-overflow-style: none;
+  }
+}
 
 body {
   font-family: "Inter", sans-serif;

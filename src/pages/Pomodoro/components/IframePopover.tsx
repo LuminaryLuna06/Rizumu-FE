@@ -93,7 +93,7 @@ function testTranh2() {
           <IconMusic size={20} />
         </ResponsiveButton>
       }
-      position="top"
+      position="bottom-left"
     >
       <div className="flex items-center justify-between px-lg py-md">
         <h3 className="text-secondary capitalize">

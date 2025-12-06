@@ -1,173 +1,113 @@
-import Popover from "@rizumu/components/Popover";
 import ResponsiveButton from "@rizumu/components/ResponsiveButton";
-
-import { useEffect, useState } from "react";
-import bg from "@rizumu/assets/image/fuji2.jpg";
-import {
-  IconHome,
-  IconShare2,
-  IconUpload,
-  IconUsers,
-} from "@tabler/icons-react";
-import TextInput from "@rizumu/components/TextInput";
-import Switch from "@rizumu/components/Switch";
 import { useAuth } from "@rizumu/context/AuthContext";
-import axiosClient from "@rizumu/api/config/axiosClient";
-import { useToast } from "@rizumu/utils/toast/toast";
-import type { ModelRoom } from "@rizumu/models/room";
-function testTranh2() {
-  const toast = useToast();
-  const { user, isLoading } = useAuth();
-  const [room, setRoom] = useState<ModelRoom>();
-  const [roomOpened, setRoomOpened] = useState(true);
-  const [roomLoading, setRoomLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    slug: "",
-    chat_during_pomodoro: false,
-    locked: false,
-    is_public: false,
+import React, { useCallback, useEffect, useRef, useState } from "react";
+
+interface TimerData {
+  completed: boolean;
+  started_at: string;
+  ended_at: string;
+  duration: number;
+  session_type: string; //"pomodoro";
+  timer_type: string; //"focus" | "stopwatch"
+  user_id: string | undefined;
+}
+
+function TestTranh2() {
+  const { user } = useAuth();
+  const [duration, setDuration] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(3);
+  const [running, setRunning] = useState(false);
+  const intervalRef = useRef<number | null>(null);
+
+  const dataRef = useRef<TimerData>({
+    completed: false,
+    started_at: "",
+    duration: 0,
+    ended_at: "",
+    session_type: "pomodoro",
+    timer_type: "focus",
+    user_id: "",
   });
 
-  const handleSubmit = (e: any) => {
-    e.preventDefault();
-    try {
-      setRoomLoading(true);
-      axiosClient.patch(`/room/${room?._id}`, formData);
-      toast.success("Room updated!", "Success");
-    } catch (e) {
-      toast.error("Update error!", "Error");
+  const clearTimer = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
     }
-    setRoomLoading(false);
-  };
+  }, []);
 
-  const getRoom = async () => {
-    if (user && !isLoading) {
-      try {
-        const response = await axiosClient.get(
-          `/room/id/${user?.current_room_id}`
-        );
-        setRoom(response.data as ModelRoom);
-      } catch (e: any) {
-        toast.error(e.message || "", "Error");
+  const resetTimer = useCallback(() => {
+    clearTimer();
+    setRunning(false);
+    setDuration(0);
+    setTimeLeft(3);
+    dataRef.current = {
+      completed: false,
+      started_at: "",
+      duration: 0,
+      ended_at: "",
+      session_type: "pomodoro",
+      timer_type: "focus",
+      user_id: "",
+    };
+  }, [clearTimer]);
+
+  useEffect(() => {
+    if (running) {
+      if (!dataRef.current.started_at) {
+        dataRef.current.started_at = new Date().toISOString();
+        dataRef.current.user_id = user?._id;
+        console.log("Started: ", dataRef.current);
       }
+      intervalRef.current = setInterval(() => {
+        setTimeLeft((prev) => {
+          const newTimeLeft = prev - 1;
+          if (newTimeLeft <= 0) {
+            dataRef.current.ended_at = new Date().toISOString();
+            dataRef.current.duration = duration + 1;
+            dataRef.current.completed = true;
+            console.log("Ended: ", dataRef.current);
+
+            setTimeout(() => resetTimer(), 0);
+            return 0;
+          }
+          return newTimeLeft;
+        });
+        setDuration((prev) => prev + 1);
+      }, 1000);
+    } else {
+      clearTimer();
     }
+    return clearTimer;
+  }, [running, resetTimer, clearTimer]);
+
+  useEffect(() => {
+    return clearTimer;
+  }, [clearTimer]);
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60)
+      .toString()
+      .padStart(2, "0");
+    const s = (seconds % 60).toString().padStart(2, "0");
+    return `${m}:${s}`;
   };
-
-  useEffect(() => {
-    getRoom();
-  }, [user]);
-
-  useEffect(() => {
-    if (room) {
-      setFormData({
-        name: room.name,
-        description: room.description,
-        slug: room.slug,
-        chat_during_pomodoro: formData.chat_during_pomodoro,
-        locked: formData.locked,
-        is_public: formData.is_public,
-      });
-    }
-  }, [room]);
-
   return (
-    <div className="h-screen" style={{ backgroundImage: `url(${bg})` }}>
-      <Popover
-        trigger={
-          <ResponsiveButton className="md:py-sm truncate">
-            Leaving room
-          </ResponsiveButton>
-        }
-        opened={roomOpened}
-        onClose={() => setRoomOpened(!roomOpened)}
-        position="right"
-      >
-        <div className="p-lg space-y-md">
-          <div className="flex justify-between text-secondary items-center">
-            <div className="flex items-center gap-x-xs">
-              <IconHome size={20} />
-              <p>{room?.name || `${user?.name || "User"}'s Room`}</p>
-              <ResponsiveButton
-                className="bg-white/10 hover:bg-white/20 gap-x-xs text-sm md:p-xs"
-                leftSection={<IconShare2 size={16} />}
-              >
-                Copy link
-              </ResponsiveButton>
-            </div>
-            <IconUsers size={20} />
-          </div>
-
-          <form className="space-y-md">
-            <TextInput
-              label="Name"
-              placeholder="Room's name"
-              value={formData.name}
-              onChange={(e) => {
-                setFormData({ ...formData, name: e.target.value });
-              }}
-              disabled={roomLoading}
-            />
-            <TextInput
-              label="About"
-              placeholder="Describe your study room"
-              value={formData.description}
-              onChange={(e) => {
-                setFormData({ ...formData, description: e.target.value });
-              }}
-              disabled={roomLoading}
-            />
-            <TextInput
-              label="Invitation slug"
-              description="Must be 4-16 characters long and unique"
-              placeholder="Room's invite code"
-              value={formData.slug}
-              onChange={(e) => {
-                setFormData({ ...formData, slug: e.target.value });
-              }}
-              disabled={roomLoading}
-            />
-            <Switch
-              label="Enable chat during Pomodoro"
-              labelPosition="right"
-              checked={formData.chat_during_pomodoro}
-              onChange={() =>
-                setFormData({
-                  ...formData,
-                  chat_during_pomodoro: !formData.chat_during_pomodoro,
-                })
-              }
-            />
-            <Switch
-              label="Lock room (No new members)"
-              labelPosition="right"
-              checked={formData.locked}
-              onChange={() =>
-                setFormData({ ...formData, locked: !formData.locked })
-              }
-            />
-            <Switch
-              label="Discoverable"
-              labelPosition="right"
-              checked={formData.is_public}
-              onChange={() =>
-                setFormData({ ...formData, is_public: !formData.is_public })
-              }
-            />
-            <div className="flex justify-end">
-              <ResponsiveButton
-                leftSection={<IconUpload size={20} />}
-                onClick={handleSubmit}
-              >
-                Save
-              </ResponsiveButton>
-            </div>
-          </form>
-        </div>
-      </Popover>
+    <div>
+      <h1>Timer: {formatTime(timeLeft)}</h1>
+      <h2>Duration: {duration} seconds</h2>
+      <ResponsiveButton
+        children={running ? "Stop" : "Run"}
+        onClick={() => setRunning(!running)}
+      />
+      <ResponsiveButton
+        children={"Reset"}
+        onClick={() => {
+          resetTimer();
+        }}
+      />
     </div>
   );
 }
 
-export default testTranh2;
+export default TestTranh2;

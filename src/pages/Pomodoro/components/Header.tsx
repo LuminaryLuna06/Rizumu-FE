@@ -1,12 +1,14 @@
-import React from "react";
+import React, { useState } from "react";
 import ResponsiveButton from "@rizumu/components/ResponsiveButton";
 import UserMenu from "@rizumu/components/UserMenu";
 import { IconChartColumn, IconClock, IconMusicCode } from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
 import RoomPopover from "./RoomPopover";
+import LeaderboardModal from "@rizumu/components/RankingBoard";
 
 function Header() {
   const navigate = useNavigate();
+  const [opened, setOpened] = useState(false);
   return (
     <div className="header flex justify-between h-[8vh]">
       {/* Header Left */}
@@ -23,17 +25,21 @@ function Header() {
       <div className="header-right flex items-center justify-center gap-x-sm">
         <ResponsiveButton
           leftSection={<IconClock size={16} />}
-          className="font-normal md:py-sm"
+          className="font-semibold md:py-sm"
         >
           0m
         </ResponsiveButton>
 
-        <ResponsiveButton className="md:py-sm">
+        <ResponsiveButton
+          className="md:py-sm"
+          onClick={() => setOpened(!opened)}
+        >
           <IconChartColumn size={22} />
         </ResponsiveButton>
         <RoomPopover />
         <UserMenu />
       </div>
+      <LeaderboardModal opened={opened} setOpened={setOpened} />
     </div>
   );
 }

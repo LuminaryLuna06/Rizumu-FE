@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+import { useRef, useEffect } from "react";
+import { useClickOutside } from "@rizumu/hooks/useClickOutside";
 
 type PopoverProps = {
   opened: boolean;
@@ -6,7 +8,7 @@ type PopoverProps = {
   trigger: ReactNode;
   children?: ReactNode;
   className?: string;
-  position?: "bottom" | "top" | "left" | "right";
+  position?: "top-right" | "bottom-left" | "bottom-right";
 };
 
 const Popover: React.FC<PopoverProps> = ({
@@ -15,42 +17,50 @@ const Popover: React.FC<PopoverProps> = ({
   trigger,
   children,
   className,
-  position = "bottom",
+  position = "bottom-right",
 }) => {
+  const popoverRef = useRef<HTMLDivElement>(null);
   const positionClasses = {
-    bottom: "right-0 top-full mt-sm",
-    top: "left-0 bottom-full mb-sm",
-    left: "right-full top-0 mr-sm",
-    right: "left-full top-0 ml-sm",
+    "top-right": "top-16 right-5",
+    "bottom-left": "bottom-20 left-5",
+    "bottom-right": "bottom-20 right-5",
   };
+  useClickOutside(popoverRef, onClose, opened);
+  useEffect(() => {
+    if (!opened) return;
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [opened, onClose]);
 
   return (
-    <div className="relative inline-block">
-      <div onClick={onClose}>{trigger}</div>
-      <>
-        <div
-          className={`fixed inset-0 z-modal transition-opacity duration-base ${
-            opened ? "opacity-100" : "opacity-0 pointer-events-none"
-          }`}
-          onClick={onClose}
-        />
+    <>
+      <div onClick={onClose} className="z-base inline-block">
+        {trigger}
+      </div>
 
-        <div
-          className={`absolute ${
-            positionClasses[position]
-          } z-popover w-96 transition-all duration-base ${
-            opened
-              ? "opacity-100 translate-y-0"
-              : "opacity-0 -translate-y-2 pointer-events-none"
-          } ${className || ""}`}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="bg-popover-overlay backdrop-blur-xl rounded-xl overflow-hidden shadow-2xl">
-            {children}
-          </div>
+      <div
+        ref={popoverRef}
+        className={`fixed ${
+          positionClasses[position]
+        } z-popover w-96 transition-all duration-slower backdrop-blur-xl ${
+          opened
+            ? "opacity-100 translate-y-0"
+            : "opacity-0 -translate-y-2 pointer-events-none"
+        } ${className || ""}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="bg-popover-overlay rounded-xl overflow-hidden shadow-2xl">
+          {children}
         </div>
-      </>
-    </div>
+      </div>
+    </>
   );
 };
 

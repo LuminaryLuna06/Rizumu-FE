@@ -7,6 +7,7 @@ type ModalProps = {
   title?: string;
   children?: React.ReactNode;
   className?: string;
+  more?: React.ReactNode;
 };
 
 const Modal: React.FC<ModalProps> = ({
@@ -15,6 +16,7 @@ const Modal: React.FC<ModalProps> = ({
   title = "Modal",
   children,
   className,
+  more,
 }) => {
   if (!opened) return null;
   return (
@@ -25,11 +27,14 @@ const Modal: React.FC<ModalProps> = ({
       <div
         className={`${(
           className || ""
-        ).trim()} mx-xl w-[800px] max-w-[90%] max-h-[80%] bg-modal-overlay text-secondary rounded-3xl shadow-2xl p-xl border border-gray-800 relative animate-dropdown font-poppins`}
+        ).trim()} mx-sm md:mx-xl w-full max-w-[800px] max-h-[90%] bg-modal-overlay text-secondary rounded-3xl shadow-2xl p-md md:p-xl border border-gray-800 relative animate-dropdown font-poppins`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-lg">
-          <h2 className="md:text-2xl text-lg font-semibold">{title}</h2>
+          <div className="flex items-center">
+            <h2 className="md:text-2xl text-lg font-semibold mr-lg">{title}</h2>
+            {more}
+          </div>
           <IconX
             size={20}
             onClick={onClose}

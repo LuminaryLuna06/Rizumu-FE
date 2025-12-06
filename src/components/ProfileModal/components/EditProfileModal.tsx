@@ -1,17 +1,43 @@
 import axiosClient from "@rizumu/api/config/axiosClient";
 import Modal from "@rizumu/components/Modal";
+import ResponsiveButton from "@rizumu/components/ResponsiveButton";
+import SelectInput from "@rizumu/components/SelectInput";
+import TextArea from "@rizumu/components/TextArea";
 import TextInput from "@rizumu/components/TextInput";
-import { IconCamera, IconCopy, IconNote, IconUser } from "@tabler/icons-react";
-import { useRef, useState } from "react";
+// import { useAuth } from "@rizumu/context/AuthContext";
+import type { ModelUserProfile } from "@rizumu/models/userProfile";
+import { useToast } from "@rizumu/utils/toast/toast";
+import { IconCamera, IconUser } from "@tabler/icons-react";
+import { useEffect, useRef, useState } from "react";
 
 interface EditProfileModalProps {
   opened: boolean;
   onClose: () => void;
+  user: ModelUserProfile;
+  onOpenProfile: () => void;
 }
-function EditProfileModal({ opened, onClose }: EditProfileModalProps) {
+function EditProfileModal({
+  opened,
+  onClose,
+  user,
+  onOpenProfile,
+}: EditProfileModalProps) {
+  const toast = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [formData, setFormData] = useState({ name: "", bio: "", country: "" });
+
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name,
+        bio: user.bio,
+        country: user.country,
+      });
+    }
+  }, [user]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -29,40 +55,93 @@ function EditProfileModal({ opened, onClose }: EditProfileModalProps) {
     fileInputRef.current?.click();
   };
 
-  const uploadFile = async (e: any) => {
+  const handleSave = async (e: any) => {
     e.preventDefault();
 
-    if (!selectedFile) return;
-    console.log(selectedFile);
-    let form_data = new FormData();
-    form_data.append("avatar", selectedFile);
-
+    setIsLoading(true);
     try {
-      const response = await axiosClient.post("/auth/avatar", form_data, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-      console.log(response);
+      if (selectedFile) {
+        let form_data = new FormData();
+        form_data.append("avatar", selectedFile);
+        await axiosClient.post("/auth/avatar", form_data, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+      }
+      await axiosClient.patch(`/auth/profile`, formData);
+      toast.success("Update profile successful!", "Success");
+      // refreshUser();
     } catch (e: any) {
-      console.error(e.message);
+      toast.error("Update profile failed!", "Error");
     }
+
+    setIsLoading(false);
   };
 
+  const countryData = [
+    { value: "VN", label: "Vietnam" },
+    { value: "US", label: "United States" },
+    { value: "GB", label: "United Kingdom" },
+    { value: "CA", label: "Canada" },
+    { value: "AU", label: "Australia" },
+    { value: "JP", label: "Japan" },
+    { value: "KR", label: "South Korea" },
+    { value: "CN", label: "China" },
+    { value: "TW", label: "Taiwan" },
+    { value: "SG", label: "Singapore" },
+    { value: "MY", label: "Malaysia" },
+    { value: "TH", label: "Thailand" },
+    { value: "ID", label: "Indonesia" },
+    { value: "PH", label: "Philippines" },
+    { value: "IN", label: "India" },
+    { value: "FR", label: "France" },
+    { value: "DE", label: "Germany" },
+    { value: "IT", label: "Italy" },
+    { value: "ES", label: "Spain" },
+    { value: "NL", label: "Netherlands" },
+    { value: "SE", label: "Sweden" },
+    { value: "NO", label: "Norway" },
+    { value: "DK", label: "Denmark" },
+    { value: "FI", label: "Finland" },
+    { value: "BR", label: "Brazil" },
+    { value: "MX", label: "Mexico" },
+    { value: "AR", label: "Argentina" },
+    { value: "CL", label: "Chile" },
+    { value: "NZ", label: "New Zealand" },
+    { value: "RU", label: "Russia" },
+  ];
   return (
     <Modal
       opened={opened}
       onClose={onClose}
       title="Edit Profile"
+      more={
+        <ResponsiveButton
+          className="bg-white/10 hover:bg-white/20 h-11 md:h-8 lg:h-5 gap-x-xs text-sm"
+          onClick={() => {
+            onOpenProfile();
+          }}
+          leftSection={<IconUser size={16} />}
+        >
+          View Profile
+        </ResponsiveButton>
+      }
       className="w-[900px] overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
     >
-      <form className="space-y-lg p-4">
+      <form className="space-y-lg">
         <div className="flex justify-center">
           <div className="w-24 h-24 rounded-full bg-primary flex items-center justify-center text-4xl font-bold shadow-2xl relative">
             {previewUrl ? (
               <img
                 src={previewUrl}
                 alt="Avatar preview"
+                className="w-24 h-24 rounded-full"
+              />
+            ) : user?.avatar ? (
+              <img
+                src={user.avatar}
+                alt="User avatar"
                 className="w-24 h-24 rounded-full"
               />
             ) : (
@@ -83,44 +162,59 @@ function EditProfileModal({ opened, onClose }: EditProfileModalProps) {
             className="hidden"
           />
         </div>
-        <div className="flex flex-col gap-sm">
-          <TextInput
-            label="Name"
-            leftSection={<IconUser />}
-            placeholder="Enter username"
-          />
-        </div>
+        <TextInput
+          label="Name"
+          leftSection={<IconUser />}
+          placeholder="Enter username"
+          value={formData.name}
+          onChange={(e: any) =>
+            setFormData({ ...formData, name: e.target.value })
+          }
+          disabled={isLoading}
+        />
 
-        <div className="flex flex-col gap-sm">
-          <TextInput
-            label="Bio"
-            leftSection={<IconNote />}
-            placeholder="Enter bio"
-          />
-        </div>
+        <TextArea
+          label="Bio"
+          placeholder="Enter bio"
+          rows={4}
+          autosize={true}
+          value={formData.bio}
+          onChange={(e: any) =>
+            setFormData({ ...formData, bio: e.target.value })
+          }
+          disabled={isLoading}
+        />
 
-        <div className="flex flex-col gap-sm">
-          <div className="text-sm font-medium">
-            <p>Crew code</p>
-          </div>
-          <div className="flex items-center text-md">
-            <p className="mr-sm">5Dg90zTpjGt6QrBODVUW4E</p>
-            <IconCopy size={18} className="cursor-pointer" />
-          </div>
-        </div>
+        {/* <SelectInput
+          label="Country"
+          data={countryData}
+          value={formData.country}
+          onChange={(e: any) =>
+            setFormData({ ...formData, country: e })
+          }
+          searchable
+          clearable
+          disabled={isLoading}
+        /> */}
+        <div className="flex flex-col gap-sm"></div>
         <hr />
         <div className="flex gap-sm">
           <button
-            onClick={onClose}
-            className="flex-1 px-6 py-3 border border-white rounded-lg font-medium cursor-pointer hover:bg-primary-hover"
+            onClick={() => {
+              onOpenProfile();
+              setPreviewUrl(null);
+            }}
+            className="flex-1 px-6 py-3 border border-white rounded-lg font-medium cursor-pointer hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isLoading}
           >
             Cancel
           </button>
           <button
-            onClick={uploadFile}
-            className="flex-1 px-6 py-3 bg-secondary text-primary rounded-lg font-medium cursor-pointer hover:bg-secondary-hover"
+            onClick={handleSave}
+            className="flex-1 px-6 py-3 bg-secondary text-primary rounded-lg font-medium cursor-pointer hover:bg-secondary-hover disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isLoading}
           >
-            Save
+            {isLoading ? "Saving..." : "Save"}
           </button>
         </div>
       </form>

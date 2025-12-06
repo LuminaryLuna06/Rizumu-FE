@@ -1,11 +1,14 @@
 export type ModelUserProfile = {
-  id: string;
-  user_id: string;
-  name: string;
-  email: string;
-  avatar_utl: string;
+  _id: string;
+  // user_id: string;
+  avatar: string;
   bio: string;
   country: string;
-  created_at: string;
+  createdAt: string;
+  current_room_id: string;
+  default_room_id: string;
+  email: string;
+  name: string;
+  status: string;
   updated_at: string;
 };

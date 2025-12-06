@@ -6,21 +6,10 @@ import {
   type ReactNode,
 } from "react";
 import axiosClient from "@rizumu/api/config/axiosClient";
-
-interface User {
-  id: string;
-  username: string;
-  name: string;
-  status: "online" | "offline";
-  avatar: string | null;
-  current_room_id: string;
-  default_room_id: string;
-
-  //   email: string;
-}
+import type { ModelUserProfile } from "@rizumu/models/userProfile";
 
 interface AuthContextType {
-  user: User | null;
+  user: ModelUserProfile | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   authModalOpened: boolean;
@@ -35,7 +24,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<ModelUserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [authModalOpened, setAuthModalOpened] = useState(false);
 
@@ -61,12 +50,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       password,
     });
 
-    const { access_token, refresh_token, user } = response.data;
+    const { access_token, refresh_token, data } = response.data;
     localStorage.setItem("access_token", access_token);
     localStorage.setItem("refresh_token", refresh_token);
-    setUser(user);
-    // const userResponse = await axiosClient.get("/auth/profile");
-    // setUser(userResponse.data.data);
+    setUser(data);
   };
 
   const register = async (username: string, password: string) => {
@@ -75,12 +62,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       password,
     });
 
-    const { access_token, refresh_token, user } = response.data;
+    const { access_token, refresh_token, data } = response.data;
     localStorage.setItem("access_token", access_token);
     localStorage.setItem("refresh_token", refresh_token);
-    setUser(user);
-    // const userResponse = await axiosClient.get("/auth/profile");
-    // setUser(userResponse.data.data);
+    setUser(data);
   };
 
   const logout = async () => {
