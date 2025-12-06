@@ -119,9 +119,9 @@ function ProfileModal({ opened, onClose, onOpenProfile }: ProfileModalProps) {
         title={user?.name ? `${user?.name}'s Profile` : "User's Profile"}
         className="w-full max-w-[1000px] max-h-[70vh] overflow-y-auto overflow-x-hidden custom-scrollbar scrollbar-hidden"
         more={
-          <div className="flex items-center h-20 lg:h-10 gap-2 md:gap-xl lg:gap-sm hidden md:flex">
+          <div className="flex items-center h-20 lg:h-10 gap-2 md:gap-sm hidden md:flex">
             <ResponsiveButton
-              className="bg-white/10 hover:bg-white/20 h-11 md:h-8 lg:h-5 gap-x-xs text-sm"
+              className="bg-white/10 hover:bg-white/20 h-11 md:h-5 gap-x-xs text-sm"
               onClick={() => {
                 setEditOpened(true);
                 onClose();
@@ -131,7 +131,7 @@ function ProfileModal({ opened, onClose, onOpenProfile }: ProfileModalProps) {
               Edit
             </ResponsiveButton>
             <ResponsiveButton
-              className="!bg-emerald-500 hover:bg-emarald-600 h-11 md:h-8 lg:h-5 gap-x-xs text-sm"
+              className="!bg-emerald-500 hover:bg-emarald-600 h-11 md:h-5 gap-x-xs text-sm"
               leftSection={<IconShare2 size={16} />}
             >
               Copy link

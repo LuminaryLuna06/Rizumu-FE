@@ -118,7 +118,7 @@ function EditProfileModal({
       title="Edit Profile"
       more={
         <ResponsiveButton
-          className="bg-white/10 hover:bg-white/20 h-11 md:h-8 lg:h-5 gap-x-xs text-sm"
+          className="bg-white/10 hover:bg-white/20 h-11 md:h-5 gap-x-xs text-sm"
           onClick={() => {
             onOpenProfile();
           }}

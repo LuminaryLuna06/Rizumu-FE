@@ -4,6 +4,7 @@ import {
   IconFlag,
   IconClockHour11Filled,
   IconPlayerSkipForwardFilled,
+  IconChevronDown,
 } from "@tabler/icons-react";
 import { useState, useRef, useEffect, useCallback } from "react";
 
@@ -174,9 +175,9 @@ function Timer() {
     <div className="main-content flex flex-col justify-center items-center gap-y-xs h-[82vh]">
       <a
         href="/#/pomodoro"
-        className="bg-primary-light rounded-xl px-xl py-xs hover:bg-primary-secondary-hover transition-colors duration-300 ease-in-out cursor-pointer mb-md"
+        className="flex items-center bg-primary-hover rounded-lg px-lg py-xs cursor-pointer text-secondary/90"
       >
-        Select a tag
+        Select a tag <IconChevronDown size={20} />
       </a>
 
       <div className="flex gap-x-xl items-center mt-10">
@@ -222,17 +223,22 @@ function Timer() {
         <p>Website</p>
       </button>
       <div className="flex items-center justify-center gap-x-xl cursor-pointer">
-        <IconClockHour11Filled />
+        <IconClockHour11Filled
+          className="hover:scale-110 transition-all"
+          size={26}
+        />
         <button
           onClick={() => setRunning(!running)}
-          className="px-lg py-lg w-[140px] md:w-[200px] md:text-lg md:px-lg md:py-lg my-lg text-primary rounded-full bg-secondary text-lg font-bold hover:bg-secondary-hover cursor-pointer transition-colors duration-300"
+          className="px-lg py-lg w-[140px] md:w-[200px] my-lg text-primary rounded-full bg-secondary text-lg font-bold hover:bg-secondary-hover cursor-pointer transition-all duration-300 hover:scale-[1.02]"
         >
           {running ? "Pause" : "Start"}
         </button>
         <IconPlayerSkipForwardFilled
+          className="hover:scale-110 transition-all"
           onClick={() => {
             resetTimer();
           }}
+          size={26}
         />
       </div>
     </div>

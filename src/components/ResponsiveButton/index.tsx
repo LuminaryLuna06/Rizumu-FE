@@ -19,7 +19,7 @@ function ResponsiveButton({
       disabled={disabled}
       className={`${
         className ?? ""
-      } flex items-center p-sm md:p-md bg-primary-light text-secondary hover:bg-primary-hover rounded-lg gap-x-sm ${
+      } flex items-center p-sm md:p-md bg-primary-light text-secondary hover:bg-primary-hover rounded-lg gap-x-xs ${
         disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
       }`.trim()}
     >
