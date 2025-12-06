@@ -7,10 +7,12 @@ import {
   IconUsers,
   IconMessage,
 } from "@tabler/icons-react";
-import React from "react";
+import React, { useState } from "react";
 import IframePopover from "./IframePopover";
+import ManageFriendModal from "@rizumu/components/ManageFriendModal";
 
 function Footer() {
+  const [friendOpened, setFriendOpened] = useState(false);
   return (
     <div className="footer flex justify-between h-[10vh] items-center">
       {/* Footer Left */}
@@ -32,13 +34,17 @@ function Footer() {
         <ResponsiveButton>
           <IconGift size={20} />
         </ResponsiveButton>
-        <ResponsiveButton>
+        <ResponsiveButton onClick={() => setFriendOpened(true)}>
           <IconUsers size={20} />
         </ResponsiveButton>
         <ResponsiveButton>
           <IconMessage size={20} />
         </ResponsiveButton>
       </div>
+      <ManageFriendModal
+        opened={friendOpened}
+        onClose={() => setFriendOpened(false)}
+      />
     </div>
   );
 }

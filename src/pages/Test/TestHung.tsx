@@ -1,6 +1,6 @@
 import React from "react";
 import RankingBoard from "@rizumu/components/RankingBoard";
-import StreakModal from "@rizumu/components/StreakModal";
+import StreakModal from "@rizumu/components/StreakPopover";
 import ManageFriendModal from "@rizumu/components/ManageFriendModal";
 
 function TestHung() {
