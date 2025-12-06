@@ -25,7 +25,7 @@ function Header() {
       <div className="header-right flex items-center justify-center gap-x-sm">
         <ResponsiveButton
           leftSection={<IconClock size={16} />}
-          className="font-normal md:py-sm"
+          className="font-semibold md:py-sm"
         >
           0m
         </ResponsiveButton>

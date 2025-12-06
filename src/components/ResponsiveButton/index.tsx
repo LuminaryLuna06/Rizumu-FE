@@ -5,7 +5,7 @@ function ResponsiveButton({
   className,
   onClick,
   leftSection,
-  disabled = false,
+  disabled,
 }: {
   children?: React.ReactNode;
   className?: string;
@@ -15,14 +15,12 @@ function ResponsiveButton({
 }) {
   return (
     <button
-      onClick={disabled ? undefined : onClick}
+      onClick={onClick}
       disabled={disabled}
       className={`${
         className ?? ""
       } flex items-center p-sm md:p-md bg-primary-light text-secondary hover:bg-primary-hover rounded-lg gap-x-sm ${
-        disabled
-          ? "opacity-50 cursor-not-allowed hover:bg-primary-light"
-          : "cursor-pointer"
+        disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
       }`.trim()}
     >
       {leftSection}

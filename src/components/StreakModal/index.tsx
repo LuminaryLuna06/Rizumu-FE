@@ -1,7 +1,7 @@
 import { IconFlameFilled, IconTrophy, IconUser } from "@tabler/icons-react";
 import React, { useState } from "react";
 import Modal from "../Modal";
-import FireStreak3Img from "@rizumu/assets/image/FireStreak3.png";
+// import FireStreak3Img from "@rizumu/assets/image/FireStreak3.png";
 import Popover from "../Popover";
 
 function StreakModal() {
@@ -17,7 +17,7 @@ function StreakModal() {
             <p className="text-white">1</p>
           </div>
         }
-        position="right"
+        position="top-right"
       >
         <div className="flex items-center justify-between text-white mx-lg mt-lg">
           <div className="flex flex-col px-4">
@@ -27,7 +27,7 @@ function StreakModal() {
           </div>
           <div>
             <img
-              src={FireStreak3Img}
+              src={"/public/FireStreak3.png"}
               alt="FireStreak"
               className="w-[120px] h-[120px]"
             />

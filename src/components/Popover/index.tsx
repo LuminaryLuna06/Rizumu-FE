@@ -49,14 +49,14 @@ const Popover: React.FC<PopoverProps> = ({
         ref={popoverRef}
         className={`fixed ${
           positionClasses[position]
-        } z-popover w-96 transition-all duration-base ${
+        } z-popover w-96 transition-all duration-slower backdrop-blur-xl ${
           opened
             ? "opacity-100 translate-y-0"
             : "opacity-0 -translate-y-2 pointer-events-none"
         } ${className || ""}`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="bg-popover-overlay backdrop-blur-xl rounded-xl overflow-hidden shadow-2xl">
+        <div className="bg-popover-overlay rounded-xl overflow-hidden shadow-2xl">
           {children}
         </div>
       </div>
