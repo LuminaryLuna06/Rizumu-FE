@@ -379,9 +379,9 @@ function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
             <BoxReview time={"11h04"} duration={"16m 28s"} />
           </div>
         ) : (
-          <div className="flex flex-col justify-center items-center h-[200px] bg-zinc-900 border border-white/20 rounded-lg mb-md text-sm text-text-inactive">
+          <div className="flex flex-col justify-center items-center h-[200px] bg-zinc-900 border border-white/20 rounded-lg mb-md text-xl text-text-inactive">
             <IconCalendarWeek size={60} />
-            <p>No sessions found</p>
+            <p className="mt-md">No sessions found</p>
           </div>
         )}
       </div>
