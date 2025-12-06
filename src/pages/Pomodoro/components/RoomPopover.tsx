@@ -76,18 +76,25 @@ function RoomPopover() {
     }
   }, [room]);
 
-  if (!room) {
+  // Don't show button if user is not logged in
+  if (!user) {
     return null;
   }
+
+  // Determine if we should show loading state
+  const isLoadingRoom = roomLoading || (!room && !isLoading);
 
   return (
     <Popover
       trigger={
-        <ResponsiveButton className="md:py-sm truncate">
-          {room ? room.name : "Room loading..."}
+        <ResponsiveButton
+          className="md:py-sm truncate"
+          disabled={isLoadingRoom || !room}
+        >
+          {isLoadingRoom ? "Loading..." : room?.name || "Room"}
         </ResponsiveButton>
       }
-      opened={roomOpened}
+      opened={roomOpened && !!room}
       onClose={() => setRoomOpened(!roomOpened)}
       position="top-right"
     >
