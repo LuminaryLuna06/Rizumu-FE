@@ -19,7 +19,7 @@ function BoxStatistic({
     <div
       className={`${(
         className || ""
-      ).trim()} bg-gradient-to-r h-[150px] p-lg rounded-3xl shadow-xl flex flex-col justify-between transform hover:scale-102 transition relative overflow-hidden`}
+      ).trim()} bg-gradient-to-r h-[150px] p-lg rounded-3xl shadow-xl flex flex-col justify-between transform hover:scale-102 transition relative overflow-hidden mb-md md:mb-xs`}
     >
       {icon && (
         <div className="absolute top-1 right-1 opacity-20 text-white rotate-20">

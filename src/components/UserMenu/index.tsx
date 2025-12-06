@@ -8,8 +8,10 @@ import {
   IconUser,
 } from "@tabler/icons-react";
 import ProfileModal from "../ProfileModal";
+import { useAuth } from "@rizumu/context/AuthContext";
 
 function UserMenu() {
+  const { user } = useAuth();
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const menuItems = [
@@ -33,9 +35,17 @@ function UserMenu() {
         opened={isPopoverOpen}
         onClose={() => setIsPopoverOpen(!isPopoverOpen)}
         trigger={
-          <div className="flex justify-center items-center rounded-full border-1 p-sm border-secondary bg-primary-light hover:bg-primary-hover cursor-pointer">
-            <IconUser className="text-secondary" />
-          </div>
+          user?.avatar ? (
+            <img
+              src={`${user.avatar}`}
+              alt="Avatar"
+              className="w-11 h-11 border border-white rounded-full cursor-pointer"
+            />
+          ) : (
+            <div className="flex justify-center items-center rounded-full border-1 p-sm border-secondary bg-primary-light hover:bg-primary-hover cursor-pointer">
+              <IconUser className="text-secondary" />
+            </div>
+          )
         }
         className="w-[18rem]"
         position="top-right"
