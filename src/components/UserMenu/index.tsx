@@ -26,7 +26,6 @@ function UserMenu() {
       onClick: null,
     },
     { icon: <IconSettings size={16} />, label: "App settings", onClick: null },
-    { icon: <IconFriends size={16} />, label: "Manage friends", onClick: null },
   ];
 
   return (
