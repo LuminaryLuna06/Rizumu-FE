@@ -21,9 +21,9 @@ interface TimerData {
 }
 
 const TIMER_DURATIONS: Record<TimerMode, number> = {
-  pomodoro: 5, // 25 minutes
+  pomodoro: 15, // 25 minutes
   short_break: 5, // 5 minutes
-  long_break: 5, // 15 minutes
+  long_break: 10, // 15 minutes
 };
 
 // Number of Pomodoro sessions before a long break
@@ -222,9 +222,9 @@ function Timer() {
         <IconFlag size={20} />
         <p>Website</p>
       </button>
-      <div className="flex items-center justify-center gap-x-xl cursor-pointer">
+      <div className="flex items-center justify-center gap-x-xl">
         <IconClockHour11Filled
-          className="hover:scale-110 transition-all"
+          className="hover:scale-110 transition-all cursor-pointer"
           size={26}
         />
         <button
@@ -234,7 +234,7 @@ function Timer() {
           {running ? "Pause" : "Start"}
         </button>
         <IconPlayerSkipForwardFilled
-          className="hover:scale-110 transition-all"
+          className="hover:scale-110 transition-all cursor-pointer"
           onClick={() => {
             resetTimer();
           }}
