@@ -13,9 +13,11 @@ import RoomPopover from "./RoomPopover";
 import LeaderboardModal from "@rizumu/components/RankingBoard";
 import ActivitiesModal from "@rizumu/components/ActivitiesModal";
 import StreakPopover from "@rizumu/components/StreakPopover";
+import { useAuth } from "@rizumu/context/AuthContext";
 
 function Header() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [opened, setOpened] = useState(false);
   const [activityOpened, setActivityOpened] = useState(false);
   return (
@@ -47,7 +49,7 @@ function Header() {
         >
           <IconChartColumn size={22} />
         </ResponsiveButton>
-        <RoomPopover />
+        {!user ? null : <RoomPopover />}
         <UserMenu />
       </div>
       <LeaderboardModal opened={opened} setOpened={setOpened} />
