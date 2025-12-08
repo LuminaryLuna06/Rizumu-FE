@@ -1,5 +1,12 @@
 import axiosClient from "@rizumu/api/config/axiosClient";
+import { DEFAULT_PRESETS, type Preset } from "@rizumu/constants/timer";
 import { useAuth } from "@rizumu/context/AuthContext";
+import {
+  getCurrentPresetId,
+  initializePresets,
+  saveCurrentPresetId,
+} from "@rizumu/utils/presets";
+import { getLocalISOString } from "@rizumu/utils/dateTime";
 import {
   IconFlag,
   IconClockHour11Filled,
@@ -7,6 +14,7 @@ import {
   IconChevronDown,
 } from "@tabler/icons-react";
 import { useState, useRef, useEffect, useCallback } from "react";
+import PresetModal from "./PresetModal";
 
 type TimerMode = "pomodoro" | "short_break" | "long_break";
 
@@ -20,13 +28,6 @@ interface TimerData {
   user_id: string | undefined;
 }
 
-const TIMER_DURATIONS: Record<TimerMode, number> = {
-  pomodoro: 15, // 25 minutes
-  short_break: 5, // 5 minutes
-  long_break: 10, // 15 minutes
-};
-
-// Number of Pomodoro sessions before a long break
 const POMODOROS_BEFORE_LONG_BREAK = 3;
 
 const formatTime = (seconds: number) => {
@@ -39,10 +40,25 @@ const formatTime = (seconds: number) => {
 
 function Timer() {
   const { user } = useAuth();
+  const [openedPreset, setOpenedPreset] = useState(false);
   const [mode, setMode] = useState<TimerMode>("pomodoro");
-  const [timeLeft, setTimeLeft] = useState(TIMER_DURATIONS.pomodoro);
+  const [currentPresetId, setCurrentPresetId] = useState(0);
+  const [presets, setPresets] = useState<Preset[]>([]);
+
+  const [timeLeft, setTimeLeft] = useState(() => {
+    const storedPresets = localStorage.getItem("pomodoro_presets");
+    const currentId = getCurrentPresetId();
+
+    if (storedPresets) {
+      const loadedPresets: Preset[] = JSON.parse(storedPresets);
+      return loadedPresets[currentId]?.durations.pomodoro * 60 || 25 * 60;
+    }
+
+    return DEFAULT_PRESETS[currentId]?.durations.pomodoro * 60 || 25 * 60;
+  });
+
   const [running, setRunning] = useState(false);
-  const [pomodoroCount, setPomodoroCount] = useState(0); // Track completed Pomodoros
+  const [pomodoroCount, setPomodoroCount] = useState(0);
   const intervalRef = useRef<number | null>(null);
   const durationRef = useRef(0);
   const dataRef = useRef<TimerData>({
@@ -54,6 +70,24 @@ function Timer() {
     timer_type: "focus",
     user_id: "",
   });
+
+  useEffect(() => {
+    const storedPresets = localStorage.getItem("pomodoro_presets");
+    let loadedPresets: Preset[];
+
+    if (storedPresets) {
+      loadedPresets = JSON.parse(storedPresets);
+    } else {
+      initializePresets();
+      loadedPresets = DEFAULT_PRESETS;
+    }
+
+    setPresets(loadedPresets);
+
+    const currentId = getCurrentPresetId();
+    setCurrentPresetId(currentId);
+  }, []);
+
   useEffect(() => {
     if (user?._id) {
       dataRef.current.user_id = user._id;
@@ -68,11 +102,17 @@ function Timer() {
   }, []);
 
   const resetTimer = useCallback(
-    (newMode?: TimerMode) => {
+    (newMode?: TimerMode, presetId?: number) => {
       clearTimer();
       setRunning(false);
       const targetMode = newMode || mode;
-      setTimeLeft(TIMER_DURATIONS[targetMode]);
+
+      const targetPresetId =
+        presetId !== undefined ? presetId : currentPresetId;
+      const currentPreset = presets[targetPresetId];
+      const duration = currentPreset?.durations[targetMode] * 60 || 25 * 60;
+
+      setTimeLeft(duration);
       durationRef.current = 0;
       dataRef.current = {
         completed: false,
@@ -84,13 +124,13 @@ function Timer() {
         user_id: "",
       };
     },
-    [clearTimer, mode]
+    [clearTimer, mode, presets, currentPresetId]
   );
 
   useEffect(() => {
     if (running) {
       if (!dataRef.current.started_at) {
-        dataRef.current.started_at = new Date().toISOString();
+        dataRef.current.started_at = getLocalISOString();
         dataRef.current.user_id = user?._id;
         console.log("Started: ", dataRef.current);
         if (dataRef.current.session_type === "pomodoro") {
@@ -111,7 +151,7 @@ function Timer() {
         setTimeLeft((prev) => {
           const newTimeLeft = prev - 1;
           if (newTimeLeft <= 0) {
-            dataRef.current.ended_at = new Date().toISOString();
+            dataRef.current.ended_at = getLocalISOString();
             dataRef.current.duration = durationRef.current;
             dataRef.current.completed = true;
             const completedSession = { ...dataRef.current };
@@ -171,6 +211,22 @@ function Timer() {
     resetTimer(newMode);
   };
 
+  const handlePresetChange = (presetId: number) => {
+    if (running) {
+      setRunning(false);
+    }
+
+    setCurrentPresetId(presetId);
+
+    const newPreset = presets.find((p) => p.id === presetId);
+    if (newPreset) {
+      setTimeLeft(newPreset.durations[mode] * 60);
+      resetTimer(mode, presetId);
+    }
+
+    saveCurrentPresetId(presetId);
+  };
+
   return (
     <div className="main-content flex flex-col justify-center items-center gap-y-xs h-[82vh]">
       <a
@@ -226,6 +282,7 @@ function Timer() {
         <IconClockHour11Filled
           className="hover:scale-110 transition-all cursor-pointer"
           size={26}
+          onClick={() => setOpenedPreset(true)}
         />
         <button
           onClick={() => setRunning(!running)}
@@ -241,6 +298,13 @@ function Timer() {
           size={26}
         />
       </div>
+      <PresetModal
+        opened={openedPreset}
+        onClose={() => setOpenedPreset(false)}
+        presets={presets}
+        currentPresetId={currentPresetId}
+        onPresetChange={handlePresetChange}
+      />
     </div>
   );
 }
