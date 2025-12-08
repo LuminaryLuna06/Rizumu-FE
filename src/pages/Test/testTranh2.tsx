@@ -21,7 +21,6 @@ function testTranh2() {
         }
       );
       const { access_token } = response.data;
-      console.log(access_token);
 
       if (!access_token) {
         throw new Error("No access token in response");
