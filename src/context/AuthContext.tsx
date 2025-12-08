@@ -54,6 +54,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem("access_token", access_token);
     localStorage.setItem("refresh_token", refresh_token);
     setUser(data);
+    setIsLoading(false);
   };
 
   const register = async (username: string, password: string) => {
@@ -66,6 +67,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem("access_token", access_token);
     localStorage.setItem("refresh_token", refresh_token);
     setUser(data);
+    setIsLoading(false);
   };
 
   const logout = async () => {
@@ -81,8 +83,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const refreshUser = async () => {
-    const response = await axiosClient.get("/auth/profile");
-    setUser(response.data.data);
+    setIsLoading(true);
+    try {
+      const response = await axiosClient.get("/auth/profile");
+      setUser(response.data.data);
+    } catch (e) {
+      console.error(e);
+    }
+    setIsLoading(false);
   };
 
   return (
