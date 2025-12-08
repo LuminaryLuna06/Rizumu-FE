@@ -217,6 +217,14 @@ export const API_URLS = {
       headers: HEADERS.fileHeader(),
     }),
   },
+
+  HEALTH: {
+    ping: () => ({
+      url: "/health",
+      method: "GET",
+      headers: HEADERS.tokenHeader(),
+    }),
+  },
 };
 
 export default API_URLS;
