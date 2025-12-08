@@ -215,7 +215,7 @@ function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
       <div
         className={`${activeTab === "Analytics" ? "flex flex-col" : "hidden"}`}
       >
-        <div className="flex gap-4 h-[30px] mb-md">
+        <div className="flex justify-center gap-0 sm:gap-4 h-[30px] mb-md">
           <ResponsiveButton
             className={`flex justify-center w-1/3 bg-transparent hover:bg-transparent transition-all duration-base  ${
               analyticsButton === "Today"
@@ -249,21 +249,31 @@ function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
         </div>
 
         <div className="flex flex-col bg-zinc-900 border border-white/20 rounded-lg mb-md">
-          <div className="flex items-center gap-6 text-sm mb-6">
+          <div className="flex items-center gap-2 sm:gap-6 text-sm mb-6">
             <div className="flex justify-center items-center">
               <ResponsiveButton
                 className="text-text-inactive hover:text-text-active bg-zinc-900 hover:bg-zinc-900"
                 leftSection={<IconChevronLeft size={20} />}
               ></ResponsiveButton>
-              <div className="text-sm font-medium">
+              <div className="flex justify-center text-sm font-medium">
                 {months.map((month, index) => {
                   const day = new Date().getDay();
                   const monthNumber = new Date().getMonth();
                   if (index == monthNumber) {
                     if (day < 10) {
-                      return <p>{month.name + " 0" + day}</p>;
+                      return (
+                        <div className="flex justify-between">
+                          <p>{month.name + " "}</p>
+                          <p className="ml-[2px]">{"0" + day}</p>
+                        </div>
+                      );
                     }
-                    return <p>{month.name + " " + day}</p>;
+                    return (
+                      <div className="flex justify-between">
+                        <p>{month.name + " "}</p>
+                        <p className="ml-[2px]">{day}</p>
+                      </div>
+                    );
                   }
                 })}
               </div>
@@ -272,13 +282,13 @@ function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
                 leftSection={<IconChevronRight size={20} />}
               ></ResponsiveButton>
             </div>
-            <div className="flex items-center text-base text-text-inactive">
+            <div className="flex items-center text-base text-text-inactive text-sm md:text-base">
               <p>Total Time:</p>
               <p className="ml-4 text-text-active">{getTotalTime()}</p>
             </div>
           </div>
 
-          <div className="flex mb-xl">
+          <div className="flex mb-xl -ml-md sm:ml-0">
             <ResponsiveContainer height={230}>
               <BarChart data={fakeActiveData}>
                 <XAxis
@@ -310,7 +320,7 @@ function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-md">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-md">
           <BoxAnalytics
             icon={<IconChartColumn size={30} />}
             text="Total Sessions"
@@ -369,9 +379,9 @@ function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
             <BoxReview time={"11h04"} duration={"16m 28s"} />
           </div>
         ) : (
-          <div className="flex flex-col justify-center items-center h-[200px] bg-zinc-900 border border-white/20 rounded-lg mb-md text-sm text-text-inactive">
+          <div className="flex flex-col justify-center items-center h-[200px] bg-zinc-900 border border-white/20 rounded-lg mb-md text-xl text-text-inactive">
             <IconCalendarWeek size={60} />
-            <p>No sessions found</p>
+            <p className="mt-md">No sessions found</p>
           </div>
         )}
       </div>

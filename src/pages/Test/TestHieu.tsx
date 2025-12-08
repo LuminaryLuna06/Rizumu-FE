@@ -1,7 +1,11 @@
 import ActivitiesModal from "@rizumu/components/ActivitiesModal";
 import Modal from "@rizumu/components/Modal";
+import Popover from "@rizumu/components/Popover";
 import ProfileModal from "@rizumu/components/ProfileModal";
+import ResponsiveButton from "@rizumu/components/ResponsiveButton";
+import TextInput from "@rizumu/components/TextInput";
 import { useAuth } from "@rizumu/context/AuthContext";
+import { IconMessage, IconSend2, IconUsers } from "@tabler/icons-react";
 import { useState } from "react";
 
 function TestHieu() {
@@ -9,6 +13,8 @@ function TestHieu() {
   const [opened, setOpened] = useState(false);
   const [profileOpened, setProfileOpened] = useState(false);
   const [activitiesOpened, setActivitiesOpened] = useState(false);
+  const [chatOpened, setChatOpened] = useState(false);
+  const [message, setMessage] = useState("");
 
   return (
     <div>
@@ -45,6 +51,106 @@ function TestHieu() {
       >
         Test Activity
       </button>
+
+      <Popover
+        trigger={
+          <ResponsiveButton leftSection={<IconMessage />}></ResponsiveButton>
+        }
+        opened={chatOpened}
+        onClose={() => setChatOpened(!chatOpened)}
+        position="bottom-left"
+      >
+        <div className="flex items-center justify-center bg-black/70 backdrop-blur-xl text-secondary rounded-3xl shadow-2xl p-md border border-gray-800 font-poppins overflow-y-hidden overflow-x-hidden">
+          <div className="flex flex-col w-full">
+            <div className="flex justify-between mb-2 w-full">
+              <h2 className="text-lg font-semibold">Chat</h2>
+              <div className="flex items-center gap-2 text-text-inactive">
+                <IconUsers size={14} />
+                <p className="text-sm">2 members</p>
+              </div>
+            </div>
+            <div className="flex flex-col items-start max-h-[350px] min-h-[250px] overflow-y-auto overflow-x-hidden custom-scrollbar scrollbar-hidden">
+              <div className="flex flex-col h-[50px] mb-sm">
+                <div className="flex items-center gap-1">
+                  <h2 className="text-lg font-bold">Sinon:</h2>
+                  <p className="text-white/80">Test chat</p>
+                </div>
+                <p className="text-text-inactive text-sm">5m ago</p>
+              </div>
+              <div className="flex flex-col mb-sm">
+                <p className="text-text-inactive text-sm">
+                  Sinon just started a session!
+                </p>
+              </div>
+              <div className="flex flex-col mb-sm">
+                <p className="text-text-inactive text-sm">
+                  Wazzup is now in focus mode!
+                </p>
+              </div>
+              <div className="flex flex-col mb-sm">
+                <p className="text-text-inactive text-sm">
+                  Sinon is getting things done!
+                </p>
+              </div>
+              <div className="flex flex-col h-[50px] mb-sm">
+                <div className="flex items-center gap-1">
+                  <h2 className="text-lg font-bold">Sinon:</h2>
+                  <p className="text-white/80">Do sth</p>
+                </div>
+                <p className="text-text-inactive text-sm">4 minuutes ago</p>
+              </div>
+              <div className="flex flex-col h-[50px] mb-sm">
+                <div className="flex items-center gap-1">
+                  <h2 className="text-lg font-bold">Sinon:</h2>
+                  <p className="text-white/80">Ready to start</p>
+                </div>
+                <p className="text-text-inactive text-sm">4 minutes ago</p>
+              </div>
+              <div className="flex flex-col mb-xs">
+                <p className="text-text-inactive text-sm">Sinon kicked off!</p>
+              </div>
+              <div className="flex flex-col h-[50px] mb-sm">
+                <div className="flex items-center gap-1">
+                  <h2 className="text-lg font-bold">Wazzup:</h2>
+                  <p className="text-white/80">R U OK</p>
+                </div>
+                <p className="text-text-inactive text-sm">3 minutes ago</p>
+              </div>
+              <div className="flex flex-col h-[50px] mb-sm">
+                <div className="flex items-center gap-1">
+                  <h2 className="text-lg font-bold">Sinon:</h2>
+                  <p className="text-white/80">Not good :)</p>
+                </div>
+                <p className="text-text-inactive text-sm">2 minutes ago</p>
+              </div>
+              <div className="flex flex-col h-[50px] mb-sm">
+                <div className="flex items-center gap-1">
+                  <h2 className="text-lg font-bold">Wazzup:</h2>
+                  <p className="text-white/80">:)))))</p>
+                </div>
+                <p className="text-text-inactive text-sm">a minute ago</p>
+              </div>
+              <div className="flex flex-col mb-sm">
+                <p className="text-text-inactive text-sm">
+                  Sinon just started a session!
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center">
+              <TextInput
+                placeholder="Type a message"
+                className="w-9/10"
+                onChange={(e: any) => setMessage(e.target.value)}
+              />
+              <ResponsiveButton
+                leftSection={<IconSend2 size={25} />}
+                disabled={message.length <= 0 || message.trim() === ""}
+              ></ResponsiveButton>
+            </div>
+          </div>
+        </div>
+      </Popover>
+
       <ProfileModal
         opened={profileOpened}
         onClose={() => setProfileOpened(false)}
