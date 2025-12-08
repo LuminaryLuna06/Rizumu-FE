@@ -353,7 +353,6 @@ function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
           <div className="text-sm font-medium">
             {months.map((month, index) => {
               const day = new Date().getDate();
-              console.log(day)
               const monthNumber = new Date().getMonth();
               if (index == monthNumber) {
                 if (day < 10) {

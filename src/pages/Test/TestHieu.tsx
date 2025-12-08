@@ -1,3 +1,4 @@
+import axiosClient from "@rizumu/api/config/axiosClient";
 import ActivitiesModal from "@rizumu/components/ActivitiesModal";
 import Modal from "@rizumu/components/Modal";
 import Popover from "@rizumu/components/Popover";
@@ -15,6 +16,11 @@ function TestHieu() {
   const [activitiesOpened, setActivitiesOpened] = useState(false);
   const [chatOpened, setChatOpened] = useState(false);
   const [message, setMessage] = useState("");
+
+  const getHeatMap = async () => {
+    const response = await axiosClient.get("session/heatmap?2025");
+    console.log(response.data);
+  };
 
   return (
     <div>
@@ -51,7 +57,12 @@ function TestHieu() {
       >
         Test Activity
       </button>
-
+      <button
+        className="px-4 py-2 bg-blue-600 text-white rounded"
+        onClick={() => getHeatMap()}
+      >
+        Test
+      </button>
       <Popover
         trigger={
           <ResponsiveButton leftSection={<IconMessage />}></ResponsiveButton>
