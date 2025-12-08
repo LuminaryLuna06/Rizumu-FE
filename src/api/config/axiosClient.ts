@@ -97,7 +97,10 @@ axiosClient.interceptors.response.use(
     };
 
     if (error.response) {
-      if (error.response.status === 401 && !originalRequest._retry) {
+      if (
+        (error.response.status === 401 || error.response.status === 403) &&
+        !originalRequest._retry
+      ) {
         if (isRefreshing) {
           return new Promise((resolve, reject) => {
             failedQueue.push({ resolve, reject });
@@ -135,9 +138,12 @@ axiosClient.interceptors.response.use(
       }
 
       switch (error.response.status) {
-        case 403:
-          console.error("Lỗi 403: Forbidden");
-          window.dispatchEvent(new CustomEvent("open-auth-modal"));
+        // case 403:
+        //   console.error("Lỗi 403: Forbidden");
+        //   window.dispatchEvent(new CustomEvent("open-auth-modal"));
+        //   break;
+        case 404:
+          console.error("Lỗi 404: Page not found");
           break;
         case 500:
           console.error("Lỗi 500: Server Error");
