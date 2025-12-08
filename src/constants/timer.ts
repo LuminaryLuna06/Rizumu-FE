@@ -18,7 +18,7 @@ export const DEFAULT_PRESETS: Preset[] = [
   {
     id: 2,
     name: "Quick Sessions",
-    durations: { pomodoro: 15, short_break: 3, long_break: 10 },
+    durations: { pomodoro: 1, short_break: 3, long_break: 10 },
   },
   {
     id: 3,

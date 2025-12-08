@@ -6,6 +6,7 @@ import {
   initializePresets,
   saveCurrentPresetId,
 } from "@rizumu/utils/presets";
+import { getLocalISOString } from "@rizumu/utils/dateTime";
 import {
   IconFlag,
   IconClockHour11Filled,
@@ -129,7 +130,7 @@ function Timer() {
   useEffect(() => {
     if (running) {
       if (!dataRef.current.started_at) {
-        dataRef.current.started_at = new Date().toISOString();
+        dataRef.current.started_at = getLocalISOString();
         dataRef.current.user_id = user?._id;
         console.log("Started: ", dataRef.current);
         if (dataRef.current.session_type === "pomodoro") {
@@ -150,7 +151,7 @@ function Timer() {
         setTimeLeft((prev) => {
           const newTimeLeft = prev - 1;
           if (newTimeLeft <= 0) {
-            dataRef.current.ended_at = new Date().toISOString();
+            dataRef.current.ended_at = getLocalISOString();
             dataRef.current.duration = durationRef.current;
             dataRef.current.completed = true;
             const completedSession = { ...dataRef.current };
