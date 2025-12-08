@@ -50,7 +50,9 @@ function UserMenu() {
         position="top-right"
       >
         <div className="font-light text-sm">
-          <p className="text-white px-lg py-md font-semibold">UserName</p>
+          <p className="text-white px-lg py-md font-semibold">
+            {user?.name || "User"}
+          </p>
           <ul className="text-secondary">
             {menuItems.map((item, index) => (
               <MenuItem
