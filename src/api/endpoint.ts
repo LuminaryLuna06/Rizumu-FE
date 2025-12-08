@@ -222,7 +222,7 @@ export const API_URLS = {
     ping: () => ({
       url: "/health",
       method: "GET",
-      headers: HEADERS.tokenHeader(),
+      headers: HEADERS.DEFAULT_HEADER,
     }),
   },
 };

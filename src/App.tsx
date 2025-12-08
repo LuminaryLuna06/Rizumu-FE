@@ -10,7 +10,7 @@ import { useServerKeepAlive } from "./hooks/useServerKeepAlive";
 
 function App() {
   // Tự động ping server mỗi 14 phút để tránh server bị sleep
-  // useServerKeepAlive(true, 14);
+  useServerKeepAlive(true, 14);
 
   return (
     <AuthProvider>
