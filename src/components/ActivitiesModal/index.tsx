@@ -257,7 +257,7 @@ function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
               ></ResponsiveButton>
               <div className="flex justify-center text-sm font-medium">
                 {months.map((month, index) => {
-                  const day = new Date().getDay();
+                  const day = new Date().getDate();
                   const monthNumber = new Date().getMonth();
                   if (index == monthNumber) {
                     if (day < 10) {
@@ -352,7 +352,7 @@ function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
           ></ResponsiveButton>
           <div className="text-sm font-medium">
             {months.map((month, index) => {
-              const day = new Date().getDay();
+              const day = new Date().getDate();
               const monthNumber = new Date().getMonth();
               if (index == monthNumber) {
                 if (day < 10) {
