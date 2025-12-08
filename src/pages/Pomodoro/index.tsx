@@ -7,8 +7,10 @@ import Timer from "./components/Timer";
 function PomodoroPage() {
   return (
     <div
-      className="bg-primary-light px-xl text-secondary bg-center z-base font-light text-sm"
-      style={{ backgroundImage: `url(/image/fuji2.jpg)` }}
+      className="bg-primary-light px-xl text-secondary bg-center bg-cover z-base font-light text-sm"
+      style={{
+        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), url(/image/fuji.jpg)`,
+      }}
     >
       {/* Header */}
       <Header />
