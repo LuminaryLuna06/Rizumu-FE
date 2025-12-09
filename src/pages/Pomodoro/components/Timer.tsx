@@ -16,6 +16,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import PresetModal from "./PresetModal";
 
 type TimerMode = "pomodoro" | "short_break" | "long_break";
+type TimerDirection = "countdown" | "countup";
 
 interface TimerData {
   completed: boolean;
@@ -28,6 +29,24 @@ interface TimerData {
 }
 
 const POMODOROS_BEFORE_LONG_BREAK = 3;
+const TIMER_DIRECTION_KEY = "pomodoro_timer_direction";
+
+const getTimerDirection = (): TimerDirection => {
+  try {
+    const stored = localStorage.getItem(TIMER_DIRECTION_KEY);
+    return (stored as TimerDirection) || "countdown";
+  } catch {
+    return "countdown";
+  }
+};
+
+const saveTimerDirection = (direction: TimerDirection) => {
+  try {
+    localStorage.setItem(TIMER_DIRECTION_KEY, direction);
+  } catch (error) {
+    console.error("Failed to save timer direction:", error);
+  }
+};
 
 const formatTime = (seconds: number) => {
   const m = Math.floor(seconds / 60)
@@ -43,8 +62,11 @@ function Timer() {
   const [mode, setMode] = useState<TimerMode>("pomodoro");
   const [currentPresetId, setCurrentPresetId] = useState(0);
   const [presets, setPresets] = useState<Preset[]>([]);
+  const [timerDirection, setTimerDirection] = useState<TimerDirection>(() =>
+    getTimerDirection()
+  );
 
-  const [timeLeft, setTimeLeft] = useState(() => {
+  const [targetDuration, setTargetDuration] = useState(() => {
     const storedPresets = localStorage.getItem("pomodoro_presets");
     const currentId = getCurrentPresetId();
 
@@ -54,6 +76,22 @@ function Timer() {
     }
 
     return DEFAULT_PRESETS[currentId]?.durations.pomodoro * 60 || 25 * 60;
+  });
+
+  const [timeLeft, setTimeLeft] = useState(() => {
+    const direction = getTimerDirection();
+    const storedPresets = localStorage.getItem("pomodoro_presets");
+    const currentId = getCurrentPresetId();
+
+    let duration = 25 * 60;
+    if (storedPresets) {
+      const loadedPresets: Preset[] = JSON.parse(storedPresets);
+      duration = loadedPresets[currentId]?.durations.pomodoro * 60 || 25 * 60;
+    } else {
+      duration = DEFAULT_PRESETS[currentId]?.durations.pomodoro * 60 || 25 * 60;
+    }
+
+    return direction === "countup" ? 0 : duration;
   });
 
   const [running, setRunning] = useState(false);
@@ -93,6 +131,25 @@ function Timer() {
     }
   }, [user?._id]);
 
+  // Save timer direction to localStorage whenever it changes
+  useEffect(() => {
+    saveTimerDirection(timerDirection);
+  }, [timerDirection]);
+
+  // Reset timer when direction changes
+  useEffect(() => {
+    if (!running) {
+      setTimeLeft(timerDirection === "countup" ? 0 : targetDuration);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timerDirection]);
+
+  const handleToggleTimerDirection = () => {
+    setTimerDirection((prev) =>
+      prev === "countdown" ? "countup" : "countdown"
+    );
+  };
+
   const clearTimer = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -111,7 +168,8 @@ function Timer() {
       const currentPreset = presets[targetPresetId];
       const duration = currentPreset?.durations[targetMode] * 60 || 25 * 60;
 
-      setTimeLeft(duration);
+      setTargetDuration(duration);
+      setTimeLeft(timerDirection === "countup" ? 0 : duration);
       durationRef.current = 0;
       dataRef.current = {
         completed: false,
@@ -123,7 +181,7 @@ function Timer() {
         user_id: "",
       };
     },
-    [clearTimer, mode, presets, currentPresetId]
+    [clearTimer, mode, presets, currentPresetId, timerDirection]
   );
 
   useEffect(() => {
@@ -148,8 +206,20 @@ function Timer() {
         durationRef.current += 1;
         // setDuration(durationRef.current);
         setTimeLeft((prev) => {
-          const newTimeLeft = prev - 1;
-          if (newTimeLeft <= 0) {
+          let newTimeLeft: number;
+          let isCompleted: boolean;
+
+          if (timerDirection === "countup") {
+            // Count up from 0 to targetDuration
+            newTimeLeft = prev + 1;
+            isCompleted = newTimeLeft >= targetDuration;
+          } else {
+            // Count down from targetDuration to 0
+            newTimeLeft = prev - 1;
+            isCompleted = newTimeLeft <= 0;
+          }
+
+          if (isCompleted) {
             dataRef.current.ended_at = new Date().toISOString();
             dataRef.current.duration = durationRef.current;
             dataRef.current.completed = true;
@@ -187,7 +257,7 @@ function Timer() {
               resetTimer(nextMode);
             });
 
-            return 0;
+            return timerDirection === "countup" ? targetDuration : 0;
           }
           return newTimeLeft;
         });
@@ -224,6 +294,49 @@ function Timer() {
     }
 
     saveCurrentPresetId(presetId);
+  };
+
+  const handleSkipSession = () => {
+    // Stop the timer
+    clearTimer();
+    setRunning(false);
+
+    // Mark session as completed if it was started
+    if (dataRef.current.started_at) {
+      dataRef.current.ended_at = new Date().toISOString();
+      dataRef.current.duration = durationRef.current;
+      dataRef.current.completed = true;
+
+      // Send API call if it's a pomodoro session
+      if (dataRef.current.session_type === "pomodoro") {
+        console.log("Skipped Pomodoro: ", dataRef.current);
+        axiosClient.patch("/session", {
+          completed: true,
+          duration: dataRef.current.duration,
+          ended_at: dataRef.current.ended_at,
+        });
+      }
+    }
+
+    // Auto-switch to next mode
+    let nextMode: TimerMode;
+
+    if (mode === "pomodoro") {
+      const newCount = pomodoroCount + 1;
+      setPomodoroCount(newCount);
+
+      if (newCount >= POMODOROS_BEFORE_LONG_BREAK) {
+        nextMode = "long_break";
+        setPomodoroCount(0);
+      } else {
+        nextMode = "short_break";
+      }
+    } else {
+      nextMode = "pomodoro";
+    }
+
+    setMode(nextMode);
+    resetTimer(nextMode);
   };
 
   return (
@@ -291,9 +404,7 @@ function Timer() {
         </button>
         <IconPlayerSkipForwardFilled
           className="hover:scale-110 transition-all cursor-pointer"
-          onClick={() => {
-            resetTimer();
-          }}
+          onClick={handleSkipSession}
           size={26}
         />
       </div>
@@ -303,6 +414,8 @@ function Timer() {
         presets={presets}
         currentPresetId={currentPresetId}
         onPresetChange={handlePresetChange}
+        timerDirection={timerDirection}
+        onToggleTimerDirection={handleToggleTimerDirection}
       />
     </div>
   );
