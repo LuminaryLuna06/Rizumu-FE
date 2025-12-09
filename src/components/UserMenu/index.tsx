@@ -9,21 +9,23 @@ import {
 } from "@tabler/icons-react";
 import ProfileModal from "../ProfileModal";
 import { useAuth } from "@rizumu/context/AuthContext";
+import FindStudyRoomModal from "../FindStudyRoomModal";
 
 function UserMenu() {
   const { user } = useAuth();
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isStudyRoomOpen, setIsStudyRoomOpen] = useState(false);
   const menuItems = [
     {
       icon: <IconUser size={16} />,
       label: "Public Profile",
-      onClick: () => setIsProfileOpen(!isProfileOpen),
+      onClick: () => setIsProfileOpen(true),
     },
     {
       icon: <IconMessage size={16} />,
       label: "Find study room",
-      onClick: null,
+      onClick: () => setIsStudyRoomOpen(true),
     },
     { icon: <IconSettings size={16} />, label: "App settings", onClick: null },
   ];
@@ -70,6 +72,10 @@ function UserMenu() {
         onClose={() => setIsProfileOpen(false)}
         onOpenProfile={() => setIsProfileOpen(true)}
       ></ProfileModal>
+      <FindStudyRoomModal
+        opened={isStudyRoomOpen}
+        onClose={() => setIsStudyRoomOpen(false)}
+      />
     </>
   );
 }
