@@ -81,13 +81,18 @@ function Switch({
     <div
       onClick={handleToggle}
       className={`
-        relative inline-flex items-center
+        inline-flex items-center
         ${trackSizeClasses[size]}
         rounded-[var(--radius-full)]
         cursor-pointer
         transition-all duration-[var(--transition-base)]
-        ${internalChecked ? "bg-white/90" : "bg-white/20 hover:bg-white/25"}
+        ${
+          internalChecked
+            ? "bg-secondary/90"
+            : "bg-secondary/20 hover:bg-secondary/25"
+        }
         ${disabled ? "opacity-50 cursor-not-allowed" : ""}
+        p-[2px]
       `}
     >
       {/* Thumb (circle) */}
@@ -98,7 +103,6 @@ function Switch({
           bg-primary
           shadow-md
           transition-transform duration-[var(--transition-base)]
-          absolute left-[2px]
           ${internalChecked ? thumbTranslateClasses[size] : "translate-x-0"}
         `}
       />
@@ -112,7 +116,7 @@ function Switch({
       {label && (
         <span
           className={`
-            font-base text-secondary/80
+            font-medium text-secondary/70
             ${labelSizeClasses[size]}
             ${disabled ? "opacity-50" : ""}
           `}

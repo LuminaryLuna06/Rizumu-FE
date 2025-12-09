@@ -197,7 +197,7 @@ function SelectInput({
     <div className={`flex flex-col ${className}`} ref={containerRef}>
       {label && (
         <label
-          className={`font-medium text-white ${labelSizeClasses[size]} ${
+          className={`font-medium text-secondary/70 ${labelSizeClasses[size]} ${
             disabled ? "opacity-50" : ""
           }`}
         >

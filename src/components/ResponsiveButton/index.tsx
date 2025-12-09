@@ -5,12 +5,14 @@ function ResponsiveButton({
   className,
   onClick,
   leftSection,
+  rightSection,
   disabled,
 }: {
   children?: React.ReactNode;
   className?: string;
   onClick?: (e: any) => void;
   leftSection?: React.ReactNode;
+  rightSection?: React.ReactNode;
   disabled?: boolean;
 }) {
   return (
@@ -25,6 +27,7 @@ function ResponsiveButton({
     >
       {leftSection}
       {children}
+      {rightSection}
     </button>
   );
 }

@@ -87,7 +87,7 @@ function TextInput({
       {/* Label */}
       {label && (
         <label
-          className={`font-base text-secondary/80 ${labelSizeClasses[size]} ${
+          className={`font-medium text-secondary/80 ${labelSizeClasses[size]} ${
             disabled ? "opacity-50" : ""
           }`}
         >
