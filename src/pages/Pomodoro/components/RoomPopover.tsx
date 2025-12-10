@@ -180,7 +180,7 @@ function RoomPopover() {
           <div className="flex items-center gap-x-xs">
             {isOwner && !showMembers && (
               <ResponsiveButton
-                className="bg-secondary/10 hover:bg-secondary/20 gap-x-xs text-sm md:p-xs"
+                className="bg-secondary/10 hover:bg-secondary/20 gap-x-xs text-sm md:p-xs rounded-sm"
                 leftSection={<IconShare2 size={16} />}
                 onClick={handleShareRoom}
               >
@@ -189,7 +189,7 @@ function RoomPopover() {
             )}
             {!isOwner && (
               <ResponsiveButton
-                className="bg-secondary/10 hover:bg-secondary/20 gap-x-xs text-sm md:p-xs"
+                className="bg-secondary/10 hover:bg-secondary/20 gap-x-xs text-sm md:p-xs rounded-sm"
                 leftSection={<IconShare2 size={16} />}
                 onClick={handleShareRoom}
               >
