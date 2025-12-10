@@ -119,6 +119,29 @@
   animation: slideUp 0.4s ease-out forwards;
 }
 
+@keyframes fadeDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-down {
+  animation: fadeDown 0.5s ease-out forwards;
+}
+
+.animate-delay-300 {
+  animation-delay: 300ms;
+}
+
+.animate-once {
+  animation-iteration-count: 1;
+}
+
 .truncate {
   text-overflow: ellipsis;
   white-space: nowrap;
