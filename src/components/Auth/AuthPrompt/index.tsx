@@ -9,28 +9,11 @@ const AuthPrompt = () => {
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      const dismissed = sessionStorage.getItem("auth_overlay_dismissed");
-      if (!dismissed) {
-        setShowOverlay(true);
-      }
+      setShowOverlay(true);
     } else {
       setShowOverlay(false);
     }
   }, [isAuthenticated, isLoading]);
-
-  // Handle ESC key to dismiss overlay
-  useEffect(() => {
-    const handleEscKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && showOverlay && !authModalOpened) {
-        handleDismiss();
-      }
-    };
-
-    if (showOverlay) {
-      window.addEventListener("keydown", handleEscKey);
-      return () => window.removeEventListener("keydown", handleEscKey);
-    }
-  }, [showOverlay, authModalOpened]);
 
   useEffect(() => {
     const handleOpenAuthModal = () => {
@@ -47,14 +30,15 @@ const AuthPrompt = () => {
     setAuthModalOpened(true);
   };
 
-  const handleDismiss = () => {
-    setShowOverlay(false);
-    sessionStorage.setItem("auth_overlay_dismissed", "true");
-  };
-
   const handleModalClose = () => {
-    setAuthModalOpened(false);
-    handleDismiss();
+    // Only close modal if user is authenticated
+    if (isAuthenticated) {
+      setAuthModalOpened(false);
+      setShowOverlay(false);
+    } else {
+      // If not authenticated, keep modal open
+      setAuthModalOpened(true);
+    }
   };
 
   if (!showOverlay) return null;
@@ -63,7 +47,7 @@ const AuthPrompt = () => {
     <>
       {!authModalOpened && (
         <div
-          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs animate-fadeIn cursor-pointer group"
+          className="fixed inset-0 z-40 bg-black/10 backdrop-blur-xs animate-fadeIn cursor-pointer group"
           onClick={handleOverlayClick}
         >
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -75,7 +59,7 @@ const AuthPrompt = () => {
                 Click anywhere to sign in or create an account
               </p>
               <p className="text-sm text-secondary/60">
-                (Press ESC to dismiss)
+                (Login required to continue)
               </p>
             </div>
           </div>
