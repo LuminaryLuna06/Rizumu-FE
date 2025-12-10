@@ -286,8 +286,8 @@ function RoomPopover() {
               disabled={roomLoading}
             />
             <TextInput
-              label="Invitation slug"
-              description="Must be 4-16 characters long and unique"
+              label="Invitation code"
+              description="Must be 4-16 characters long and unique."
               placeholder="Room's invite code"
               value={formData.slug}
               onChange={(e) => {
@@ -316,6 +316,7 @@ function RoomPopover() {
             />
             <Switch
               label="Discoverable"
+              description="Make your room public by others."
               labelPosition="right"
               checked={formData.is_public}
               onChange={() =>
