@@ -4,10 +4,9 @@ import ResponsiveButton from "@rizumu/components/ResponsiveButton";
 import SelectInput from "@rizumu/components/SelectInput";
 import TextArea from "@rizumu/components/TextArea";
 import TextInput from "@rizumu/components/TextInput";
-// import { useAuth } from "@rizumu/context/AuthContext";
 import type { ModelUserProfile } from "@rizumu/models/userProfile";
 import { useToast } from "@rizumu/utils/toast/toast";
-import { IconCamera, IconUser } from "@tabler/icons-react";
+import { IconCamera, IconUser, IconX } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
 import { countries } from "../data/countries";
 
@@ -154,18 +153,32 @@ function EditProfileModal({
           disabled={isLoading}
         />
 
-        <SelectInput
-          label="Country"
-          data={countries.map((c) => ({ value: c.code, label: c.name }))}
-          placeholder="Select country"
-          value={formData.country}
-          onChange={(value) =>
-            setFormData({ ...formData, country: value || "" })
-          }
-          disabled={isLoading}
-          searchable
-          className="w-1/3"
-        />
+        <div className="flex items-center gap-1">
+          <SelectInput
+            label="Country"
+            data={countries.map((c) => ({ value: c.code, label: c.name }))}
+            placeholder="Select country"
+            value={formData.country}
+            onChange={(value) =>
+              setFormData({ ...formData, country: value || "" })
+            }
+            disabled={isLoading}
+            searchable
+            maxDropdownHeight={180}
+            className="w-1/2 sm:w-1/3"
+          />
+          {formData.country && (
+            <ResponsiveButton
+              leftSection={<IconX size={20} />}
+              className="bg-transparent hover:bg-transparent text-text-inactive hover:text-text-active mt-6"
+              onClick={(e) => {
+                e.preventDefault();
+                setFormData({ ...formData, country: "" });
+              }}
+            ></ResponsiveButton>
+          )}
+        </div>
+
         <div className="flex flex-col gap-sm"></div>
         <hr />
         <div className="flex gap-sm">

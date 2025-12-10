@@ -17,11 +17,17 @@ import ResponsiveButton from "../ResponsiveButton";
 import BoxStatistic from "./components/BoxStatistic";
 import { useEffect, useState } from "react";
 import EditProfileModal from "./components/EditProfileModal";
-import HeatMap from "./components/HeatMap";
-import { data as heatmapData } from "@rizumu/pages/Test/TestHieu";
+import HeatMap, { type HeatMapData } from "./components/HeatMap";
 import { useAuth } from "@rizumu/context/AuthContext";
 import { useToast } from "@rizumu/utils/toast/toast";
 import type { ModelUserProfile } from "@rizumu/models/userProfile";
+import axiosClient from "@rizumu/api/config/axiosClient";
+
+interface HeatMapResponse {
+  durations: number[];
+  start_date: string;
+  end_date: string;
+}
 
 interface ProfileModalProps {
   opened: boolean;
@@ -32,6 +38,7 @@ interface ProfileModalProps {
 function ProfileModal({ opened, onClose, onOpenProfile }: ProfileModalProps) {
   const { logout, user, refreshUser } = useAuth();
   const [editOpened, setEditOpened] = useState(false);
+  const [heatmapData, setHeatmapData] = useState<HeatMapData>({});
   const toast = useToast();
   const months = [
     {
@@ -101,11 +108,46 @@ function ProfileModal({ opened, onClose, onOpenProfile }: ProfileModalProps) {
     );
   };
 
-  useEffect(() => {
-    if (opened === true) {
-      refreshUser();
+  const getHeatMap = async () => {
+    if (!user?._id) return;
+
+    try {
+      const year = new Date().getFullYear();
+      const startOfYear = new Date(year, 0, 1, 0, 0, 0, 0); // Giờ local (00:00:00)
+      const endOfYear = new Date(year, 11, 31, 23, 59, 59, 999); //Giờ local (23:59:59.999)
+
+      // Chuyển sang ISO string (UTC) - Auto theo múi giờ
+      const startTime = startOfYear.toISOString();
+      const endTime = endOfYear.toISOString();
+
+      const response = await axiosClient.get<HeatMapResponse>(
+        `/session/heatmap?userId=${user._id}&startTime=${startTime}&endTime=${endTime}`
+      );
+
+      const heatmapDataObj: HeatMapData = {};
+      const startDate = new Date(response.data.start_date);
+
+      response.data.durations.forEach((duration, index) => {
+        const currentDate = new Date(startDate);
+        currentDate.setDate(startDate.getDate() + index);
+
+        const dateKey = currentDate.toISOString().split("T")[0];
+        heatmapDataObj[dateKey] = duration;
+      });
+
+      setHeatmapData(heatmapDataObj);
+    } catch (error) {
+      console.error("Error fetching heatmap data:", error);
+      setHeatmapData({});
     }
-  }, [opened]);
+  };
+
+  useEffect(() => {
+    if (opened) {
+      refreshUser();
+      getHeatMap();
+    }
+  }, [opened, user?._id]);
 
   const handleLogout = () => {
     logout();
@@ -145,9 +187,18 @@ function ProfileModal({ opened, onClose, onOpenProfile }: ProfileModalProps) {
           </div>
           <div className="flex-5 flex-col w-full">
             <div className="flex flex-col-reverse md:flex-row items-center gap-sm w-full h-25 md:h-10 mb-xs">
-              <h1 className="text-2xl md:text-xl font-bold">
-                {user?.name ? `${user?.name}` : "User"}
-              </h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl md:text-xl font-bold">
+                  {user?.name ? `${user?.name}` : "User"}
+                </h1>
+                {user?.country ? (
+                  <div className="flex justify-center items-center bg-secondary/10 px-2 py-1 rounded-lg w-[50px] text-xs">
+                    {user?.country}
+                  </div>
+                ) : (
+                  <></>
+                )}
+              </div>
               <div className="flex items-center h-20 lg:h-10 gap-2 md:gap-xl lg:gap-sm md:hidden flex">
                 <ResponsiveButton
                   className="flex justify-center h-11 md:h-8 lg:h-5 bg-white/10 hover:bg-white/20 gap-x-xs text-sm min-w-[100px]"
@@ -262,10 +313,9 @@ function ProfileModal({ opened, onClose, onOpenProfile }: ProfileModalProps) {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 w-full overflow-visible relative [&_text]:fill-white/80">
             {months.map((month, index) => (
               <HeatMap
+                key={index}
                 month={month.name}
                 monthNumber={index + 1}
-                day={month.days}
-                year={new Date().getFullYear()}
                 data={heatmapData}
               />
             ))}
@@ -284,7 +334,10 @@ function ProfileModal({ opened, onClose, onOpenProfile }: ProfileModalProps) {
 
         <div className="flex justify-center ">
           <ResponsiveButton
-            onClick={handleLogout}
+            onClick={() => {
+              handleLogout();
+              onClose();
+            }}
             className="bg-red-500 hover:bg-red-600 h-11 min-w-[100px] gap-x-xs text-sm justify-center"
             leftSection={<IconDoorExit size={16} />}
           >

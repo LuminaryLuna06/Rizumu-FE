@@ -10,15 +10,24 @@ import { IconMessage, IconSend2, IconUsers } from "@tabler/icons-react";
 import { useState } from "react";
 
 function TestHieu() {
-  const { refreshUser } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [opened, setOpened] = useState(false);
   const [profileOpened, setProfileOpened] = useState(false);
   const [activitiesOpened, setActivitiesOpened] = useState(false);
   const [chatOpened, setChatOpened] = useState(false);
   const [message, setMessage] = useState("");
 
-  const getHeatMap = async () => {
-    const response = await axiosClient.get("session/heatmap?2025");
+  const getHourStats = async () => {
+    const year = new Date().getFullYear();
+    const month = new Date().getMonth();
+    const date = new Date().getDate();
+
+    const startTime = new Date(year, month, date, 0, 0, 0, 0).toISOString();
+    const endTime = new Date(year, month, date, 23, 59, 59, 999).toISOString();
+
+    const response = await axiosClient.get(
+      `/session/hourly?startTime=${startTime}&endTime=${endTime}&userId=${user?._id}`
+    );
     console.log(response.data);
   };
 
@@ -59,7 +68,7 @@ function TestHieu() {
       </button>
       <button
         className="px-4 py-2 bg-blue-600 text-white rounded"
-        onClick={() => getHeatMap()}
+        onClick={() => getHourStats()}
       >
         Test
       </button>
