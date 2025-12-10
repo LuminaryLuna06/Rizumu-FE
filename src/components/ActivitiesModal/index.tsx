@@ -1,4 +1,4 @@
-// import { useAuth } from "@rizumu/context/AuthContext";
+import { useAuth } from "@rizumu/context/AuthContext";
 import {
   Bar,
   BarChart,
@@ -19,17 +19,22 @@ import {
   IconFlame,
   IconList,
 } from "@tabler/icons-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import BoxAnalytics from "./components/BoxAnalytics";
 import BoxReview from "./components/BoxReview";
+import axiosClient from "@rizumu/api/config/axiosClient";
+import { months, hourNames } from "./data/month";
 
 interface ActivitiesModalProps {
   opened: boolean;
   onClose: () => void;
 }
 function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
-  // const { user, refreshUser } = useAuth();
+  const { user } = useAuth();
   const [existSession, setExistSession] = useState(true);
+  const [hourStats, setHourStats] = useState<
+    { hourName: string; duration: number }[]
+  >([]);
   const [activeTab, setActiveTab] = useState<"Analytics" | "Review">(
     "Analytics"
   );
@@ -37,83 +42,45 @@ function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
     "Today" | "This week" | "This month"
   >("Today");
 
-  const months = [
-    {
-      name: "Jan",
-      days: 31,
-    },
-    {
-      name: "Feb",
-      days: 28,
-    },
-    {
-      name: "Mar",
-      days: 31,
-    },
-    {
-      name: "Apr",
-      days: 30,
-    },
-    {
-      name: "May",
-      days: 31,
-    },
-    {
-      name: "Jun",
-      days: 30,
-    },
-    {
-      name: "Jul",
-      days: 31,
-    },
-    {
-      name: "Aug",
-      days: 31,
-    },
-    {
-      name: "Sep",
-      days: 30,
-    },
-    {
-      name: "Oct",
-      days: 31,
-    },
-    {
-      name: "Nov",
-      days: 30,
-    },
-    {
-      name: "Dec",
-      days: 31,
-    },
-  ];
+  const getHourStats = async () => {
+    if (!user?._id || !hourStats) return;
 
-  const fakeActiveData = [
-    { hourName: "12AM", duration: Math.floor(900 / 60), numberSession: 1 },
-    { hourName: "1AM", duration: Math.floor(0 / 60), numberSession: 0 },
-    { hourName: "2AM", duration: Math.floor(0 / 60), numberSession: 0 },
-    { hourName: "3AM", duration: Math.floor(0 / 60), numberSession: 0 },
-    { hourName: "4AM", duration: Math.floor(0 / 60), numberSession: 0 },
-    { hourName: "5AM", duration: Math.floor(0 / 60), numberSession: 0 },
-    { hourName: "6AM", duration: Math.floor(0 / 60), numberSession: 0 },
-    { hourName: "7AM", duration: Math.floor(0 / 60), numberSession: 0 },
-    { hourName: "8AM", duration: Math.floor(340 / 60), numberSession: 1 },
-    { hourName: "9AM", duration: Math.floor(930 / 60), numberSession: 1 },
-    { hourName: "10AM", duration: Math.floor(1000 / 60), numberSession: 1 },
-    { hourName: "11AM", duration: Math.floor(50 / 60), numberSession: 1 },
-    { hourName: "12PM", duration: Math.floor(0 / 60), numberSession: 0 },
-    { hourName: "1PM", duration: Math.floor(0 / 60), numberSession: 0 },
-    { hourName: "2PM", duration: Math.floor(0 / 60), numberSession: 0 },
-    { hourName: "3PM", duration: Math.floor(0 / 60), numberSession: 0 },
-    { hourName: "4PM", duration: Math.floor(3000 / 60), numberSession: 3 },
-    { hourName: "5PM", duration: Math.floor(2400 / 60), numberSession: 3 },
-    { hourName: "6PM", duration: Math.floor(1000 / 60), numberSession: 2 },
-    { hourName: "7PM", duration: Math.floor(0 / 60), numberSession: 0 },
-    { hourName: "8PM", duration: Math.floor(0 / 60), numberSession: 0 },
-    { hourName: "9PM", duration: Math.floor(0 / 60), numberSession: 0 },
-    { hourName: "10PM", duration: Math.floor(10 / 60), numberSession: 1 },
-    { hourName: "11PM", duration: Math.floor(750 / 60), numberSession: 2 },
-  ];
+    try {
+      const year = new Date().getFullYear();
+      const month = new Date().getMonth();
+      const date = new Date().getDate();
+
+      const startTime = new Date(year, month, date, 0, 0, 0, 0).toISOString();
+      const endTime = new Date(
+        year,
+        month,
+        date,
+        23,
+        59,
+        59,
+        999
+      ).toISOString();
+
+      const response = await axiosClient.get(
+        `/session/hourly?startTime=${startTime}&endTime=${endTime}&userId=${user?._id}`
+      );
+      const duration = response.data;
+      const result = hourNames.map((name, index) => ({
+        hourName: name,
+        duration: Math.floor(duration[index]),
+      }));
+
+      setHourStats(result);
+    } catch (error) {
+      console.error("Error fetching heatmap data:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (opened) {
+      getHourStats();
+    }
+  }, [opened, user?._id]);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -121,9 +88,6 @@ function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
         <div className="bg-gray-800 border border-gray-600 rounded-lg p-3 shadow-lg">
           <p className="text-white font-semibold mb-1">{label}</p>
           <p className="text-green-400">Duration: {payload[0].value} minutes</p>
-          <p className="text-blue-400">
-            Sessions: {payload[0].payload.numberSession}
-          </p>
         </div>
       );
     }
@@ -146,7 +110,7 @@ function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
 
   const getTotalTime = () => {
     let totalMinute = 0;
-    fakeActiveData.map((data) => {
+    hourStats.map((data) => {
       totalMinute += data.duration;
     });
 
@@ -159,14 +123,17 @@ function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
 
   const getTotalSession = () => {
     let totalSession = 0;
-    fakeActiveData.map((data) => (totalSession += data.numberSession));
+    hourStats.map((data) => {
+      if (data.duration > 0) totalSession += 1;
+    });
 
     return totalSession;
   };
 
   const getBestTime = () => {
-    let Max = fakeActiveData[0].duration;
-    fakeActiveData.map((data) => {
+    if (hourStats.length === 0) return "0m";
+    let Max = hourStats[0].duration;
+    hourStats.map((data) => {
       if (data.duration > Max) {
         Max = data.duration;
       }
@@ -290,7 +257,7 @@ function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
 
           <div className="flex mb-xl -ml-md sm:ml-0">
             <ResponsiveContainer height={230}>
-              <BarChart data={fakeActiveData}>
+              <BarChart data={hourStats}>
                 <XAxis
                   style={{ fontSize: "12px" }}
                   dataKey="hourName"
@@ -308,7 +275,7 @@ function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
                 />
                 <Tooltip content={<CustomTooltip />} />
                 <Bar dataKey="duration">
-                  {fakeActiveData.map((entry, index) => (
+                  {hourStats.map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
                       fill={getBarColor(entry.duration)}

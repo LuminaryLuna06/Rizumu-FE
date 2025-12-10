@@ -293,7 +293,7 @@ function SelectInput({
 
             {/* Options list */}
             <div
-              className="overflow-y-auto"
+              className="overflow-y-auto custom-scrollbar scrollbar-hidden"
               style={{ maxHeight: `${maxDropdownHeight}px` }}
             >
               {filteredOptions.length === 0 ? (
