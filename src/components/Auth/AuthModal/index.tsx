@@ -5,8 +5,8 @@ import { useToast } from "@rizumu/utils/toast/toast";
 import {
   IconLogin,
   IconUserPlus,
-  IconUser,
   IconLock,
+  IconMail,
 } from "@tabler/icons-react";
 import { useState } from "react";
 import { string, object } from "@rizumu/utils/validate";
@@ -61,7 +61,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
   };
   const switchMode = (newMode: "login" | "register") => {
     setMode(newMode);
-    handleReset();
+    // handleReset();
     handleErrorReset();
   };
 
@@ -132,9 +132,9 @@ const AuthModal: React.FC<AuthModalProps> = ({
       <form onSubmit={handleSubmit} autoComplete="off" className="space-y-lg">
         <TextInput
           required
-          label="Username"
-          placeholder="Enter username"
-          leftSection={<IconUser size={20} />}
+          label="Email"
+          placeholder="Enter email"
+          leftSection={<IconMail size={20} />}
           onChange={(e) => {
             setUsername(e.target.value);
             if (usernameError) setUsernameError("");
