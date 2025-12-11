@@ -30,20 +30,24 @@ function BoxReview({ data }: BoxReviewProps) {
 
   const getDuration = (duration: number) => {
     if (duration < 60) {
-      return "0m " + duration + "s";
+      return "0m " + duration.toString().padStart(2, "0") + "s";
     }
     if (duration < 3600) {
       return (
         Math.floor(duration / 60) +
         "m " +
-        (duration - Math.floor(duration / 60) * 60) +
+        (duration - Math.floor(duration / 60) * 60)
+          .toString()
+          .padStart(2, "0") +
         "s"
       );
     }
     return (
       Math.floor(duration / 3600) +
       "h " +
-      Math.floor((duration - Math.floor(duration / 3600) * 3600) / 60) +
+      Math.floor((duration - Math.floor(duration / 3600) * 3600) / 60)
+        .toString()
+        .padStart(2, "0") +
       "m"
     );
   };

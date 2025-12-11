@@ -142,24 +142,29 @@ function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
       }
     });
 
-    if (Max < 10) {
-      return "0" + Max + "s";
-    }
     if (Max < 60) {
-      return Max + "s";
+      return Max.toString().padStart(2, "0") + "s";
     }
     if (Max < 3600) {
       return (
-        Math.floor(Max / 60) +
+        Math.floor(Max / 60)
+          .toString()
+          .padStart(2, "0") +
         "m " +
-        Math.floor(Max - Math.floor(Max / 60) * 60) +
+        Math.floor(Max - Math.floor(Max / 60) * 60)
+          .toString()
+          .padStart(2, "0") +
         "s"
       );
     }
     return (
-      Math.floor(Max / 3600) +
+      Math.floor(Max / 3600)
+        .toString()
+        .padStart(2, "0") +
       "h " +
-      Math.floor((Max - Math.floor(Max / 3600) * 3600) / 60) +
+      Math.floor((Max - Math.floor(Max / 3600) * 3600) / 60)
+        .toString()
+        .padStart(2, "0") +
       "m"
     );
   };
@@ -204,159 +209,147 @@ function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
       <div
         className={`${activeTab === "Analytics" ? "flex flex-col" : "hidden"}`}
       >
+        <div className="flex flex-col bg-zinc-900 border border-white/20 rounded-lg mb-md">
+          <div className="flex items-center gap-2 sm:gap-6 text-sm mb-6">
+            <div className="flex justify-center items-center">
+              <ResponsiveButton
+                className="text-text-inactive hover:text-text-active bg-zinc-900 hover:bg-zinc-900"
+                leftSection={<IconChevronLeft size={20} />}
+                onClick={(e) => {
+                  e.preventDefault();
+                  const newDate = new Date(selectedDate);
+                  newDate.setDate(newDate.getDate() - 1);
+                  setSelectedDate(newDate);
+                }}
+              ></ResponsiveButton>
+              <div className="flex justify-center text-sm font-medium">
+                {months.map((month, index) => {
+                  const monthNumber = selectedDate.getMonth();
+                  const date = selectedDate.getDate();
+                  if (index == monthNumber) {
+                    if (date < 10) {
+                      return (
+                        <div className="flex justify-between">
+                          <p>{month.name + " "}</p>
+                          <p className="ml-[2px]">{"0" + date}</p>
+                        </div>
+                      );
+                    }
+                    return (
+                      <div className="flex justify-between">
+                        <p>{month.name + " "}</p>
+                        <p className="ml-[2px]">{date}</p>
+                      </div>
+                    );
+                  }
+                })}
+              </div>
+              <ResponsiveButton
+                className="text-text-inactive hover:text-text-active bg-zinc-900 hover:bg-zinc-900"
+                leftSection={<IconChevronRight size={20} />}
+                onClick={(e) => {
+                  e.preventDefault();
+                  const newDate = new Date(selectedDate);
+                  newDate.setDate(newDate.getDate() + 1);
+
+                  if (newDate < new Date()) {
+                    setSelectedDate(newDate);
+                  }
+                }}
+              ></ResponsiveButton>
+            </div>
+            <div className="flex items-center text-base text-text-inactive text-sm md:text-base">
+              <p>Total Time:</p>
+              {isLoading ? (
+                <div className="w-12 h-4 bg-zinc-700 rounded ml-1"></div>
+              ) : (
+                <p className="ml-1 text-text-active">{getTotalTime()}</p>
+              )}
+            </div>
+          </div>
+
+          {isLoading ? (
+            <div className="flex items-end justify-around h-[230px] gap-1 px-4">
+              {[...Array(24)].map((_, i) => (
+                <div
+                  className="bg-zinc-800 rounded-t w-full"
+                  style={{
+                    height: `${Math.random() * 60 + 20}%`,
+                    animation: `pulse 1.5s ease-in-out ${i * 0.05}s infinite`,
+                  }}
+                ></div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex mb-xl -ml-md sm:ml-0">
+              <ResponsiveContainer height={230}>
+                <BarChart data={hourStats}>
+                  <XAxis
+                    style={{ fontSize: "12px" }}
+                    dataKey="hourName"
+                    tick={{ dy: 5 }}
+                    tickLine={false}
+                    ticks={["12AM", "4AM", "8AM", "12PM", "4PM", "8PM"]}
+                    axisLine={false}
+                  />
+                  <YAxis
+                    style={{ fontSize: "12px" }}
+                    tick={{ dx: -5 }}
+                    tickFormatter={(value) => `${value}m`}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar dataKey="duration">
+                    {hourStats.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={getBarColor(entry.duration)}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </div>
+
         {isLoading ? (
-          <>
-            <div className="flex flex-col bg-zinc-900 border border-white/20 rounded-lg mb-md p-6 animate-pulse">
-              <div className="flex items-center gap-2 sm:gap-6 text-sm mb-6">
-                <div className="flex justify-center items-center gap-2">
-                  <div className="w-8 h-8 bg-zinc-800 rounded"></div>
-                  <div className="w-24 h-5 bg-zinc-800 rounded"></div>
-                  <div className="w-8 h-8 bg-zinc-800 rounded"></div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-20 h-4 bg-zinc-800 rounded"></div>
-                  <div className="w-12 h-4 bg-zinc-700 rounded"></div>
-                </div>
-              </div>
-
-              <div className="flex items-end justify-around h-[230px] gap-1 px-4">
-                {[...Array(24)].map((_, i) => (
-                  <div
-                    className="bg-zinc-800 rounded-t w-full"
-                    style={{
-                      height: `${Math.random() * 60 + 20}%`,
-                      animation: `pulse 1.5s ease-in-out ${i * 0.05}s infinite`,
-                    }}
-                  ></div>
-                ))}
-              </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-md">
+            <div className="flex flex-col bg-zinc-900 border border-white/20 rounded-lg p-4 animate-pulse">
+              <div className="w-10 h-10 bg-zinc-800 rounded-full mb-sm"></div>
+              <div className="w-24 h-4 bg-zinc-800 rounded mb-md"></div>
+              <div className="w-10 h-4 bg-zinc-700 rounded"></div>
             </div>
-
-            <div className="grid grid-cols-3 sm:grid-cols-2 md:grid-cols-3 gap-md">
-              <div className="flex flex-col bg-zinc-900 border border-white/20 rounded-lg p-4 animate-pulse">
-                <div className="w-10 h-10 bg-zinc-800 rounded-full mb-sm"></div>
-                <div className="w-24 h-4 bg-zinc-800 rounded mb-md"></div>
-                <div className="w-8 h-6 bg-zinc-700 rounded"></div>
-              </div>
-              <div className="flex flex-col bg-zinc-900 border border-white/20 rounded-lg p-4 animate-pulse">
-                <div className="w-10 h-10 bg-zinc-800 rounded-full mb-sm"></div>
-                <div className="w-24 h-4 bg-zinc-800 rounded mb-md"></div>
-                <div className="w-8 h-6 bg-zinc-700 rounded"></div>
-              </div>
-              <div className="flex flex-col bg-zinc-900 border border-white/20 rounded-lg p-4 animate-pulse">
-                <div className="w-10 h-10 bg-zinc-800 rounded-full mb-sm"></div>
-                <div className="w-24 h-4 bg-zinc-800 rounded mb-md"></div>
-                <div className="w-8 h-6 bg-zinc-700 rounded"></div>
-              </div>
+            <div className="flex flex-col bg-zinc-900 border border-white/20 rounded-lg p-4 animate-pulse">
+              <div className="w-10 h-10 bg-zinc-800 rounded-full mb-sm"></div>
+              <div className="w-24 h-4 bg-zinc-800 rounded mb-md"></div>
+              <div className="w-10 h-4 bg-zinc-700 rounded"></div>
             </div>
-          </>
+            <div className="flex flex-col bg-zinc-900 border border-white/20 rounded-lg p-4 animate-pulse">
+              <div className="w-10 h-10 bg-zinc-800 rounded-full mb-sm"></div>
+              <div className="w-24 h-4 bg-zinc-800 rounded mb-md"></div>
+              <div className="w-10 h-4 bg-zinc-700 rounded"></div>
+            </div>
+          </div>
         ) : (
-          <>
-            <div className="flex flex-col bg-zinc-900 border border-white/20 rounded-lg mb-md">
-              <div className="flex items-center gap-2 sm:gap-6 text-sm mb-6">
-                <div className="flex justify-center items-center">
-                  <ResponsiveButton
-                    className="text-text-inactive hover:text-text-active bg-zinc-900 hover:bg-zinc-900"
-                    leftSection={<IconChevronLeft size={20} />}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      const newDate = new Date(selectedDate);
-                      newDate.setDate(newDate.getDate() - 1);
-                      setSelectedDate(newDate);
-                    }}
-                  ></ResponsiveButton>
-                  <div className="flex justify-center text-sm font-medium">
-                    {months.map((month, index) => {
-                      const monthNumber = selectedDate.getMonth();
-                      const date = selectedDate.getDate();
-                      if (index == monthNumber) {
-                        if (date < 10) {
-                          return (
-                            <div className="flex justify-between">
-                              <p>{month.name + " "}</p>
-                              <p className="ml-[2px]">{"0" + date}</p>
-                            </div>
-                          );
-                        }
-                        return (
-                          <div className="flex justify-between">
-                            <p>{month.name + " "}</p>
-                            <p className="ml-[2px]">{date}</p>
-                          </div>
-                        );
-                      }
-                    })}
-                  </div>
-                  <ResponsiveButton
-                    className="text-text-inactive hover:text-text-active bg-zinc-900 hover:bg-zinc-900"
-                    leftSection={<IconChevronRight size={20} />}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      const newDate = new Date(selectedDate);
-                      newDate.setDate(newDate.getDate() + 1);
-
-                      if (newDate < new Date()) {
-                        setSelectedDate(newDate);
-                      }
-                    }}
-                  ></ResponsiveButton>
-                </div>
-                <div className="flex items-center text-base text-text-inactive text-sm md:text-base">
-                  <p>Total Time:</p>
-                  <p className="ml-1 text-text-active">{getTotalTime()}</p>
-                </div>
-              </div>
-
-              <div className="flex mb-xl -ml-md sm:ml-0">
-                <ResponsiveContainer height={230}>
-                  <BarChart data={hourStats}>
-                    <XAxis
-                      style={{ fontSize: "12px" }}
-                      dataKey="hourName"
-                      tick={{ dy: 5 }}
-                      tickLine={false}
-                      ticks={["12AM", "4AM", "8AM", "12PM", "4PM", "8PM"]}
-                      axisLine={false}
-                    />
-                    <YAxis
-                      style={{ fontSize: "12px" }}
-                      tick={{ dx: -5 }}
-                      tickFormatter={(value) => `${value}m`}
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Bar dataKey="duration">
-                      {hourStats.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={getBarColor(entry.duration)}
-                        />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-md">
-              <BoxAnalytics
-                icon={<IconChartColumn size={30} />}
-                text="Total Sessions"
-                stat={getTotalSession()}
-              />
-              <BoxAnalytics
-                icon={<IconClock size={30} />}
-                text="Focused Time"
-                stat={getTotalTime()}
-              />
-              <BoxAnalytics
-                icon={<IconFlame size={30} />}
-                text="Best Sessions"
-                stat={getBestTime()}
-              />
-            </div>
-          </>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-md">
+            <BoxAnalytics
+              icon={<IconChartColumn size={30} />}
+              text="Total Sessions"
+              stat={getTotalSession()}
+            />
+            <BoxAnalytics
+              icon={<IconClock size={30} />}
+              text="Focused Time"
+              stat={getTotalTime()}
+            />
+            <BoxAnalytics
+              icon={<IconFlame size={30} />}
+              text="Best Sessions"
+              stat={getBestTime()}
+            />
+          </div>
         )}
       </div>
 
