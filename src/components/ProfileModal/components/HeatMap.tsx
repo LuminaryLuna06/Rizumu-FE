@@ -10,7 +10,8 @@ interface HeatMapProps {
 
 function HeatMap({ month, monthNumber, data }: HeatMapProps) {
   const year = new Date().getFullYear();
-  const day = new Date(year, monthNumber, 0).getDate();
+  const days = new Date(year, monthNumber, 0).getDate();
+  const firstDayOfMonth = new Date(year, monthNumber - 1, 1).getDay();
 
   const formatDate = (year: number, month: number, day: number): string => {
     const monthStr = month.toString().padStart(2, "0");
@@ -20,7 +21,6 @@ function HeatMap({ month, monthNumber, data }: HeatMapProps) {
 
   const getBackgroundColor = (duration: number | undefined) => {
     if (!duration || duration === 0) return "bg-gray-100/20";
-
     if (duration < 30) return "bg-emerald-200";
     if (duration < 60) return "bg-emerald-300";
     if (duration < 120) return "bg-emerald-500";
@@ -33,7 +33,10 @@ function HeatMap({ month, monthNumber, data }: HeatMapProps) {
         {month}
       </div>
       <div className="grid grid-cols-7 gap-xs lg:gap-1 max-w-[143px]">
-        {Array.from({ length: day }).map((_, index) => {
+        {Array.from({ length: firstDayOfMonth }).map((_, index) => (
+          <div key={`empty-${index}`} className="w-3 h-3 sm:w-4 sm:h-4" />
+        ))}
+        {Array.from({ length: days }).map((_, index) => {
           const dayNumber = index + 1;
           const dateKey = formatDate(year, monthNumber, dayNumber);
           const duration = Math.floor(data[dateKey] / 60) || 0;
