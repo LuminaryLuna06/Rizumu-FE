@@ -54,7 +54,7 @@ function BoxReview({ data }: BoxReviewProps) {
   return (
     <div className="flex items-center relative p-0 sm:pl-6 sm:pb-4 w-full text-base">
       <div className="text-text-inactive text-right w-[40px]">
-        {d.getHours() + ":" + d.getMinutes()}
+        {d.getHours() + ":" + d.getMinutes().toString().padStart(2, "0")}
       </div>
       <div className="absolute left-14 sm:left-24 ml-[1px] w-3 h-3 bg-white rounded-full border-2 border-black/30 z-10 transform -translate-x-1/2"></div>
       <div className="flex-1 ml-10 sm:ml-20 mb-4 sm:mb-0 p-4 bg-black/10 rounded-xl border border-white/20 min-h-[100px]">

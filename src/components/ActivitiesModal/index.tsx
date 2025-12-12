@@ -104,15 +104,15 @@ function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
 
   const getBarColor = (duration: number) => {
     if (duration <= 10) {
-      return "#a7f3d0";
-    } else if (duration <= 20) {
       return "#6ee7b7";
-    } else if (duration <= 30) {
+    } else if (duration <= 20) {
       return "#34d399";
-    } else if (duration <= 40) {
+    } else if (duration <= 30) {
       return "#10b981";
+    } else if (duration <= 40) {
+      return "#047857";
     } else {
-      return "#059669";
+      return "#065f46";
     }
   };
 
@@ -172,7 +172,10 @@ function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
   return (
     <Modal
       opened={opened}
-      onClose={onClose}
+      onClose={() => {
+        onClose();
+        setSelectedDate(new Date());
+      }}
       title="Activities summary"
       className="w-full max-w-[800px] max-h-[70vh] overflow-y-auto overflow-x-hidden custom-scrollbar scrollbar-hidden"
     >
