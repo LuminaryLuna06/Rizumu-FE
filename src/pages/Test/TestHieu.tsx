@@ -20,6 +20,7 @@ function TestHieu() {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [messages, setMessages] = useState<any>([]);
   const [input, setInput] = useState("");
+  const [roomMembers, setRoomMembers] = useState<any[]>([]);
 
   const [hasMoreMessage, setHasMoreMessage] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -64,6 +65,9 @@ function TestHieu() {
 
   useEffect(() => {
     connectSocket();
+    if (user?.current_room_id) {
+      fetchRoomMembers();
+    }
   }, [user?.current_room_id]);
 
   useEffect(() => {
@@ -97,15 +101,9 @@ function TestHieu() {
   const sendMessage = () => {
     if (!input.trim() || !socket || !user?.current_room_id) return;
 
-    const msgContent = {
-      roomId: user.current_room_id,
-      senderId: user._id,
-      content: input.trim(),
-    };
+    console.log("Emit send_message:", input.trim());
 
-    console.log("Emit send_message:", msgContent);
-
-    socket.emit("send_message", msgContent);
+    socket.emit("send_message", input.trim());
     setInput("");
   };
 
@@ -121,6 +119,38 @@ function TestHieu() {
       const earliest = messages[0];
       loadMessages(earliest?.createdAt || null);
     }
+  };
+
+  const fetchRoomMembers = async () => {
+    if (!user?.current_room_id) return;
+
+    try {
+      const response = await axiosClient.get(
+        `/room/${user.current_room_id}/members`
+      );
+      setRoomMembers(response.data || []);
+      console.log("Room members:", response.data);
+    } catch (err) {
+      console.error("Lỗi load members:", err);
+    }
+  };
+
+  const getMemberName = (userId: string) => {
+    if (!userId) return "Unknown";
+
+    if (roomMembers && roomMembers.length > 0) {
+      const member = roomMembers.find(
+        (member: any) =>
+          member?.user_id?._id === userId ||
+          member?.user_id?._id?.toString() === userId?.toString()
+      );
+
+      if (member) {
+        return member?.user_id?.name || "Unknown";
+      }
+    }
+
+    return "Not found";
   };
 
   const formatTime = (time?: string) => {
@@ -200,7 +230,7 @@ function TestHieu() {
               <h2 className="text-lg font-semibold">Chat</h2>
               <div className="flex items-center gap-2 text-text-inactive">
                 <IconUsers size={14} />
-                <p className="text-sm">2 members</p>
+                <p className="text-sm">{roomMembers.length} members</p>
               </div>
             </div>
             <div
@@ -208,22 +238,24 @@ function TestHieu() {
               onScroll={handleScroll}
               className="flex flex-col items-start max-h-[350px] min-h-[250px] overflow-y-auto overflow-x-hidden custom-scrollbar scrollbar-hidden"
             >
-              {messages.map((msg: any, idx: number) => (
-                <div
-                  className="flex flex-col h-[50px] mb-sm"
-                  key={msg._id || idx}
-                >
-                  <div className="flex items-center gap-1">
-                    <h2 className="text-lg font-bold">
-                      {msg.senderName || msg.sender?.name || "Unknown"}:
-                    </h2>
-                    <p className="text-white/80">{msg.content}</p>
+              {messages.map((msg: any, idx: number) => {
+                const senderName = getMemberName(msg?.sender_id?._id);
+
+                return (
+                  <div
+                    className="flex flex-col h-[50px] mb-sm"
+                    key={msg._id || idx}
+                  >
+                    <div className="flex items-center gap-1">
+                      <h2 className="text-lg font-bold">{senderName}:</h2>
+                      <p className="text-white/80">{msg.content}</p>
+                    </div>
+                    <p className="text-text-inactive text-sm">
+                      {formatTime(msg.createdAt)}
+                    </p>
                   </div>
-                  <p className="text-text-inactive text-sm">
-                    {formatTime(msg.createdAt)}
-                  </p>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="flex items-center">
