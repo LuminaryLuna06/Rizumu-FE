@@ -237,7 +237,7 @@ function TestHieu() {
               className="flex flex-col items-start max-h-[350px] min-h-[250px] overflow-y-auto overflow-x-hidden custom-scrollbar scrollbar-hidden"
             >
               {messages.map((msg: any, idx: number) => {
-                const senderName = getMemberName(msg?.sender_id?._id);
+                const senderName = getMemberName(msg?.sender_id);
 
                 return (
                   <div
