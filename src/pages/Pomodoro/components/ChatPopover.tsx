@@ -21,9 +21,19 @@ function ChatPopover() {
   const messagesRef = useRef<HTMLDivElement | null>(null);
   const isInitialLoadRef = useRef<boolean>(true);
 
-  const connectSocket = () => {
-    if (!user?._id || !user.current_room_id || socket) return;
+  useEffect(() => {
+    console.log(user);
+    if (!user?._id || !user?.current_room_id) {
+      return;
+    }
 
+    // Reset tất cả state khi đổi room
+    setMessages([]);
+    setRoomMembers([]);
+    setHasMoreMessage(true);
+    isInitialLoadRef.current = true;
+
+    // Tạo socket connection mới
     const newSocket = io("https://backend-school-pj-1.onrender.com", {
       auth: {
         userId: user._id,
@@ -34,22 +44,17 @@ function ChatPopover() {
       transports: ["websocket"],
     });
 
-    setSocket(newSocket);
-    console.log("Test: ", newSocket);
-  };
+    // Xử lý khi socket kết nối thành công
+    newSocket.on("connect", () => {
+      console.log("Socket connected to room:", user.current_room_id);
 
-  useEffect(() => {
-    if (!socket) return;
-
-    socket.on("connect", () => {
-      console.log("Đã kết nối socket!");
       loadMessages();
     });
 
-    socket.on("new_message", (msg) => {
+    // Xử lý khi nhận tin nhắn mới
+    newSocket.on("new_message", (msg) => {
       setMessages((prev: any) => [...prev, msg]);
 
-      // Chỉ tự động cuộn xuống nếu user đang ở gần cuối
       setTimeout(() => {
         if (isNearBottom()) {
           scrollToBottom();
@@ -57,22 +62,19 @@ function ChatPopover() {
       }, 100);
     });
 
-    return () => {
-      socket.disconnect();
-    };
-  }, [socket]);
+    setSocket(newSocket);
 
-  useEffect(() => {
-    connectSocket();
-    if (user?.current_room_id) {
-      fetchRoomMembers();
-    }
-  }, [user?.current_room_id]);
+    fetchRoomMembers();
+
+    return () => {
+      console.log("Disconnecting socket from room:", user.current_room_id);
+      newSocket.disconnect();
+    };
+  }, [user]);
 
   // Cuộn xuống dưới chỉ khi lần đầu load messages
   useEffect(() => {
     if (messages.length > 0 && isInitialLoadRef.current) {
-      // Chỉ tự động cuộn khi là lần đầu load
       scrollToBottom();
       isInitialLoadRef.current = false;
     }
@@ -81,12 +83,10 @@ function ChatPopover() {
   const loadMessages = async (before: string | null = null) => {
     if (isLoading) return;
 
-    // Check hasMoreMessage khi load tin nhắn cũ
     if (before && !hasMoreMessage) return;
 
     setIsLoading(true);
 
-    // Lưu lại vị trí scroll hiện tại trước khi load tin nhắn cũ
     let previousScrollHeight = 0;
     let previousScrollTop = 0;
 
@@ -97,7 +97,6 @@ function ChatPopover() {
 
     try {
       if (before) {
-        // Load tin nhắn cũ
         const res = await axiosClient.get(
           `/${user?.current_room_id}/messages?before=${before}`
         );
@@ -113,12 +112,10 @@ function ChatPopover() {
           if (messagesRef.current) {
             const newScrollHeight = messagesRef.current.scrollHeight;
             const heightDiff = newScrollHeight - previousScrollHeight;
-            // Giữ nguyên vị trí bằng cách cộng thêm chiều cao mới
             messagesRef.current.scrollTop = previousScrollTop + heightDiff;
           }
         }, 50);
       } else {
-        // Load tin nhắn ban đầu
         const res = await axiosClient.get(`/${user?.current_room_id}/messages`);
         const data = res.data.message2 || [];
 
@@ -142,7 +139,6 @@ function ChatPopover() {
     if (!messagesRef.current) return false;
 
     const { scrollTop, scrollHeight, clientHeight } = messagesRef.current;
-    // Kiểm tra nếu user đang ở trong vòng 150px từ đáy
     return scrollHeight - scrollTop - clientHeight < 150;
   };
 
@@ -194,13 +190,13 @@ function ChatPopover() {
       onClose={() => setChatOpened(!chatOpened)}
       position="bottom-right"
     >
-      <div className="flex items-center justify-center bg-black/70 backdrop-blur-xl text-secondary rounded-3xl shadow-2xl p-md border border-gray-800 font-poppins overflow-y-hidden overflow-x-hidden">
+      <div className="flex items-center justify-center bg-primary/70 backdrop-blur-xl text-secondary rounded-3xl shadow-2xl p-md border border-primary font-poppins overflow-y-hidden overflow-x-hidden">
         <div className="flex flex-col w-full">
           <div className="flex justify-between mb-2 w-full">
             <h2 className="text-lg font-semibold">Chat</h2>
             <div className="flex items-center gap-2 text-text-inactive">
               <IconUsers size={14} />
-              <p className="text-sm">{roomMembers.length} members</p>
+              <p className="text-sm">{roomMembers.length || 1} members</p>
             </div>
           </div>
           <div
@@ -212,16 +208,16 @@ function ChatPopover() {
               messages.map((msg: any, idx: number) => {
                 return (
                   <div
-                    className="flex flex-col h-[50px] mb-sm"
+                    className="flex flex-col h-[40px] mb-sm"
                     key={msg._id || idx}
                   >
                     <div className="flex items-center gap-1">
-                      <h2 className="text-lg font-bold">
+                      <h2 className="font-semibold">
                         {mapSenderName[msg.sender_id] || "Anonymous User"}:
                       </h2>
-                      <p className="text-white/80">{msg.content}</p>
+                      <p className="text-secondary/80">{msg.content}</p>
                     </div>
-                    <p className="text-text-inactive text-sm">
+                    <p className="text-text-inactive text-xs">
                       {formatTime(msg.createdAt)}
                     </p>
                   </div>
@@ -232,7 +228,7 @@ function ChatPopover() {
           <div className="flex items-center">
             <TextInput
               placeholder="Type a message"
-              className="w-9/10"
+              className="w-full"
               value={input}
               onChange={(e: any) => {
                 setInput(e.target.value);
