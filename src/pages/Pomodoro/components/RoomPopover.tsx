@@ -243,9 +243,9 @@ function RoomPopover() {
                     onClick={() => null}
                   >
                     <div className="w-10 h-10 rounded-full bg-secondary text-primary flex items-center justify-center font-bold">
-                      {member.user_id.avatar ? (
+                      {member.avatar ? (
                         <img
-                          src={`${member.user_id.avatar}`}
+                          src={`${member.avatar}`}
                           alt="Avatar"
                           className="w-11 border border-white rounded-full"
                         />
@@ -257,7 +257,7 @@ function RoomPopover() {
                     </div>
                     <div className="flex-1">
                       <p className="text-secondary font-medium">
-                        {member.user_id.name || "User"}
+                        {member.name || "User"}
                       </p>
                     </div>
                   </div>
@@ -358,9 +358,9 @@ function RoomPopover() {
                     className="flex items-center gap-x-sm rounded-lg p-xs transition-all hover:bg-secondary/5"
                   >
                     <div className="w-10 h-10 rounded-full bg-secondary text-primary flex items-center justify-center font-bold">
-                      {member.user_id.avatar ? (
+                      {member.avatar ? (
                         <img
-                          src={`${member.user_id.avatar}`}
+                          src={`${member.avatar}`}
                           alt="Avatar"
                           className="w-11 border border-white rounded-full"
                         />
@@ -375,7 +375,7 @@ function RoomPopover() {
                         className="text-secondary font-medium cursor-pointer"
                         onClick={() => null} // mo profile
                       >
-                        {member.user_id.name || "User"}
+                        {member.name || "User"}
                       </p>
                     </div>
                   </div>

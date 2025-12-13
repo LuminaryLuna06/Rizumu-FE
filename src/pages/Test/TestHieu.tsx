@@ -140,13 +140,11 @@ function TestHieu() {
 
     if (roomMembers && roomMembers.length > 0) {
       const member = roomMembers.find(
-        (member: any) =>
-          member?.user_id?._id === userId ||
-          member?.user_id?._id?.toString() === userId?.toString()
+        (member: any) => member.user_id === userId
       );
 
       if (member) {
-        return member?.user_id?.name || "Unknown";
+        return member?.name || "Unknown";
       }
     }
 
