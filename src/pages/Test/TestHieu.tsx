@@ -26,8 +26,7 @@ function TestHieu() {
   const [isLoading, setIsLoading] = useState(false);
 
   const messagesRef = useRef<HTMLDivElement | null>(null);
-  const limit = 20;
-
+  const limit = 30;
   const connectSocket = () => {
     if (!user?._id || !user.current_room_id || socket) return;
 
@@ -54,6 +53,9 @@ function TestHieu() {
     });
 
     socket.on("new_message", (msg) => {
+      console.log("🔔 New message received:", msg);
+      console.log("📨 Sender ID:", msg?.sender_id);
+      console.log("👥 Room members:", roomMembers);
       setMessages((prev: any) => [...prev, msg]);
       scrollToBottom();
     });
@@ -87,7 +89,7 @@ function TestHieu() {
         params,
       });
 
-      const data = res.data.messages || [];
+      const data = res.data.message2 || [];
 
       setMessages((prev: any) => [...data, ...prev]);
       setHasMoreMessage(res.data?.hasMore ?? false);
@@ -135,21 +137,21 @@ function TestHieu() {
     }
   };
 
-  const getMemberName = (userId: string) => {
-    if (!userId) return "Unknown";
+  // const getMemberName = (userId: string) => {
+  //   if (!userId) return "Unknown";
 
-    if (roomMembers && roomMembers.length > 0) {
-      const member = roomMembers.find(
-        (member: any) => member.user_id === userId
-      );
+  //   if (roomMembers && roomMembers.length > 0) {
+  //     const member = roomMembers.find(
+  //       (member: any) => member.user_id === userId
+  //     );
 
-      if (member) {
-        return member?.name || "Unknown";
-      }
-    }
+  //     if (member) {
+  //       return member?.name || "Unknown";
+  //     }
+  //   }
 
-    return "Not found";
-  };
+  //   return "Not found";
+  // };
 
   const formatTime = (time?: string) => {
     if (!time) return "";
@@ -172,6 +174,9 @@ function TestHieu() {
     );
     console.log(response.data);
   };
+  const mapSenderName = Object.fromEntries(
+    roomMembers && roomMembers.map((e) => [e.user_id, e.name])
+  );
 
   return (
     <div>
@@ -236,24 +241,27 @@ function TestHieu() {
               onScroll={handleScroll}
               className="flex flex-col items-start max-h-[350px] min-h-[250px] overflow-y-auto overflow-x-hidden custom-scrollbar scrollbar-hidden"
             >
-              {messages.map((msg: any, idx: number) => {
-                const senderName = getMemberName(msg?.sender_id);
+              {messages &&
+                messages.map((msg: any, idx: number) => {
+                  // const senderName = getMemberName(msg?.sender_id);
 
-                return (
-                  <div
-                    className="flex flex-col h-[50px] mb-sm"
-                    key={msg._id || idx}
-                  >
-                    <div className="flex items-center gap-1">
-                      <h2 className="text-lg font-bold">{senderName}:</h2>
-                      <p className="text-white/80">{msg.content}</p>
+                  return (
+                    <div
+                      className="flex flex-col h-[50px] mb-sm"
+                      key={msg._id || idx}
+                    >
+                      <div className="flex items-center gap-1">
+                        <h2 className="text-lg font-bold">
+                          {mapSenderName[msg.sender_id] || "Me"}:
+                        </h2>
+                        <p className="text-white/80">{msg.content}</p>
+                      </div>
+                      <p className="text-text-inactive text-sm">
+                        {formatTime(msg.createdAt)}
+                      </p>
                     </div>
-                    <p className="text-text-inactive text-sm">
-                      {formatTime(msg.createdAt)}
-                    </p>
-                  </div>
-                );
-              })}
+                  );
+                })}
             </div>
 
             <div className="flex items-center">
