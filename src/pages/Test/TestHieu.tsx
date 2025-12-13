@@ -26,7 +26,8 @@ function TestHieu() {
   const [isLoading, setIsLoading] = useState(false);
 
   const messagesRef = useRef<HTMLDivElement | null>(null);
-  const limit = 30;
+  const isInitialLoadRef = useRef<boolean>(true);
+
   const connectSocket = () => {
     if (!user?._id || !user.current_room_id || socket) return;
 
@@ -53,11 +54,14 @@ function TestHieu() {
     });
 
     socket.on("new_message", (msg) => {
-      console.log("🔔 New message received:", msg);
-      console.log("📨 Sender ID:", msg?.sender_id);
-      console.log("👥 Room members:", roomMembers);
       setMessages((prev: any) => [...prev, msg]);
-      scrollToBottom();
+
+      // Chỉ tự động cuộn xuống nếu user đang ở gần cuối
+      setTimeout(() => {
+        if (isNearBottom()) {
+          scrollToBottom();
+        }
+      }, 100);
     });
 
     return () => {
@@ -72,27 +76,62 @@ function TestHieu() {
     }
   }, [user?.current_room_id]);
 
+  // Cuộn xuống dưới chỉ khi lần đầu load messages
   useEffect(() => {
-    scrollToBottom();
+    if (messages.length > 0 && isInitialLoadRef.current) {
+      // Chỉ tự động cuộn khi là lần đầu load
+      scrollToBottom();
+      isInitialLoadRef.current = false;
+    }
   }, [messages]);
 
   const loadMessages = async (before: string | null = null) => {
-    if (isLoading || !hasMoreMessage || !user?.current_room_id) return;
+    if (isLoading) return;
+
+    // Check hasMoreMessage khi load tin nhắn cũ
+    if (before && !hasMoreMessage) return;
 
     setIsLoading(true);
 
+    // Lưu lại vị trí scroll hiện tại trước khi load tin nhắn cũ
+    let previousScrollHeight = 0;
+    let previousScrollTop = 0;
+
+    if (before && messagesRef.current) {
+      previousScrollHeight = messagesRef.current.scrollHeight;
+      previousScrollTop = messagesRef.current.scrollTop;
+    }
+
     try {
-      const params: any = { limit };
-      if (before) params.before = before;
+      if (before) {
+        // Load tin nhắn cũ
+        const res = await axiosClient.get(
+          `/${user?.current_room_id}/messages?before=${before}`
+        );
+        const data = res.data.message2 || [];
 
-      const res = await axiosClient.get(`/${user?.current_room_id}/messages`, {
-        params,
-      });
+        if (data.length > 0) {
+          setMessages((prev: any) => [...data, ...prev]);
+        }
+        setHasMoreMessage(res.data?.hasMore ?? false);
 
-      const data = res.data.message2 || [];
+        // Khôi phục vị trí scroll sau khi load tin nhắn cũ
+        setTimeout(() => {
+          if (messagesRef.current) {
+            const newScrollHeight = messagesRef.current.scrollHeight;
+            const heightDiff = newScrollHeight - previousScrollHeight;
+            // Giữ nguyên vị trí bằng cách cộng thêm chiều cao mới
+            messagesRef.current.scrollTop = previousScrollTop + heightDiff;
+          }
+        }, 50);
+      } else {
+        // Load tin nhắn ban đầu
+        const res = await axiosClient.get(`/${user?.current_room_id}/messages`);
+        const data = res.data.message2 || [];
 
-      setMessages((prev: any) => [...data, ...prev]);
-      setHasMoreMessage(res.data?.hasMore ?? false);
+        setMessages(data);
+        setHasMoreMessage(res.data?.hasMore ?? false);
+      }
     } catch (err) {
       console.error("Lỗi load tin nhắn", err);
     }
@@ -102,11 +141,16 @@ function TestHieu() {
 
   const sendMessage = () => {
     if (!input.trim() || !socket || !user?.current_room_id) return;
-
-    console.log("Emit send_message:", input.trim());
-
     socket.emit("send_message", input.trim());
     setInput("");
+  };
+
+  const isNearBottom = () => {
+    if (!messagesRef.current) return false;
+
+    const { scrollTop, scrollHeight, clientHeight } = messagesRef.current;
+    // Kiểm tra nếu user đang ở trong vòng 150px từ đáy
+    return scrollHeight - scrollTop - clientHeight < 150;
   };
 
   const scrollToBottom = () => {
@@ -131,7 +175,6 @@ function TestHieu() {
         `/room/${user.current_room_id}/members`
       );
       setRoomMembers(response.data || []);
-      console.log("Room members:", response.data);
     } catch (err) {
       console.error("Lỗi load members:", err);
     }
@@ -243,8 +286,6 @@ function TestHieu() {
             >
               {messages &&
                 messages.map((msg: any, idx: number) => {
-                  // const senderName = getMemberName(msg?.sender_id);
-
                   return (
                     <div
                       className="flex flex-col h-[50px] mb-sm"
@@ -252,7 +293,7 @@ function TestHieu() {
                     >
                       <div className="flex items-center gap-1">
                         <h2 className="text-lg font-bold">
-                          {mapSenderName[msg.sender_id] || "Me"}:
+                          {mapSenderName[msg.sender_id] || "Anonymous User"}:
                         </h2>
                         <p className="text-white/80">{msg.content}</p>
                       </div>
