@@ -15,7 +15,7 @@ import {
   IconUser,
   IconDoorExit,
 } from "@tabler/icons-react";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 function RoomPopover() {
   const toast = useToast();
