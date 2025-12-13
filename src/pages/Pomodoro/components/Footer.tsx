@@ -10,6 +10,7 @@ import {
 import React, { useState } from "react";
 import IframePopover from "./IframePopover";
 import ManageFriendModal from "@rizumu/components/ManageFriendModal";
+import ChatPopover from "./ChatPopover";
 
 function Footer() {
   const [friendOpened, setFriendOpened] = useState(false);
@@ -37,9 +38,7 @@ function Footer() {
         <ResponsiveButton onClick={() => setFriendOpened(true)}>
           <IconUsers size={20} />
         </ResponsiveButton>
-        <ResponsiveButton>
-          <IconMessage size={20} />
-        </ResponsiveButton>
+        <ChatPopover />
       </div>
       <ManageFriendModal
         opened={friendOpened}
