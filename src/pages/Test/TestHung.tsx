@@ -5,6 +5,7 @@ import ManageFriendModal from "@rizumu/components/ManageFriendModal";
 import FindStudyRoomModal from "@rizumu/components/FindStudyRoomModal";
 import AppSetting from "@rizumu/components/AppSetting";
 import EditTask from "@rizumu/components/EditTask";
+import Task from "@rizumu/components/Task";
 
 function TestHung() {
   return (
@@ -12,7 +13,7 @@ function TestHung() {
       className="h-screen"
       style={{ backgroundImage: `url(/image/fuji2.jpg)` }}
     >
-      <EditTask />
+      <Task />
     </div>
   );
 }
