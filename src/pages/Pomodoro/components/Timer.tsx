@@ -57,7 +57,7 @@ const formatTime = (seconds: number) => {
   return `${m}:${s}`;
 };
 
-function Timer() {
+function Timer({ bgIsImage }: { bgIsImage: boolean }) {
   const { user } = useAuth();
   const [openedPreset, setOpenedPreset] = useState(false);
   const [mode, setMode] = useState<TimerMode>("pomodoro");
@@ -386,6 +386,27 @@ function Timer() {
       });
 
       // Create PiP UI structure
+      const bgStyle = bgIsImage
+        ? `background-image: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), url('/image/fuji.webp');
+          background-size: cover;
+          background-position: center;`
+        : `background: black; position: relative; overflow: hidden;`;
+
+      const videoBg = !bgIsImage
+        ? `<video autoplay muted loop style="
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 0;
+          ">
+            <source src="/video/Vid_BG_1.mp4" type="video/mp4" />
+          </video>`
+        : "";
+
+      // Create PiP UI structure
       pip.document.body.innerHTML = `
         <div id="pip-container" style="
           display: flex;
@@ -393,20 +414,20 @@ function Timer() {
           align-items: center;
           justify-content: center;
           height: 100vh;
-          background-image: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), url('/image/fuji.webp');
-          background-size: cover;
-          background-position: center;
           font-family: system-ui, -apple-system, sans-serif;
           color: white;
           gap: 20px;
+          ${bgStyle}
         ">
+          ${videoBg}
           <div id="pip-timer" style="
             font-size: 4rem;
             font-weight: 800;
             letter-spacing: 0.07em;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            z-index: 1;
           "></div>
-          <div style="display: flex; gap: 15px; align-items: center;">
+          <div style="display: flex; gap: 15px; align-items: center; z-index: 1;">
             <button id="pip-toggle" style="
               padding: 12px 32px;
               border-radius: 9999px;
