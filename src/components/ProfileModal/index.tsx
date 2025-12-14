@@ -22,6 +22,7 @@ import { useAuth } from "@rizumu/context/AuthContext";
 import { useToast } from "@rizumu/utils/toast/toast";
 import type { ModelUserProfile } from "@rizumu/models/userProfile";
 import axiosClient from "@rizumu/api/config/axiosClient";
+import { months } from "./data/months";
 
 interface HeatMapResponse {
   durations: number[];
@@ -33,64 +34,42 @@ interface ProfileModalProps {
   opened: boolean;
   onClose: () => void;
   onOpenProfile: () => void;
+  userId?: string; // ID của user cần xem profile, mặc định là user hiện tại
 }
 
-function ProfileModal({ opened, onClose, onOpenProfile }: ProfileModalProps) {
-  const { logout, user, refreshUser } = useAuth();
+function ProfileModal({
+  opened,
+  onClose,
+  onOpenProfile,
+  userId,
+}: ProfileModalProps) {
+  const { logout, user: currentUser } = useAuth();
   const [editOpened, setEditOpened] = useState(false);
   const [heatmapData, setHeatmapData] = useState<HeatMapData>({});
+  const [profileUser, setProfileUser] = useState<ModelUserProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(false);
   const toast = useToast();
-  const months = [
-    {
-      name: "Jan",
-      days: 31,
-    },
-    {
-      name: "Feb",
-      days: 28,
-    },
-    {
-      name: "Mar",
-      days: 31,
-    },
-    {
-      name: "Apr",
-      days: 30,
-    },
-    {
-      name: "May",
-      days: 31,
-    },
-    {
-      name: "Jun",
-      days: 30,
-    },
-    {
-      name: "Jul",
-      days: 31,
-    },
-    {
-      name: "Aug",
-      days: 31,
-    },
-    {
-      name: "Sep",
-      days: 30,
-    },
-    {
-      name: "Oct",
-      days: 31,
-    },
-    {
-      name: "Nov",
-      days: 30,
-    },
-    {
-      name: "Dec",
-      days: 31,
-    },
-  ];
 
+  // ID của user cần xem (ưu tiên userId prop, nếu không có thì dùng currentUser._id)
+  const targetUserId = userId || currentUser?._id;
+
+  // Kiểm tra xem có phải đang xem profile của chính mình không
+  const isOwnProfile = targetUserId === currentUser?._id;
+
+  const getProfile = async (id: string) => {
+    setProfileLoading(true);
+    try {
+      const response = await axiosClient.get<{ data: ModelUserProfile }>(
+        `/auth/profile/${id}`
+      );
+      setProfileUser(response.data.data);
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+      toast.error("Failed to load profile");
+    } finally {
+      setProfileLoading(false);
+    }
+  };
   const getAvatar = (userAvatar: any) => {
     if (!userAvatar) {
       return (
@@ -108,8 +87,8 @@ function ProfileModal({ opened, onClose, onOpenProfile }: ProfileModalProps) {
     );
   };
 
-  const getHeatMap = async () => {
-    if (!user?._id) return;
+  const getHeatMap = async (userId: string) => {
+    if (!userId) return;
 
     try {
       const year = new Date().getFullYear();
@@ -121,7 +100,7 @@ function ProfileModal({ opened, onClose, onOpenProfile }: ProfileModalProps) {
       const endTime = endOfYear.toISOString();
 
       const response = await axiosClient.get<HeatMapResponse>(
-        `/session/heatmap?userId=${user._id}&startTime=${startTime}&endTime=${endTime}`
+        `/session/heatmap?user_id=${userId}&startTime=${startTime}&endTime=${endTime}`
       );
 
       const heatmapDataObj: HeatMapData = {};
@@ -143,11 +122,14 @@ function ProfileModal({ opened, onClose, onOpenProfile }: ProfileModalProps) {
   };
 
   useEffect(() => {
-    if (opened) {
-      refreshUser();
-      getHeatMap();
+    if (opened && targetUserId) {
+      // Reset profile data khi targetUserId thay đổi
+      setProfileUser(null);
+      setHeatmapData({});
+      getProfile(targetUserId);
+      getHeatMap(targetUserId);
     }
-  }, [opened, user?._id]);
+  }, [opened, targetUserId]);
 
   const handleLogout = () => {
     logout();
@@ -158,67 +140,91 @@ function ProfileModal({ opened, onClose, onOpenProfile }: ProfileModalProps) {
       <Modal
         opened={opened}
         onClose={onClose}
-        title={user?.name ? `${user?.name}'s Profile` : "User's Profile"}
+        title={
+          profileUser?.name
+            ? `${profileUser?.name}'s Profile`
+            : "User's Profile"
+        }
         className="w-full max-w-[1000px] max-h-[70vh] overflow-y-auto overflow-x-hidden custom-scrollbar scrollbar-hidden"
         more={
-          <div className="flex items-center h-20 lg:h-10 gap-2 md:gap-sm hidden md:flex">
-            <ResponsiveButton
-              className="bg-white/10 hover:bg-white/20 h-11 md:h-5 gap-x-xs text-sm"
-              onClick={() => {
-                setEditOpened(true);
-                onClose();
-              }}
-              leftSection={<IconPencil size={16} />}
-            >
-              Edit
-            </ResponsiveButton>
-            <ResponsiveButton
-              className="!bg-emerald-500 hover:bg-emarald-600 h-11 md:h-5 gap-x-xs text-sm"
-              leftSection={<IconShare2 size={16} />}
-            >
-              Copy link
-            </ResponsiveButton>
-          </div>
+          isOwnProfile ? (
+            <div className="flex items-center h-20 lg:h-10 gap-2 md:gap-sm hidden md:flex">
+              <ResponsiveButton
+                className="bg-white/10 hover:bg-white/20 h-11 md:h-5 gap-x-xs text-sm"
+                onClick={() => {
+                  setEditOpened(true);
+                  onClose();
+                }}
+                leftSection={<IconPencil size={16} />}
+              >
+                Edit
+              </ResponsiveButton>
+              <ResponsiveButton
+                className="!bg-emerald-500 hover:bg-emarald-600 h-11 md:h-5 gap-x-xs text-sm"
+                leftSection={<IconShare2 size={16} />}
+              >
+                Copy link
+              </ResponsiveButton>
+            </div>
+          ) : null
         }
       >
         <div className="flex flex-col md:flex-row items-center mb-xl h-1/3">
           <div className="flex-1 flex justify-center items-center mb-md md:mb-0">
-            {getAvatar(user?.avatar)}
+            {profileLoading ? (
+              <div className="w-30 h-30 md:w-24 md:h-24 rounded-full bg-secondary/20 animate-pulse" />
+            ) : (
+              getAvatar(profileUser?.avatar)
+            )}
           </div>
           <div className="flex-5 flex-col w-full">
             <div className="flex flex-col-reverse md:flex-row items-center gap-sm w-full h-25 md:h-10 mb-xs">
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl md:text-xl font-bold">
-                  {user?.name ? `${user?.name}` : "User"}
-                </h1>
-                {user?.country ? (
-                  <div className="flex justify-center items-center bg-secondary/10 px-2 py-1 rounded-lg w-[50px] text-xs">
-                    {user?.country}
-                  </div>
+                {profileLoading ? (
+                  <div className="h-8 bg-secondary/20 rounded animate-pulse w-48" />
                 ) : (
-                  <></>
+                  <>
+                    <h1 className="text-2xl md:text-xl font-bold">
+                      {profileUser?.name ? `${profileUser?.name}` : "User"}
+                    </h1>
+                    {profileUser?.country ? (
+                      <div className="flex justify-center items-center bg-secondary/10 px-2 py-1 rounded-lg w-[50px] text-xs">
+                        {profileUser?.country}
+                      </div>
+                    ) : (
+                      <></>
+                    )}
+                  </>
                 )}
               </div>
-              <div className="flex items-center h-20 lg:h-10 gap-2 md:gap-xl lg:gap-sm md:hidden flex">
-                <ResponsiveButton
-                  className="flex justify-center h-11 md:h-8 lg:h-5 bg-white/10 hover:bg-white/20 gap-x-xs text-sm min-w-[100px]"
-                  onClick={() => {
-                    setEditOpened(true);
-                    onClose();
-                  }}
-                  leftSection={<IconPencil size={16} />}
-                >
-                  Edit
-                </ResponsiveButton>
-                <ResponsiveButton
-                  className="!bg-emerald-500 hover:bg-emarald-600 h-11 md:h-8 lg:h-5 gap-x-xs text-sm min-w-[100px]"
-                  leftSection={<IconShare2 size={16} />}
-                >
-                  Copy link
-                </ResponsiveButton>
-              </div>
+              {isOwnProfile && (
+                <div className="flex items-center h-20 lg:h-10 gap-2 md:gap-xl lg:gap-sm md:hidden flex">
+                  <ResponsiveButton
+                    className="flex justify-center h-11 md:h-8 lg:h-5 bg-white/10 hover:bg-white/20 gap-x-xs text-sm min-w-[100px]"
+                    onClick={() => {
+                      setEditOpened(true);
+                      onClose();
+                    }}
+                    leftSection={<IconPencil size={16} />}
+                  >
+                    Edit
+                  </ResponsiveButton>
+                  <ResponsiveButton
+                    className="!bg-emerald-500 hover:bg-emarald-600 h-11 md:h-8 lg:h-5 gap-x-xs text-sm min-w-[100px]"
+                    leftSection={<IconShare2 size={16} />}
+                  >
+                    Copy link
+                  </ResponsiveButton>
+                </div>
+              )}
             </div>
-            <p className="mb-sm">{user?.bio ? `${user?.bio}` : ""}</p>
+            {profileLoading ? (
+              <div className="h-4 bg-secondary/20 rounded animate-pulse w-full mb-sm" />
+            ) : (
+              <p className="mb-sm">
+                {profileUser?.bio ? `${profileUser?.bio}` : ""}
+              </p>
+            )}
             <div>
               <div className="flex justify-between text-sm font-bold mb-xs">
                 <p>Lv. 6</p>
@@ -332,23 +338,25 @@ function ProfileModal({ opened, onClose, onOpenProfile }: ProfileModalProps) {
           </div>
         </div>
 
-        <div className="flex justify-center ">
-          <ResponsiveButton
-            onClick={() => {
-              handleLogout();
-              onClose();
-            }}
-            className="bg-red-500 hover:bg-red-600 h-11 min-w-[100px] gap-x-xs text-sm justify-center"
-            leftSection={<IconDoorExit size={16} />}
-          >
-            Logout
-          </ResponsiveButton>
-        </div>
+        {isOwnProfile && (
+          <div className="flex justify-center ">
+            <ResponsiveButton
+              onClick={() => {
+                handleLogout();
+                onClose();
+              }}
+              className="bg-red-500 hover:bg-red-600 h-11 min-w-[100px] gap-x-xs text-sm justify-center"
+              leftSection={<IconDoorExit size={16} />}
+            >
+              Logout
+            </ResponsiveButton>
+          </div>
+        )}
       </Modal>
       <EditProfileModal
         opened={editOpened}
         onClose={() => setEditOpened(false)}
-        user={user as ModelUserProfile}
+        user={profileUser as ModelUserProfile}
         onOpenProfile={() => {
           setEditOpened(false);
           onOpenProfile();

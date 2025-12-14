@@ -1,12 +1,5 @@
 import ResponsiveButton from "@rizumu/components/ResponsiveButton";
-import {
-  IconCloud,
-  IconPhoto,
-  IconSticker2,
-  IconGift,
-  IconUsers,
-  IconMessage,
-} from "@tabler/icons-react";
+import { IconCloud, IconPhoto, IconGift, IconUsers } from "@tabler/icons-react";
 import React, { useState } from "react";
 import IframePopover from "./IframePopover";
 import ManageFriendModal from "@rizumu/components/ManageFriendModal";
