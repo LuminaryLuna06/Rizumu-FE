@@ -11,6 +11,8 @@ import {
   IconGift,
   IconMap,
   IconDoorExit,
+  IconUserPlus,
+  IconUserMinus,
 } from "@tabler/icons-react";
 import Modal from "../Modal";
 import ResponsiveButton from "../ResponsiveButton";
@@ -48,6 +50,9 @@ function ProfileModal({
   const [heatmapData, setHeatmapData] = useState<HeatMapData>({});
   const [profileUser, setProfileUser] = useState<ModelUserProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
+  const [isFriend, setIsFriend] = useState(false);
+  const [friendshipId, setFriendshipId] = useState<string | null>(null);
+  const [friendshipLoading, setFriendshipLoading] = useState(false);
   const toast = useToast();
 
   // ID của user cần xem (ưu tiên userId prop, nếu không có thì dùng currentUser._id)
@@ -70,6 +75,60 @@ function ProfileModal({
       setProfileLoading(false);
     }
   };
+
+  const checkFriendship = async (userId: string) => {
+    try {
+      const response = await axiosClient.get("/friend/list");
+      const friends = response.data || [];
+      // Check if the userId exists in the friends list
+      const friend = friends.find((friend: any) => friend._id === userId);
+      if (friend) {
+        setIsFriend(true);
+        setFriendshipId(friend.friendshipId);
+      } else {
+        setIsFriend(false);
+        setFriendshipId(null);
+      }
+    } catch (error) {
+      console.error("Error checking friendship:", error);
+      setIsFriend(false);
+      setFriendshipId(null);
+    }
+  };
+
+  const handleAddFriend = async () => {
+    if (!targetUserId) return;
+    try {
+      setFriendshipLoading(true);
+      await axiosClient.post("/friend/request", { recipientId: targetUserId });
+      toast.success("Friend request sent!");
+    } catch (error: any) {
+      console.error("Error sending friend request:", error);
+      toast.error(error?.response?.data?.message || "Failed to send request");
+    } finally {
+      setFriendshipLoading(false);
+    }
+  };
+
+  const handleUnfriend = async () => {
+    if (!friendshipId) {
+      toast.error("Friendship ID not found");
+      return;
+    }
+    try {
+      setFriendshipLoading(true);
+      await axiosClient.delete(`/friend/${friendshipId}`);
+      toast.success("Unfriended successfully!");
+      setIsFriend(false);
+      setFriendshipId(null);
+    } catch (error: any) {
+      console.error("Error unfriending:", error);
+      toast.error(error?.response?.data?.message || "Failed to unfriend");
+    } finally {
+      setFriendshipLoading(false);
+    }
+  };
+
   const getAvatar = (userAvatar: any) => {
     if (!userAvatar) {
       return (
@@ -126,8 +185,14 @@ function ProfileModal({
       // Reset profile data khi targetUserId thay đổi
       setProfileUser(null);
       setHeatmapData({});
+      setIsFriend(false);
+      setFriendshipId(null);
       getProfile(targetUserId);
       getHeatMap(targetUserId);
+      // Check friendship status nếu không phải profile của mình
+      if (!isOwnProfile) {
+        checkFriendship(targetUserId);
+      }
     }
   }, [opened, targetUserId]);
 
@@ -170,11 +235,32 @@ function ProfileModal({
         }
       >
         <div className="flex flex-col md:flex-row items-center mb-xl h-1/3">
-          <div className="flex-1 flex justify-center items-center mb-md md:mb-0">
+          <div className="flex-1 flex flex-col justify-center items-center mb-md md:mb-0 gap-md">
             {profileLoading ? (
               <div className="w-30 h-30 md:w-24 md:h-24 rounded-full bg-secondary/20 animate-pulse" />
             ) : (
               getAvatar(profileUser?.avatar)
+            )}
+            {/* Add Friend / Unfriend Button */}
+            {!isOwnProfile && !profileLoading && (
+              <button
+                onClick={isFriend ? handleUnfriend : handleAddFriend}
+                disabled={friendshipLoading}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                  isFriend
+                    ? "bg-red-500/20 hover:bg-red-500/30 text-red-400"
+                    : "bg-blue-500/20 hover:bg-blue-500/30 text-blue-400"
+                } ${friendshipLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+              >
+                {friendshipLoading ? (
+                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                ) : isFriend ? (
+                  <IconUserMinus size={18} />
+                ) : (
+                  <IconUserPlus size={18} />
+                )}
+                {isFriend ? "Unfriend" : "Add Friend"}
+              </button>
             )}
           </div>
           <div className="flex-5 flex-col w-full">
