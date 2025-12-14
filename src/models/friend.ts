@@ -4,4 +4,5 @@ export type ModelFriend = {
   username: string;
   avatar?: string;
   friendshipId: string;
+  status?: string;
 };

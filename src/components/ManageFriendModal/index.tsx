@@ -298,7 +298,9 @@ function ManageFriendModal({ opened, onClose }: ManageFriendModalProps) {
                               {friend.name?.[0]?.toUpperCase() || "U"}
                             </div>
                           )}
-                          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-[#1e1e1e] rounded-full"></span>
+                          {friend.status === "online" && (
+                            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-[#1e1e1e] rounded-full"></span>
+                          )}
                         </div>
 
                         {/* Info */}
