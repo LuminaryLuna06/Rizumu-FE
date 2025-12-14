@@ -16,14 +16,12 @@ function PomodoroPage() {
           {/* Header */}
           <Header />
           {/* Main Content */}
-          <div className="flex-1 flex flex-col justify-center">
-            <Timer bgIsImage={isImage}/>
-          </div>
+          <Timer bgIsImage={isImage} />
           {/* Footer */}
           <Footer />
         </div>
       ) : (
-        <div className="relative flex flex-col min-h-screen w-full overflow-hidden px-md md:px-xl text-secondary font-light text-sm">
+        <div className="flex flex-col min-h-screen w-full overflow-hidden px-md md:px-xl text-secondary font-light text-sm z-base">
           <video
             autoPlay
             muted
@@ -37,9 +35,7 @@ function PomodoroPage() {
           {/* Header */}
           <Header />
           {/* Main Content */}
-          <div className="flex-1 flex flex-col justify-center">
-            <Timer bgIsImage={isImage}/>
-          </div>
+          <Timer bgIsImage={isImage} />
           {/* Footer */}
           <Footer />
         </div>
