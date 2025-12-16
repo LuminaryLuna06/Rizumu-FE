@@ -1,5 +1,6 @@
 import axiosClient from "@rizumu/api/config/axiosClient";
 import ActivitiesModal from "@rizumu/components/ActivitiesModal";
+import BackgroundModal from "@rizumu/components/BackgroundModal";
 import Modal from "@rizumu/components/Modal";
 import Popover from "@rizumu/components/Popover";
 import ProfileModal from "@rizumu/components/ProfileModal";
@@ -221,121 +222,146 @@ function TestHieu() {
     roomMembers && roomMembers.map((e) => [e.user_id, e.name])
   );
 
+  const getProgress = async () => {
+    const response = await axiosClient.get(`/progress/${user?._id}`);
+    console.log(response.data);
+  };
+
   return (
-    <div>
-      <button
-        className="px-4 py-2 bg-blue-600 text-white rounded"
-        onClick={() => setOpened(true)}
+    <div className="flex flex-col min-h-screen w-full overflow-hidden px-md md:px-xl text-secondary font-light text-sm z-base">
+      <video
+        autoPlay
+        muted
+        loop
+        playsInline
+        className="absolute top-0 left-0 w-full h-full object-cover -z-10"
       >
-        Open Modal
-      </button>
-      <Modal
-        opened={opened}
-        onClose={() => setOpened(false)}
-        title="Demo Modal"
-      >
-        <p>This is a basic modal content.</p>
-      </Modal>
+        <source src="/video/Vid_BG_1.mp4" type="video/mp4" />
+      </video>
+      <div className="absolute flex gap-1 z-10">
+        <button
+          className="px-4 py-2 bg-blue-600 text-white rounded"
+          onClick={() => setOpened(true)}
+        >
+          Open Modal
+        </button>
 
-      <button
-        className="px-4 py-2 bg-blue-600 text-white rounded"
-        onClick={() => {
-          setProfileOpened(true);
-          refreshUser();
-        }}
-      >
-        Test Profile
-      </button>
+        <button
+          className="px-4 py-2 bg-blue-600 text-white rounded"
+          onClick={() => {
+            setProfileOpened(true);
+            refreshUser();
+          }}
+        >
+          Test Profile
+        </button>
 
-      <button
-        className="px-4 py-2 bg-blue-600 text-white rounded"
-        onClick={() => {
-          setActivitiesOpened(true);
-          refreshUser();
-        }}
-      >
-        Test Activity
-      </button>
-      <button
-        className="px-4 py-2 bg-blue-600 text-white rounded"
-        onClick={() => getHourStats()}
-      >
-        Test
-      </button>
-      <Popover
-        trigger={
-          <ResponsiveButton leftSection={<IconMessage />}></ResponsiveButton>
-        }
-        opened={chatOpened}
-        onClose={() => setChatOpened(!chatOpened)}
-        position="bottom-left"
-      >
-        <div className="flex items-center justify-center bg-black/70 backdrop-blur-xl text-secondary rounded-3xl shadow-2xl p-md border border-gray-800 font-poppins overflow-y-hidden overflow-x-hidden">
-          <div className="flex flex-col w-full">
-            <div className="flex justify-between mb-2 w-full">
-              <h2 className="text-lg font-semibold">Chat</h2>
-              <div className="flex items-center gap-2 text-text-inactive">
-                <IconUsers size={14} />
-                <p className="text-sm">{roomMembers.length} members</p>
+        <button
+          className="px-4 py-2 bg-blue-600 text-white rounded"
+          onClick={() => {
+            setActivitiesOpened(true);
+            refreshUser();
+          }}
+        >
+          Test Activity
+        </button>
+
+        <button
+          className="px-4 py-2 bg-blue-600 text-white rounded"
+          onClick={() => getProgress()}
+        >
+          Test
+        </button>
+
+        <button
+          className="px-4 py-2 bg-blue-600 text-white rounded"
+          onClick={() => getHourStats()}
+        >
+          TestRoom
+        </button>
+
+        <Popover
+          trigger={
+            <ResponsiveButton leftSection={<IconMessage />}></ResponsiveButton>
+          }
+          opened={chatOpened}
+          onClose={() => setChatOpened(!chatOpened)}
+          position="bottom-left"
+        >
+          <div className="flex items-center justify-center bg-black/70 backdrop-blur-xl text-secondary rounded-3xl shadow-2xl p-md border border-gray-800 font-poppins overflow-y-hidden overflow-x-hidden">
+            <div className="flex flex-col w-full">
+              <div className="flex justify-between mb-2 w-full">
+                <h2 className="text-lg font-semibold">Chat</h2>
+                <div className="flex items-center gap-2 text-text-inactive">
+                  <IconUsers size={14} />
+                  <p className="text-sm">{roomMembers.length} members</p>
+                </div>
+              </div>
+              <div
+                ref={messagesRef}
+                onScroll={handleScroll}
+                className="flex flex-col items-start max-h-[350px] min-h-[250px] overflow-y-auto overflow-x-hidden custom-scrollbar scrollbar-hidden"
+              >
+                {messages &&
+                  messages.map((msg: any, idx: number) => {
+                    return (
+                      <div
+                        className="flex flex-col h-[50px] mb-sm"
+                        key={msg._id || idx}
+                      >
+                        <div className="flex items-center gap-1">
+                          <h2 className="text-lg font-bold">
+                            {mapSenderName[msg.sender_id] || "Anonymous User"}:
+                          </h2>
+                          <p className="text-white/80">{msg.content}</p>
+                        </div>
+                        <p className="text-text-inactive text-sm">
+                          {formatTime(msg.createdAt)}
+                        </p>
+                      </div>
+                    );
+                  })}
+              </div>
+
+              <div className="flex items-center">
+                <TextInput
+                  placeholder="Type a message"
+                  className="w-9/10"
+                  value={input}
+                  onChange={(e: any) => {
+                    setInput(e.target.value);
+                  }}
+                  onKeyDown={(e: any) => {
+                    if (e.key === "Enter") sendMessage();
+                  }}
+                />
+                <ResponsiveButton
+                  leftSection={<IconSend2 size={25} />}
+                  disabled={input.trim().length === 0}
+                  onClick={sendMessage}
+                ></ResponsiveButton>
               </div>
             </div>
-            <div
-              ref={messagesRef}
-              onScroll={handleScroll}
-              className="flex flex-col items-start max-h-[350px] min-h-[250px] overflow-y-auto overflow-x-hidden custom-scrollbar scrollbar-hidden"
-            >
-              {messages &&
-                messages.map((msg: any, idx: number) => {
-                  return (
-                    <div
-                      className="flex flex-col h-[50px] mb-sm"
-                      key={msg._id || idx}
-                    >
-                      <div className="flex items-center gap-1">
-                        <h2 className="text-lg font-bold">
-                          {mapSenderName[msg.sender_id] || "Anonymous User"}:
-                        </h2>
-                        <p className="text-white/80">{msg.content}</p>
-                      </div>
-                      <p className="text-text-inactive text-sm">
-                        {formatTime(msg.createdAt)}
-                      </p>
-                    </div>
-                  );
-                })}
-            </div>
-
-            <div className="flex items-center">
-              <TextInput
-                placeholder="Type a message"
-                className="w-9/10"
-                value={input}
-                onChange={(e: any) => {
-                  setInput(e.target.value);
-                }}
-                onKeyDown={(e: any) => {
-                  if (e.key === "Enter") sendMessage();
-                }}
-              />
-              <ResponsiveButton
-                leftSection={<IconSend2 size={25} />}
-                disabled={input.trim().length === 0}
-                onClick={sendMessage}
-              ></ResponsiveButton>
-            </div>
           </div>
-        </div>
-      </Popover>
+        </Popover>
 
-      <ProfileModal
-        opened={profileOpened}
-        onClose={() => setProfileOpened(false)}
-        onOpenProfile={() => setProfileOpened(true)}
-      />
-      <ActivitiesModal
-        opened={activitiesOpened}
-        onClose={() => setActivitiesOpened(false)}
-      />
+        <Modal
+          opened={opened}
+          onClose={() => setOpened(false)}
+          title="Demo Modal"
+        >
+          <p>This is a basic modal content.</p>
+        </Modal>
+        <ProfileModal
+          opened={profileOpened}
+          onClose={() => setProfileOpened(false)}
+          onOpenProfile={() => setProfileOpened(true)}
+        />
+        <ActivitiesModal
+          opened={activitiesOpened}
+          onClose={() => setActivitiesOpened(false)}
+        />
+      </div>
     </div>
   );
 }
