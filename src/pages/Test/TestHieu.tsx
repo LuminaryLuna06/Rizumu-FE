@@ -1,5 +1,6 @@
 import axiosClient from "@rizumu/api/config/axiosClient";
 import ActivitiesModal from "@rizumu/components/ActivitiesModal";
+import BackgroundModal from "@rizumu/components/BackgroundModal";
 import Modal from "@rizumu/components/Modal";
 import Popover from "@rizumu/components/Popover";
 import ProfileModal from "@rizumu/components/ProfileModal";
@@ -16,6 +17,7 @@ function TestHieu() {
   const [profileOpened, setProfileOpened] = useState(false);
   const [activitiesOpened, setActivitiesOpened] = useState(false);
   const [chatOpened, setChatOpened] = useState(false);
+  const [bgOpened, setBgOpened] = useState(false);
 
   const [socket, setSocket] = useState<Socket | null>(null);
   const [messages, setMessages] = useState<any>([]);
@@ -222,26 +224,23 @@ function TestHieu() {
   );
 
   return (
-    <div>
-      <div>
-        <video autoPlay muted loop playsInline>
-          <source src="/video/Vid_BG_1.mp4" type="video/mp4" />
-        </video>
-      </div>
-      <div className="absolute inset-0 bg-black/10 z-10">
+    <div className="flex flex-col min-h-screen w-full overflow-hidden px-md md:px-xl text-secondary font-light text-sm z-base">
+      <video
+        autoPlay
+        muted
+        loop
+        playsInline
+        className="absolute top-0 left-0 w-full h-full object-cover -z-10"
+      >
+        <source src="/video/Vid_BG_1.mp4" type="video/mp4" />
+      </video>
+      <div className="absolute flex gap-1 z-10">
         <button
           className="px-4 py-2 bg-blue-600 text-white rounded"
           onClick={() => setOpened(true)}
         >
           Open Modal
         </button>
-        <Modal
-          opened={opened}
-          onClose={() => setOpened(false)}
-          title="Demo Modal"
-        >
-          <p>This is a basic modal content.</p>
-        </Modal>
 
         <button
           className="px-4 py-2 bg-blue-600 text-white rounded"
@@ -262,12 +261,21 @@ function TestHieu() {
         >
           Test Activity
         </button>
+
         <button
           className="px-4 py-2 bg-blue-600 text-white rounded"
           onClick={() => getHourStats()}
         >
           Test
         </button>
+
+        <button
+          className="px-4 py-2 bg-blue-600 text-white rounded"
+          onClick={() => setBgOpened(true)}
+        >
+          Test Background
+        </button>
+
         <Popover
           trigger={
             <ResponsiveButton leftSection={<IconMessage />}></ResponsiveButton>
@@ -333,6 +341,13 @@ function TestHieu() {
           </div>
         </Popover>
 
+        <Modal
+          opened={opened}
+          onClose={() => setOpened(false)}
+          title="Demo Modal"
+        >
+          <p>This is a basic modal content.</p>
+        </Modal>
         <ProfileModal
           opened={profileOpened}
           onClose={() => setProfileOpened(false)}
@@ -342,6 +357,7 @@ function TestHieu() {
           opened={activitiesOpened}
           onClose={() => setActivitiesOpened(false)}
         />
+        <BackgroundModal opened={bgOpened} onClose={() => setBgOpened(false)} />
       </div>
     </div>
   );
