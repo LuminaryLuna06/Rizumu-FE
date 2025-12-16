@@ -1,12 +1,18 @@
 import ResponsiveButton from "@rizumu/components/ResponsiveButton";
 import { IconCloud, IconPhoto, IconGift, IconUsers } from "@tabler/icons-react";
-import React, { useState } from "react";
+import { useState } from "react";
 import IframePopover from "./IframePopover";
 import ManageFriendModal from "@rizumu/components/ManageFriendModal";
 import ChatPopover from "./ChatPopover";
+import BackgroundModal from "@rizumu/components/BackgroundModal";
 
-function Footer() {
+interface FooterProps {
+  onBackgroundChange: (bg: { name: string; type: string }) => void;
+}
+
+function Footer({ onBackgroundChange }: FooterProps) {
   const [friendOpened, setFriendOpened] = useState(false);
+  const [backgroundModalOpened, setBackgroundModalOpened] = useState(false);
   return (
     <div className="footer flex justify-between h-[10vh] items-center">
       {/* Footer Left */}
@@ -15,7 +21,7 @@ function Footer() {
           <IconCloud size={20} />
         </ResponsiveButton>
         <IframePopover />
-        <ResponsiveButton>
+        <ResponsiveButton onClick={() => setBackgroundModalOpened(true)}>
           <IconPhoto size={20} />
         </ResponsiveButton>
         {/* <ResponsiveButton>
@@ -36,6 +42,11 @@ function Footer() {
       <ManageFriendModal
         opened={friendOpened}
         onClose={() => setFriendOpened(false)}
+      />
+      <BackgroundModal
+        opened={backgroundModalOpened}
+        onClose={() => setBackgroundModalOpened(false)}
+        onChange={onBackgroundChange}
       />
     </div>
   );

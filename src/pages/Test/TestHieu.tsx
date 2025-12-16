@@ -17,7 +17,6 @@ function TestHieu() {
   const [profileOpened, setProfileOpened] = useState(false);
   const [activitiesOpened, setActivitiesOpened] = useState(false);
   const [chatOpened, setChatOpened] = useState(false);
-  const [bgOpened, setBgOpened] = useState(false);
 
   const [socket, setSocket] = useState<Socket | null>(null);
   const [messages, setMessages] = useState<any>([]);
@@ -223,6 +222,11 @@ function TestHieu() {
     roomMembers && roomMembers.map((e) => [e.user_id, e.name])
   );
 
+  const getProgress = async () => {
+    const response = await axiosClient.get(`/progress/${user?._id}`);
+    console.log(response.data);
+  };
+
   return (
     <div className="flex flex-col min-h-screen w-full overflow-hidden px-md md:px-xl text-secondary font-light text-sm z-base">
       <video
@@ -264,16 +268,16 @@ function TestHieu() {
 
         <button
           className="px-4 py-2 bg-blue-600 text-white rounded"
-          onClick={() => getHourStats()}
+          onClick={() => getProgress()}
         >
           Test
         </button>
 
         <button
           className="px-4 py-2 bg-blue-600 text-white rounded"
-          onClick={() => setBgOpened(true)}
+          onClick={() => getHourStats()}
         >
-          Test Background
+          TestRoom
         </button>
 
         <Popover
@@ -357,7 +361,6 @@ function TestHieu() {
           opened={activitiesOpened}
           onClose={() => setActivitiesOpened(false)}
         />
-        <BackgroundModal opened={bgOpened} onClose={() => setBgOpened(false)} />
       </div>
     </div>
   );

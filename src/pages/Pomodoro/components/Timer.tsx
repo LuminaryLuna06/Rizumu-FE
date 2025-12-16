@@ -57,7 +57,13 @@ const formatTime = (seconds: number) => {
   return `${m}:${s}`;
 };
 
-function Timer({ bgIsImage }: { bgIsImage: boolean }) {
+interface TimerProps {
+  bgType: string;
+  bgName: string;
+  onSessionComplete?: () => void;
+}
+
+function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
   const { user } = useAuth();
   const [openedPreset, setOpenedPreset] = useState(false);
   const [mode, setMode] = useState<TimerMode>("pomodoro");
@@ -250,6 +256,7 @@ function Timer({ bgIsImage }: { bgIsImage: boolean }) {
                 ended_at: dataRef.current.ended_at,
                 // user_id: dataRef.current.user_id,
               });
+              if (onSessionComplete) onSessionComplete();
             }
 
             queueMicrotask(() => {
@@ -331,6 +338,7 @@ function Timer({ bgIsImage }: { bgIsImage: boolean }) {
           duration: dataRef.current.duration,
           ended_at: dataRef.current.ended_at,
         });
+        if (onSessionComplete) onSessionComplete();
       }
     }
 
@@ -386,14 +394,16 @@ function Timer({ bgIsImage }: { bgIsImage: boolean }) {
       });
 
       // Create PiP UI structure
-      const bgStyle = bgIsImage
-        ? `background-image: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), url('/image/fuji.webp');
+      const bgStyle =
+        bgType === "static"
+          ? `background-image: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), url(${bgName});
           background-size: cover;
           background-position: center;`
-        : `background: black; position: relative; overflow: hidden;`;
+          : `background: black; position: relative; overflow: hidden;`;
 
-      const videoBg = !bgIsImage
-        ? `<video autoplay muted loop style="
+      const videoBg =
+        bgType === "animated"
+          ? `<video autoplay muted loop style="
             position: absolute;
             top: 0;
             left: 0;
@@ -402,9 +412,9 @@ function Timer({ bgIsImage }: { bgIsImage: boolean }) {
             object-fit: cover;
             z-index: 0;
           ">
-            <source src="/video/Vid_BG_1.mp4" type="video/mp4" />
+            <source src="${bgName}" type="video/mp4" />
           </video>`
-        : "";
+          : "";
 
       // Create PiP UI structure
       pip.document.body.innerHTML = `
