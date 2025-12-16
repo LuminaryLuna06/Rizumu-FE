@@ -23,6 +23,7 @@ import HeatMap, { type HeatMapData } from "./components/HeatMap";
 import { useAuth } from "@rizumu/context/AuthContext";
 import { useToast } from "@rizumu/utils/toast/toast";
 import type { ModelUserProfile } from "@rizumu/models/userProfile";
+import type { ModelProgress } from "@rizumu/models/progress";
 import axiosClient from "@rizumu/api/config/axiosClient";
 import { months } from "./data/months";
 
@@ -53,6 +54,8 @@ function ProfileModal({
   const [isFriend, setIsFriend] = useState(false);
   const [friendshipId, setFriendshipId] = useState<string | null>(null);
   const [friendshipLoading, setFriendshipLoading] = useState(false);
+  const [progressData, setProgressData] = useState<ModelProgress | null>(null);
+  const [progressLoading, setProgressLoading] = useState(false);
   const toast = useToast();
 
   // ID của user cần xem (ưu tiên userId prop, nếu không có thì dùng currentUser._id)
@@ -146,6 +149,27 @@ function ProfileModal({
     );
   };
 
+  const getProgress = async (userId: string) => {
+    setProgressLoading(true);
+    try {
+      const response = await axiosClient.get<{ data: ModelProgress }>(
+        `/progress/${userId}`
+      );
+      setProgressData(response.data.data);
+    } catch (error) {
+      console.error("Error fetching progress:", error);
+      toast.error("Failed to load progress data");
+    } finally {
+      setProgressLoading(false);
+    }
+  };
+
+  const formatDuration = (hours: number) => {
+    const hrs = Math.floor(hours);
+    const mins = Math.round((hours - hrs) * 60);
+    return `${hrs}h ${mins}m`;
+  };
+
   const getHeatMap = async (userId: string) => {
     if (!userId) return;
 
@@ -187,8 +211,10 @@ function ProfileModal({
       setHeatmapData({});
       setIsFriend(false);
       setFriendshipId(null);
+      setProgressData(null);
       getProfile(targetUserId);
       getHeatMap(targetUserId);
+      getProgress(targetUserId);
       // Check friendship status nếu không phải profile của mình
       if (!isOwnProfile) {
         checkFriendship(targetUserId);
@@ -343,42 +369,62 @@ function ProfileModal({
             <BoxStatistic
               className="from-orange-400 to-pink-500"
               header="Current Streak"
-              detail="0"
+              detail={
+                progressLoading ? "..." : String(progressData?.streak ?? 0)
+              }
               note="DAYS"
               icon={<IconFlame size={50} />}
             />
-            <BoxStatistic
+            {/* <BoxStatistic
               className="from-orange-400 to-pink-600"
               header="Best Streak"
-              detail="3"
+              detail={
+                progressLoading ? "..." : String(progressData?.streak ?? 0)
+              }
               note="DAYS"
               icon={<IconTrophy size={50} />}
-            />
+            /> */}
             <BoxStatistic
               className="from-emerald-400 to-teal-600"
               header="Total hours"
-              detail="2h 58m"
+              detail={
+                progressLoading
+                  ? "..."
+                  : formatDuration(progressData?.total_hours ?? 0)
+              }
               note=""
               icon={<IconClock size={50} />}
             />
             <BoxStatistic
               className="from-purple-500 to-indigo-600"
               header="Pomodoros"
-              detail="22"
+              detail={
+                progressLoading
+                  ? "..."
+                  : String(progressData?.promo_complete ?? 0)
+              }
               note="Completed"
               icon={<IconCircleCheck size={50} />}
             />
             <BoxStatistic
               className="from-blue-400 to-cyan-500"
               header="This Week"
-              detail="20"
+              detail={
+                progressLoading
+                  ? "..."
+                  : String(progressData?.week_promo_complete ?? 0)
+              }
               note="POMODOROS"
               icon={<IconCalendarWeek size={50} />}
             />
             <BoxStatistic
               className="from-cyan-400 to-blue-600"
               header="Daily average"
-              detail="5m"
+              detail={
+                progressLoading
+                  ? "..."
+                  : formatDuration(progressData?.daily_average ?? 0)
+              }
               note="LAST 30 DAYS"
               icon={<IconChartLine size={50} />}
             />
@@ -386,10 +432,14 @@ function ProfileModal({
               className="from-pink-500 to-rose-600"
               header="Gifts Sent"
               detail={
-                <div className="flex items-center gap-xs">
-                  <IconGift size={24} />
-                  <span>5</span>
-                </div>
+                progressLoading ? (
+                  "..."
+                ) : (
+                  <div className="flex items-center gap-xs">
+                    <IconGift size={24} />
+                    <span>{progressData?.gifts_sent ?? 0}</span>
+                  </div>
+                )
               }
               note=""
               icon={<IconGift size={50} />}
