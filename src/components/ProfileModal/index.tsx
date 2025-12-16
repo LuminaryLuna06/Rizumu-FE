@@ -369,13 +369,15 @@ function ProfileModal({
               note="DAYS"
               icon={<IconFlame size={50} />}
             />
-            <BoxStatistic
+            {/* <BoxStatistic
               className="from-orange-400 to-pink-600"
               header="Best Streak"
-              detail="3"
+              detail={
+                progressLoading ? "..." : String(progressData?.streak ?? 0)
+              }
               note="DAYS"
               icon={<IconTrophy size={50} />}
-            />
+            /> */}
             <BoxStatistic
               className="from-emerald-400 to-teal-600"
               header="Total hours"
