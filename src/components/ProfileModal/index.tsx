@@ -164,6 +164,12 @@ function ProfileModal({
     }
   };
 
+  const formatDuration = (hours: number) => {
+    const hrs = Math.floor(hours);
+    const mins = Math.round((hours - hrs) * 60);
+    return `${hrs}h ${mins}m`;
+  };
+
   const getHeatMap = async (userId: string) => {
     if (!userId) return;
 
@@ -382,7 +388,9 @@ function ProfileModal({
               className="from-emerald-400 to-teal-600"
               header="Total hours"
               detail={
-                progressLoading ? "..." : `${progressData?.total_hours ?? 0}h`
+                progressLoading
+                  ? "..."
+                  : formatDuration(progressData?.total_hours ?? 0)
               }
               note=""
               icon={<IconClock size={50} />}
@@ -413,7 +421,9 @@ function ProfileModal({
               className="from-cyan-400 to-blue-600"
               header="Daily average"
               detail={
-                progressLoading ? "..." : `${progressData?.daily_average ?? 0}h`
+                progressLoading
+                  ? "..."
+                  : formatDuration(progressData?.daily_average ?? 0)
               }
               note="LAST 30 DAYS"
               icon={<IconChartLine size={50} />}
