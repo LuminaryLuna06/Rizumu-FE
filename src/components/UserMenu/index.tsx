@@ -3,6 +3,8 @@ import Popover from "../Popover";
 import {
   IconChevronRight,
   IconFriends,
+  IconLogout,
+  IconLogout2,
   IconMessage,
   IconSettings,
   IconUser,
@@ -10,12 +12,16 @@ import {
 import ProfileModal from "../ProfileModal";
 import { useAuth } from "@rizumu/context/AuthContext";
 import FindStudyRoomModal from "../FindStudyRoomModal";
+import { useToast } from "@rizumu/utils/toast/toast";
+import AppSetting from "../AppSetting";
 
 function UserMenu() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const toast = useToast();
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isStudyRoomOpen, setIsStudyRoomOpen] = useState(false);
+  const [isSettingOpen, setIsSettingOpen] = useState(true);
   const menuItems = [
     {
       icon: <IconUser size={16} />,
@@ -27,7 +33,19 @@ function UserMenu() {
       label: "Find study room",
       onClick: () => setIsStudyRoomOpen(true),
     },
-    { icon: <IconSettings size={16} />, label: "App settings", onClick: null },
+    {
+      icon: <IconSettings size={16} />,
+      label: "App settings",
+      onClick: () => setIsSettingOpen(true),
+    },
+    {
+      icon: <IconLogout2 size={16} />,
+      label: "Logout",
+      onClick: async () => {
+        await logout();
+        toast.info("Loged out", "Info");
+      },
+    },
   ];
 
   return (
@@ -75,6 +93,10 @@ function UserMenu() {
       <FindStudyRoomModal
         opened={isStudyRoomOpen}
         onClose={() => setIsStudyRoomOpen(false)}
+      />
+      <AppSetting
+        opened={isSettingOpen}
+        onClose={() => setIsSettingOpen(false)}
       />
     </>
   );
