@@ -17,7 +17,7 @@ import {
 import Modal from "../Modal";
 import ResponsiveButton from "../ResponsiveButton";
 import BoxStatistic from "./components/BoxStatistic";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import EditProfileModal from "./components/EditProfileModal";
 import HeatMap, { type HeatMapData } from "./components/HeatMap";
 import { useAuth } from "@rizumu/context/AuthContext";
@@ -56,6 +56,10 @@ function ProfileModal({
   const [friendshipLoading, setFriendshipLoading] = useState(false);
   const [progressData, setProgressData] = useState<ModelProgress | null>(null);
   const [progressLoading, setProgressLoading] = useState(false);
+  const [currentLevel, setCurrentLevel] = useState(0);
+  const [currentXP, setCurrentXp] = useState(0);
+  const [remainingXP, setRemainingXP] = useState(0);
+  const [coins, setCoin] = useState(0);
   const toast = useToast();
 
   // ID của user cần xem (ưu tiên userId prop, nếu không có thì dùng currentUser._id)
@@ -204,6 +208,19 @@ function ProfileModal({
     }
   };
 
+  const getStat = async () => {
+    try {
+      const response = await axiosClient.get("/progress/stats");
+      const data = response.data.data;
+      setCurrentXp(data.current_xp);
+      setCurrentLevel(data.level);
+      setRemainingXP(data.remaining_xp);
+      setCoin(data.coins);
+    } catch {
+      console.error("Error fetching stats");
+    }
+  };
+
   useEffect(() => {
     if (opened && targetUserId) {
       // Reset profile data khi targetUserId thay đổi
@@ -215,6 +232,7 @@ function ProfileModal({
       getProfile(targetUserId);
       getHeatMap(targetUserId);
       getProgress(targetUserId);
+      getStat();
       // Check friendship status nếu không phải profile của mình
       if (!isOwnProfile) {
         checkFriendship(targetUserId);
@@ -339,23 +357,51 @@ function ProfileModal({
             )}
             <div>
               <div className="flex justify-between text-sm font-bold mb-xs">
-                <p>Lv. 6</p>
-                <p>40 XP to next</p>
+                {profileLoading ? (
+                  <>
+                    <div className="h-5 w-12 bg-secondary/20 rounded animate-pulse" />
+                    <div className="h-5 w-24 bg-secondary/20 rounded animate-pulse" />
+                  </>
+                ) : (
+                  <>
+                    <p>Lv. {currentLevel}</p>
+                    <p>{remainingXP} XP to next</p>
+                  </>
+                )}
               </div>
               <div className="bg-gray-700 rounded-full h-1 w-full mb-sm">
                 <div
-                  className="bg-gradient-to-r from-green-400 to-emerald-500 h-1 rounded-full"
-                  style={{ width: `${(173 / 213) * 100}%` }}
+                  className="bg-gradient-to-r from-green-400 to-emerald-500 h-1 rounded-full transition-all duration-500"
+                  style={{
+                    width: `${
+                      profileLoading
+                        ? 0
+                        : ((currentXP || 0) /
+                            ((currentXP || 0) + (remainingXP || 0) || 1)) *
+                          100
+                    }%`,
+                  }}
                 />
               </div>
               <div className="flex justify-end text-xs mb-xs text-secondary">
-                <p>173 / 213 XP</p>
+                {profileLoading ? (
+                  <div className="h-4 w-20 bg-secondary/20 rounded animate-pulse" />
+                ) : (
+                  <p>
+                    {currentXP} / {currentXP + remainingXP} XP
+                  </p>
+                )}
               </div>
             </div>
             <div>
-              <p>
-                Your coins: <span className="font-bold">17</span>
-              </p>
+              <div className="flex items-center gap-2">
+                Your coins:{" "}
+                {profileLoading ? (
+                  <div className="h-5 w-10 bg-secondary/20 rounded animate-pulse" />
+                ) : (
+                  <span className="font-bold">{coins}</span>
+                )}
+              </div>
             </div>
           </div>
         </div>

@@ -12,6 +12,7 @@ function PomodoroPage() {
     type: "static",
   });
   const [totalTime, setTotalTime] = useState(0);
+  const [shouldFetch, setShouldFetch] = useState(false);
 
   const fetchTotalTime = async () => {
     if (!user?._id) return;
@@ -35,6 +36,7 @@ function PomodoroPage() {
       const response = await axiosClient.get(
         `/session/hourly?startTime=${startTime}&endTime=${endTime}&userId=${user?._id}`
       );
+      console.log(response.data);
       response.data.forEach((data: number) => {
         total += data;
       });
@@ -43,6 +45,13 @@ function PomodoroPage() {
       console.error(error);
     }
   };
+
+  useEffect(() => {
+    if (shouldFetch) {
+      fetchTotalTime();
+      setShouldFetch(false);
+    }
+  }, [shouldFetch]);
 
   useEffect(() => {
     if (user?.current_room_id) {
@@ -89,7 +98,7 @@ function PomodoroPage() {
         <Timer
           bgType={background.type}
           bgName={background.name}
-          onSessionComplete={fetchTotalTime}
+          onSessionComplete={() => setShouldFetch(true)}
         />
         {/* Footer */}
         <Footer onBackgroundChange={handleBackgroundChange} />

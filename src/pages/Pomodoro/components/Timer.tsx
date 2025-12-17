@@ -250,13 +250,20 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
             console.log("Ended: ", completedSession);
             if (completedSession.session_type === "pomodoro") {
               console.log("Ended Pomodoro: ", completedSession);
-              axiosClient.patch("/session", {
-                completed: true,
-                duration: dataRef.current.duration,
-                ended_at: dataRef.current.ended_at,
-                // user_id: dataRef.current.user_id,
-              });
-              if (onSessionComplete) onSessionComplete();
+              console.log("Duration: ", durationRef.current);
+              axiosClient
+                .patch("/session", {
+                  completed: true,
+                  duration: dataRef.current.duration,
+                  ended_at: dataRef.current.ended_at,
+                  // user_id: dataRef.current.user_id,
+                })
+                .then(() => {
+                  if (onSessionComplete) {
+                    onSessionComplete();
+                    console.log("Wazzz");
+                  }
+                });
             }
 
             queueMicrotask(() => {
@@ -333,12 +340,32 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
       // Send API call if it's a pomodoro session
       if (dataRef.current.session_type === "pomodoro") {
         console.log("Skipped Pomodoro: ", dataRef.current);
-        axiosClient.patch("/session", {
-          completed: true,
-          duration: dataRef.current.duration,
-          ended_at: dataRef.current.ended_at,
-        });
-        if (onSessionComplete) onSessionComplete();
+
+        const updateSession = async () => {
+          await axiosClient.patch("/session", {
+            completed: true,
+            duration: dataRef.current.duration,
+            ended_at: dataRef.current.ended_at,
+          });
+          if (onSessionComplete) onSessionComplete();
+        };
+
+        const updateXpAndCoin = async () => {
+          const duration = durationRef.current;
+          const xp = Math.floor(duration / 60);
+          const coin = Math.floor(duration / 600);
+
+          try {
+            await axiosClient.patch("/progress/stats", {
+              current_xp: xp,
+              coins: coin,
+            });
+          } catch (error) {
+            console.error(error);
+          }
+        };
+        updateSession();
+        updateXpAndCoin();
       }
     }
 
