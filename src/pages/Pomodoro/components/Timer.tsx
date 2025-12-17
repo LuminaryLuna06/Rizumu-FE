@@ -250,7 +250,7 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
             console.log("Ended: ", completedSession);
             if (completedSession.session_type === "pomodoro") {
               console.log("Ended Pomodoro: ", completedSession);
-              console.log("Duration: ", durationRef.current);
+
               axiosClient
                 .patch("/session", {
                   completed: true,
@@ -261,9 +261,18 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
                 .then(() => {
                   if (onSessionComplete) {
                     onSessionComplete();
-                    console.log("Wazzz");
                   }
                 });
+              const duration = durationRef.current;
+              const xp = Math.floor(duration / 60);
+              const coin = Math.floor(duration / 600);
+
+              axiosClient
+                .patch("/progress/stats", {
+                  current_xp: xp,
+                  coins: coin,
+                })
+                .catch((err) => console.error("Failed to update stats:", err));
             }
 
             queueMicrotask(() => {
