@@ -25,9 +25,7 @@ const LeaderboardModal = ({
   const [timeFilter, setTimeFilter] = useState<"daily" | "weekly" | "monthly">(
     "daily"
   );
-  const [leaderboardData, setLeaderboardData] = useState<ModelLeaderboard[]>(
-    []
-  );
+  const [leaderboardData, setLeaderboardData] = useState<ModelLeaderboard[]>();
   const [loading, setLoading] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [profileOpened, setProfileOpened] = useState(false);
@@ -68,7 +66,7 @@ const LeaderboardModal = ({
       const response = await axiosClient.get(
         `/session/leaderboard?startTime=${startTime}&endTime=${endTime}`
       );
-      setLeaderboardData(response.data || []);
+      setLeaderboardData(response.data.data || []);
     } catch (error) {
       console.error("Error fetching leaderboard:", error);
       setLeaderboardData([]);
@@ -264,14 +262,15 @@ const LeaderboardModal = ({
                       </div>
                     </td>
                   </tr>
-                ) : leaderboardData.length === 0 ? (
+                ) : leaderboardData?.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="py-8 text-center text-gray-400">
                       No data available for this period
                     </td>
                   </tr>
                 ) : (
-                  leaderboardData?.map((user, index) => (
+                  leaderboardData &&
+                  leaderboardData.map((user, index) => (
                     <tr
                       key={user._id}
                       onClick={() => handleUserClick(user._id)}
