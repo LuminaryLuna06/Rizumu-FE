@@ -522,20 +522,7 @@ function ProfileModal({
           </div>
         </div>
 
-        {isOwnProfile && (
-          <div className="flex justify-center ">
-            <ResponsiveButton
-              onClick={() => {
-                handleLogout();
-                onClose();
-              }}
-              className="bg-red-500 hover:bg-red-600 h-11 min-w-[100px] gap-x-xs text-sm justify-center"
-              leftSection={<IconDoorExit size={16} />}
-            >
-              Logout
-            </ResponsiveButton>
-          </div>
-        )}
+        
       </Modal>
       <EditProfileModal
         opened={editOpened}
