@@ -1,4 +1,5 @@
-type TimerMode = "pomodoro" | "short_break" | "long_break";
+export type TimerMode = "pomodoro" | "short_break" | "long_break";
+export type TimerDirection = "countdown" | "countup";
 export interface Preset {
   id: number;
   name: string;
