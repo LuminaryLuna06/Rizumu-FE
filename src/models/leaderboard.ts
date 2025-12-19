@@ -1,5 +1,5 @@
 export type ModelLeaderboard = {
-  id: string;
+  _id: string;
   totalDuration: number;
   sessionsCount: number;
   name: string;

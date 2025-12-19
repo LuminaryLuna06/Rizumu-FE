@@ -278,8 +278,8 @@ const LeaderboardModal = ({
                 ) : (
                   leaderboardData?.map((user, index) => (
                     <tr
-                      key={user.id}
-                      onClick={() => handleUserClick(user.id)}
+                      key={user._id}
+                      onClick={() => handleUserClick(user._id)}
                       className="group hover:bg-primary-hover cursor-pointer last:border-none"
                     >
                       {/* Cột 1 */}
@@ -323,7 +323,7 @@ const LeaderboardModal = ({
                             </div>
                             {user.username && (
                               <p className="text-xs text-gray-500 truncate hidden sm:block">
-                                @{user.username}
+                                {user.username}
                               </p>
                             )}
                           </div>
