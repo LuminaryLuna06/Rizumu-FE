@@ -25,7 +25,8 @@ import { useToast } from "@rizumu/utils/toast/toast";
 import type { ModelUserProfile } from "@rizumu/models/userProfile";
 import type { ModelProgress } from "@rizumu/models/progress";
 import axiosClient from "@rizumu/api/config/axiosClient";
-import { months } from "./data/months";
+import { months } from "../../constants/months";
+import type { ModelStat } from "@rizumu/models/stats";
 
 interface HeatMapResponse {
   durations: number[];
@@ -46,26 +47,26 @@ function ProfileModal({
   onOpenProfile,
   userId,
 }: ProfileModalProps) {
+  const toast = useToast();
   const { logout, user: currentUser } = useAuth();
   const [editOpened, setEditOpened] = useState(false);
+
   const [heatmapData, setHeatmapData] = useState<HeatMapData>({});
+
   const [profileUser, setProfileUser] = useState<ModelUserProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
+
   const [isFriend, setIsFriend] = useState(false);
   const [friendshipId, setFriendshipId] = useState<string | null>(null);
   const [friendshipLoading, setFriendshipLoading] = useState(false);
+
   const [progressData, setProgressData] = useState<ModelProgress | null>(null);
   const [progressLoading, setProgressLoading] = useState(false);
-  const [currentLevel, setCurrentLevel] = useState(0);
-  const [currentXP, setCurrentXp] = useState(0);
-  const [remainingXP, setRemainingXP] = useState(0);
-  const [coins, setCoin] = useState(0);
-  const toast = useToast();
 
-  // ID của user cần xem (ưu tiên userId prop, nếu không có thì dùng currentUser._id)
+  const [stats, setStats] = useState<ModelStat>();
+  const [statsLoading, setStatsLoading] = useState(false);
+
   const targetUserId = userId || currentUser?._id;
-
-  // Kiểm tra xem có phải đang xem profile của chính mình không
   const isOwnProfile = targetUserId === currentUser?._id;
 
   const getProfile = async (id: string) => {
@@ -87,7 +88,6 @@ function ProfileModal({
     try {
       const response = await axiosClient.get("/friend/list");
       const friends = response.data || [];
-      // Check if the userId exists in the friends list
       const friend = friends.find((friend: any) => friend._id === userId);
       if (friend) {
         setIsFriend(true);
@@ -179,10 +179,9 @@ function ProfileModal({
 
     try {
       const year = new Date().getFullYear();
-      const startOfYear = new Date(year, 0, 1, 0, 0, 0, 0); // Giờ local (00:00:00)
-      const endOfYear = new Date(year, 11, 31, 23, 59, 59, 999); //Giờ local (23:59:59.999)
+      const startOfYear = new Date(year, 0, 1, 0, 0, 0, 0);
+      const endOfYear = new Date(year, 11, 31, 23, 59, 59, 999);
 
-      // Chuyển sang ISO string (UTC) - Auto theo múi giờ
       const startTime = startOfYear.toISOString();
       const endTime = endOfYear.toISOString();
 
@@ -210,20 +209,20 @@ function ProfileModal({
 
   const getStat = async () => {
     try {
+      setStatsLoading(true);
       const response = await axiosClient.get("/progress/stats");
       const data = response.data.data;
-      setCurrentXp(data.current_xp);
-      setCurrentLevel(data.level);
-      setRemainingXP(data.remaining_xp);
-      setCoin(data.coins);
+      setStats(data);
     } catch {
       console.error("Error fetching stats");
+    } finally {
+      setStatsLoading(false);
     }
   };
 
+  // Reset profile data khi targetUserId thay đổi
   useEffect(() => {
     if (opened && targetUserId) {
-      // Reset profile data khi targetUserId thay đổi
       setProfileUser(null);
       setHeatmapData({});
       setIsFriend(false);
@@ -233,7 +232,6 @@ function ProfileModal({
       getHeatMap(targetUserId);
       getProgress(targetUserId);
       getStat();
-      // Check friendship status nếu không phải profile của mình
       if (!isOwnProfile) {
         checkFriendship(targetUserId);
       }
@@ -244,6 +242,7 @@ function ProfileModal({
     logout();
     toast.info("Loged out");
   };
+
   return (
     <>
       <Modal
@@ -356,16 +355,18 @@ function ProfileModal({
               </p>
             )}
             <div>
-              <div className="flex justify-between text-sm font-bold mb-xs">
-                {profileLoading ? (
+              <div className="flex justify-between text-sm font-semibold mb-xs">
+                {profileLoading || statsLoading || !stats ? (
                   <>
                     <div className="h-5 w-12 bg-secondary/20 rounded animate-pulse" />
                     <div className="h-5 w-24 bg-secondary/20 rounded animate-pulse" />
                   </>
                 ) : (
                   <>
-                    <p>Lv. {currentLevel}</p>
-                    <p>{remainingXP} XP to next</p>
+                    <p>Lv. {stats.level}</p>
+                    <p>
+                      {stats.remaining_xp - stats.current_xp} XP to next level
+                    </p>
                   </>
                 )}
               </div>
@@ -376,19 +377,20 @@ function ProfileModal({
                     width: `${
                       profileLoading
                         ? 0
-                        : ((currentXP || 0) /
-                            ((currentXP || 0) + (remainingXP || 0) || 1)) *
+                        : ((stats?.current_xp || 0) /
+                            ((stats?.current_xp || 0) +
+                              (stats?.remaining_xp || 0) || 1)) *
                           100
                     }%`,
                   }}
                 />
               </div>
               <div className="flex justify-end text-xs mb-xs text-secondary">
-                {profileLoading ? (
+                {profileLoading || statsLoading || !stats ? (
                   <div className="h-4 w-20 bg-secondary/20 rounded animate-pulse" />
                 ) : (
                   <p>
-                    {currentXP} / {currentXP + remainingXP} XP
+                    {stats.current_xp} / {stats.remaining_xp} XP
                   </p>
                 )}
               </div>
@@ -396,10 +398,10 @@ function ProfileModal({
             <div>
               <div className="flex items-center gap-2">
                 Your coins:{" "}
-                {profileLoading ? (
+                {profileLoading || statsLoading || !stats ? (
                   <div className="h-5 w-10 bg-secondary/20 rounded animate-pulse" />
                 ) : (
-                  <span className="font-bold">{coins}</span>
+                  <span className="font-bold">{stats.coins}</span>
                 )}
               </div>
             </div>
