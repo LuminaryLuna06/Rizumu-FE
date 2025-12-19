@@ -201,6 +201,16 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [running]);
 
+  // Update document title with timer countdown
+  useEffect(() => {
+    document.title = `Rizumu - ${formatTime(timeLeft)}`;
+
+    // Reset title when component unmounts
+    return () => {
+      document.title = "Rizumu";
+    };
+  }, [timeLeft]);
+
   const handleToggleTimerDirection = () => {
     setTimerDirection((prev) =>
       prev === "countdown" ? "countup" : "countdown"
