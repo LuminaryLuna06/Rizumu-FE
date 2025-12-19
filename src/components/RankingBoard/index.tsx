@@ -68,7 +68,7 @@ const LeaderboardModal = ({
       const response = await axiosClient.get(
         `/session/leaderboard?startTime=${startTime}&endTime=${endTime}`
       );
-      setLeaderboardData(response.data || []);
+      setLeaderboardData(response.data.data || []);
     } catch (error) {
       console.error("Error fetching leaderboard:", error);
       setLeaderboardData([]);
