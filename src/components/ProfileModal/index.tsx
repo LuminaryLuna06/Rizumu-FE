@@ -3,21 +3,19 @@ import {
   IconPencil,
   IconShare2,
   IconFlame,
-  IconTrophy,
   IconClock,
   IconCircleCheck,
   IconCalendarWeek,
   IconChartLine,
   IconGift,
   IconMap,
-  IconDoorExit,
   IconUserPlus,
   IconUserMinus,
 } from "@tabler/icons-react";
 import Modal from "../Modal";
 import ResponsiveButton from "../ResponsiveButton";
 import BoxStatistic from "./components/BoxStatistic";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import EditProfileModal from "./components/EditProfileModal";
 import HeatMap, { type HeatMapData } from "./components/HeatMap";
 import { useAuth } from "@rizumu/context/AuthContext";
@@ -48,7 +46,7 @@ function ProfileModal({
   userId,
 }: ProfileModalProps) {
   const toast = useToast();
-  const { logout, user: currentUser } = useAuth();
+  const { user: currentUser } = useAuth();
   const [editOpened, setEditOpened] = useState(false);
 
   const [heatmapData, setHeatmapData] = useState<HeatMapData>({});
@@ -237,11 +235,6 @@ function ProfileModal({
       }
     }
   }, [opened, targetUserId]);
-
-  const handleLogout = () => {
-    logout();
-    toast.info("Loged out");
-  };
 
   return (
     <>
@@ -521,8 +514,6 @@ function ProfileModal({
             <p>Total: 0</p>
           </div>
         </div>
-
-        
       </Modal>
       <EditProfileModal
         opened={editOpened}
