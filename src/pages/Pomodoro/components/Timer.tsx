@@ -1,6 +1,7 @@
 import axiosClient from "@rizumu/api/config/axiosClient";
 import { DEFAULT_PRESETS, type Preset } from "@rizumu/constants/timer";
 import { useAuth } from "@rizumu/context/AuthContext";
+import type { ModelTag } from "@rizumu/models/tag";
 import {
   getCurrentPresetId,
   initializePresets,
@@ -10,11 +11,12 @@ import {
   IconFlag,
   IconClockHour11Filled,
   IconPlayerSkipForwardFilled,
-  IconChevronDown,
   IconPictureInPicture,
 } from "@tabler/icons-react";
 import { useState, useRef, useEffect, useCallback } from "react";
 import PresetModal from "./PresetModal";
+import TagSelector from "./TagSelector";
+import { useToast } from "@rizumu/utils/toast/toast";
 
 type TimerMode = "pomodoro" | "short_break" | "long_break";
 type TimerDirection = "countdown" | "countup";
@@ -27,10 +29,12 @@ interface TimerData {
   session_type: string; //"pomodoro";
   timer_type: string; //"focus" | "stopwatch"
   user_id: string | undefined;
+  tag_id: string;
 }
 
 const POMODOROS_BEFORE_LONG_BREAK = 3;
 const TIMER_DIRECTION_KEY = "pomodoro_timer_direction";
+const SELECTED_TAG_KEY = "pomodoro_selected_tag";
 
 const getTimerDirection = (): TimerDirection => {
   try {
@@ -65,6 +69,7 @@ interface TimerProps {
 
 function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
   const { user } = useAuth();
+  const toast = useToast();
   const [openedPreset, setOpenedPreset] = useState(false);
   const [mode, setMode] = useState<TimerMode>("pomodoro");
   const [currentPresetId, setCurrentPresetId] = useState(0);
@@ -72,6 +77,16 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
   const [timerDirection, setTimerDirection] = useState<TimerDirection>(() =>
     getTimerDirection()
   );
+
+  // Tag state - load from localStorage
+  const [selectedTag, setSelectedTag] = useState<ModelTag | null>(() => {
+    try {
+      const stored = localStorage.getItem(SELECTED_TAG_KEY);
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
 
   const [targetDuration, setTargetDuration] = useState(() => {
     const storedPresets = localStorage.getItem("pomodoro_presets");
@@ -113,6 +128,7 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
     session_type: "pomodoro",
     timer_type: "focus",
     user_id: "",
+    tag_id: "",
   });
 
   // Picture-in-Picture state
@@ -120,7 +136,6 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
   const [isPipSupported] = useState(() => "documentPictureInPicture" in window);
   const modeRef = useRef<TimerMode>("pomodoro");
   const audioCtxRef = useRef<AudioContext | null>(null);
-
   useEffect(() => {
     const storedPresets = localStorage.getItem("pomodoro_presets");
     let loadedPresets: Preset[];
@@ -152,6 +167,19 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
     saveTimerDirection(timerDirection);
   }, [timerDirection]);
 
+  // Save selectedTag to localStorage
+  useEffect(() => {
+    try {
+      if (selectedTag) {
+        localStorage.setItem(SELECTED_TAG_KEY, JSON.stringify(selectedTag));
+      } else {
+        localStorage.removeItem(SELECTED_TAG_KEY);
+      }
+    } catch (error) {
+      console.error("Failed to save selected tag:", error);
+    }
+  }, [selectedTag]);
+
   useEffect(() => {
     if (!running) {
       setTimeLeft(timerDirection === "countup" ? 0 : targetDuration);
@@ -172,6 +200,16 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [running]);
+
+  // Update document title with timer countdown
+  useEffect(() => {
+    document.title = `Rizumu - ${formatTime(timeLeft)}`;
+
+    // Reset title when component unmounts
+    return () => {
+      document.title = "Rizumu";
+    };
+  }, [timeLeft]);
 
   const handleToggleTimerDirection = () => {
     setTimerDirection((prev) =>
@@ -208,6 +246,7 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
         session_type: targetMode,
         timer_type: "focus",
         user_id: "",
+        tag_id: "",
       };
     },
     [clearTimer, mode, presets, currentPresetId, timerDirection]
@@ -218,6 +257,7 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
       if (!dataRef.current.started_at) {
         dataRef.current.started_at = new Date().toISOString();
         dataRef.current.user_id = user?._id;
+        dataRef.current.tag_id = selectedTag?._id || "";
         console.log("Started: ", dataRef.current);
         if (dataRef.current.session_type === "pomodoro") {
           console.log("Started Pomodoro: ", dataRef.current);
@@ -227,7 +267,7 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
             session_type: dataRef.current.session_type,
             started_at: dataRef.current.started_at,
             timer_type: dataRef.current.timer_type,
-            // user_id: dataRef.current.user_id,
+            tag_id: dataRef.current.tag_id,
           });
         }
       }
@@ -266,7 +306,6 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
                   completed: true,
                   duration: dataRef.current.duration,
                   ended_at: dataRef.current.ended_at,
-                  // user_id: dataRef.current.user_id,
                 })
                 .then(() => {
                   if (onSessionComplete) {
@@ -276,13 +315,20 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
               const duration = durationRef.current;
               const xp = Math.floor(duration / 60);
               const coin = Math.floor(duration / 600);
-
-              axiosClient
-                .patch("/progress/stats", {
-                  current_xp: xp,
-                  coins: coin,
-                })
-                .catch((err) => console.error("Failed to update stats:", err));
+              if (xp > 0 || coin > 0) {
+                axiosClient
+                  .patch("/progress/stats", {
+                    current_xp: xp,
+                    coins: coin,
+                  })
+                  .catch((err) =>
+                    console.error("Failed to update stats:", err)
+                  );
+                toast.info(
+                  `You gained ${xp} xp${coin > 0 ? `, ${coin} coins` : ""}.`,
+                  "Let's fucking gooooo!"
+                );
+              }
             }
 
             queueMicrotask(() => {
@@ -368,6 +414,7 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
             completed: true,
             duration: dataRef.current.duration,
             ended_at: dataRef.current.ended_at,
+            tag_id: dataRef.current.tag_id,
           });
           if (onSessionComplete) onSessionComplete();
         };
@@ -378,10 +425,18 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
           const coin = Math.floor(duration / 600);
 
           try {
-            await axiosClient.patch("/progress/stats", {
-              current_xp: xp,
-              coins: coin,
-            });
+            if (xp > 0 || coin > 0) {
+              axiosClient
+                .patch("/progress/stats", {
+                  current_xp: xp,
+                  coins: coin,
+                })
+                .catch((err) => console.error("Failed to update stats:", err));
+              toast.info(
+                `You gained ${xp} xp${coin > 0 ? `, ${coin} coins` : ""}.`,
+                "Let's fucking gooooo!"
+              );
+            }
           } catch (error) {
             console.error(error);
           }
@@ -698,12 +753,8 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
       ) : (
         // Show full timer when PiP is not active
         <>
-          <a
-            href="/#/pomodoro"
-            className="flex items-center bg-primary-hover rounded-lg px-lg py-xs cursor-pointer text-secondary/90"
-          >
-            Select a tag <IconChevronDown size={20} />
-          </a>
+          {/* Tag Selection */}
+          <TagSelector selectedTag={selectedTag} onTagSelect={setSelectedTag} />
 
           <div className="flex gap-x-xl items-center mt-10">
             <button

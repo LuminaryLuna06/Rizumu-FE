@@ -8,7 +8,7 @@ import type { ModelUserProfile } from "@rizumu/models/userProfile";
 import { useToast } from "@rizumu/utils/toast/toast";
 import { IconCamera, IconUser, IconX } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
-import { countries } from "../data/countries";
+import { countries } from "../../../constants/countries";
 
 interface EditProfileModalProps {
   opened: boolean;

@@ -68,11 +68,7 @@ const LeaderboardModal = ({
       const response = await axiosClient.get(
         `/session/leaderboard?startTime=${startTime}&endTime=${endTime}`
       );
-      // Handle both Array response and { data: Array } response
-      const data = Array.isArray(response.data)
-        ? response.data
-        : response.data?.data || [];
-      setLeaderboardData(data);
+      setLeaderboardData(response.data || []);
     } catch (error) {
       console.error("Error fetching leaderboard:", error);
       setLeaderboardData([]);
@@ -240,7 +236,6 @@ const LeaderboardModal = ({
           {/* Table */}
           <div className="max-h-[600px] overflow-y-auto overflow-x-hidden custom-scrollbar scrollbar-hidden px-2">
             <table className="w-full relative mb-md">
-              {/* Hàng 1 */}
               <thead>
                 <tr>
                   <th className="pb-4 pt-2 text-center w-[10%]">#</th>
@@ -278,8 +273,8 @@ const LeaderboardModal = ({
                 ) : (
                   leaderboardData?.map((user, index) => (
                     <tr
-                      key={user.id}
-                      onClick={() => handleUserClick(user.id)}
+                      key={user._id}
+                      onClick={() => handleUserClick(user._id)}
                       className="group hover:bg-primary-hover cursor-pointer last:border-none"
                     >
                       {/* Cột 1 */}
@@ -323,7 +318,7 @@ const LeaderboardModal = ({
                             </div>
                             {user.username && (
                               <p className="text-xs text-gray-500 truncate hidden sm:block">
-                                @{user.username}
+                                {user.username}
                               </p>
                             )}
                           </div>
