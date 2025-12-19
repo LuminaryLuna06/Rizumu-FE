@@ -118,6 +118,8 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
   // Picture-in-Picture state
   const [pipWindow, setPipWindow] = useState<Window | null>(null);
   const [isPipSupported] = useState(() => "documentPictureInPicture" in window);
+  const modeRef = useRef<TimerMode>("pomodoro");
+  const audioCtxRef = useRef<AudioContext | null>(null);
 
   useEffect(() => {
     const storedPresets = localStorage.getItem("pomodoro_presets");
@@ -141,6 +143,10 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
       dataRef.current.user_id = user._id;
     }
   }, [user?._id]);
+
+  useEffect(() => {
+    modeRef.current = mode;
+  }, [mode]);
 
   useEffect(() => {
     saveTimerDirection(timerDirection);
@@ -246,17 +252,37 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
             dataRef.current.ended_at = new Date().toISOString();
             dataRef.current.duration = durationRef.current;
             dataRef.current.completed = true;
+
+            initAudio();
+            playDing();
+
             const completedSession = { ...dataRef.current };
             console.log("Ended: ", completedSession);
             if (completedSession.session_type === "pomodoro") {
               console.log("Ended Pomodoro: ", completedSession);
-              axiosClient.patch("/session", {
-                completed: true,
-                duration: dataRef.current.duration,
-                ended_at: dataRef.current.ended_at,
-                // user_id: dataRef.current.user_id,
-              });
-              if (onSessionComplete) onSessionComplete();
+
+              axiosClient
+                .patch("/session", {
+                  completed: true,
+                  duration: dataRef.current.duration,
+                  ended_at: dataRef.current.ended_at,
+                  // user_id: dataRef.current.user_id,
+                })
+                .then(() => {
+                  if (onSessionComplete) {
+                    onSessionComplete();
+                  }
+                });
+              const duration = durationRef.current;
+              const xp = Math.floor(duration / 60);
+              const coin = Math.floor(duration / 600);
+
+              axiosClient
+                .patch("/progress/stats", {
+                  current_xp: xp,
+                  coins: coin,
+                })
+                .catch((err) => console.error("Failed to update stats:", err));
             }
 
             queueMicrotask(() => {
@@ -330,22 +356,46 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
       dataRef.current.duration = durationRef.current;
       dataRef.current.completed = true;
 
+      initAudio();
+      playDing();
+
       // Send API call if it's a pomodoro session
       if (dataRef.current.session_type === "pomodoro") {
         console.log("Skipped Pomodoro: ", dataRef.current);
-        axiosClient.patch("/session", {
-          completed: true,
-          duration: dataRef.current.duration,
-          ended_at: dataRef.current.ended_at,
-        });
-        if (onSessionComplete) onSessionComplete();
+
+        const updateSession = async () => {
+          await axiosClient.patch("/session", {
+            completed: true,
+            duration: dataRef.current.duration,
+            ended_at: dataRef.current.ended_at,
+          });
+          if (onSessionComplete) onSessionComplete();
+        };
+
+        const updateXpAndCoin = async () => {
+          const duration = durationRef.current;
+          const xp = Math.floor(duration / 60);
+          const coin = Math.floor(duration / 600);
+
+          try {
+            await axiosClient.patch("/progress/stats", {
+              current_xp: xp,
+              coins: coin,
+            });
+          } catch (error) {
+            console.error(error);
+          }
+        };
+        updateSession();
+        updateXpAndCoin();
       }
     }
 
-    // Auto-switch to next mode
+    // Auto-switch to next mode – dùng modeRef để luôn lấy mode mới nhất (kể cả trong PiP)
+    const currentMode = modeRef.current;
     let nextMode: TimerMode;
 
-    if (mode === "pomodoro") {
+    if (currentMode === "pomodoro") {
       const newCount = pomodoroCount + 1;
       setPomodoroCount(newCount);
 
@@ -545,6 +595,89 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
     }
   };
 
+  const initAudio = () => {
+    if (!audioCtxRef.current) {
+      audioCtxRef.current = new (window.AudioContext ||
+        (window as any).webkitAudioContext)();
+    }
+  };
+
+  const playDing = () => {
+    const ctx = audioCtxRef.current;
+    if (!ctx) return;
+
+    if (ctx.state === "suspended") {
+      ctx.resume();
+    }
+
+    const t = ctx.currentTime;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    const delay = ctx.createDelay();
+    const feedback = ctx.createGain();
+    const lowpass = ctx.createBiquadFilter();
+
+    const comp = ctx.createDynamicsCompressor();
+
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(1400, t);
+
+    gain.gain.setValueAtTime(20, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+
+    delay.delayTime.value = 0.08;
+    feedback.gain.value = 0.4;
+    lowpass.type = "lowpass";
+    lowpass.frequency.value = 900;
+
+    comp.threshold.value = -24;
+    comp.ratio.value = 6;
+
+    osc.connect(gain);
+    gain.connect(comp);
+    comp.connect(ctx.destination);
+
+    comp.connect(delay);
+    delay.connect(feedback);
+    lowpass.connect(feedback);
+    feedback.connect(delay);
+    lowpass.connect(ctx.destination);
+
+    osc.start(t);
+    osc.stop(t + 1.5);
+  };
+
+  const playClickSound = () => {
+    const ctx = audioCtxRef.current;
+    if (!ctx) return;
+
+    if (ctx.state === "suspended") {
+      ctx.resume();
+    }
+
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const highpass = ctx.createBiquadFilter();
+
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(800, t);
+
+    highpass.type = "highpass";
+    highpass.frequency.value = 700;
+
+    gain.gain.setValueAtTime(0.62, t);
+    highpass.connect(gain);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(t);
+    osc.stop(t + 0.06);
+  };
   return (
     <div className="main-content flex flex-col justify-center items-center gap-y-xs h-[82vh]">
       {pipWindow ? (
@@ -625,7 +758,11 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
 
             <div className="flex justify-center">
               <button
-                onClick={() => setRunning(!running)}
+                onClick={() => {
+                  setRunning(!running);
+                  initAudio();
+                  playClickSound();
+                }}
                 className="px-lg py-lg w-[140px] md:w-[200px] my-lg text-primary rounded-full bg-secondary text-lg font-bold hover:bg-secondary-hover cursor-pointer transition-all duration-300 hover:scale-[1.02]"
               >
                 {running ? "Pause" : "Start"}

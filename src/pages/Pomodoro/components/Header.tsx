@@ -1,20 +1,13 @@
-import React, { useEffect, useState } from "react";
+import { useState } from "react";
 import ResponsiveButton from "@rizumu/components/ResponsiveButton";
 import UserMenu from "@rizumu/components/UserMenu";
-import {
-  IconChartColumn,
-  IconClock,
-  IconFireHydrant,
-  IconFlame,
-  IconMusicCode,
-} from "@tabler/icons-react";
+import { IconChartColumn, IconClock, IconMusicCode } from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
 import RoomPopover from "./RoomPopover";
 import LeaderboardModal from "@rizumu/components/RankingBoard";
 import ActivitiesModal from "@rizumu/components/ActivitiesModal";
 import StreakPopover from "@rizumu/components/StreakPopover";
 import { useAuth } from "@rizumu/context/AuthContext";
-import axiosClient from "@rizumu/api/config/axiosClient";
 
 function Header({ totalTime }: { totalTime: number }) {
   const navigate = useNavigate();

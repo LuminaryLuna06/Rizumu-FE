@@ -123,8 +123,9 @@ function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
     });
 
     if (totalMinute > 60) {
-      let totalHour = Math.floor(totalMinute / 60);
-      return totalHour + "h " + (totalMinute - totalHour * 60) + "m";
+      const hours = Math.floor(totalMinute / 60);
+      const mins = totalMinute - hours * 60;
+      return hours + "h " + mins + "m";
     }
     return totalMinute + "m";
   };
