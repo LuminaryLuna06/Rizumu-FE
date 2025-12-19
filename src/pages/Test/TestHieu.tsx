@@ -11,6 +11,18 @@ import { IconMessage, IconSend2, IconUsers } from "@tabler/icons-react";
 import { useState, useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 
+interface Message {
+  _id: string;
+  sender_id: string;
+  content: string;
+  createdAt: string;
+}
+
+interface RoomMember {
+  user_id: string;
+  name: string;
+}
+
 function TestHieu() {
   const { user, refreshUser } = useAuth();
   const [opened, setOpened] = useState(false);
@@ -19,9 +31,9 @@ function TestHieu() {
   const [chatOpened, setChatOpened] = useState(false);
 
   const [socket, setSocket] = useState<Socket | null>(null);
-  const [messages, setMessages] = useState<any>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
-  const [roomMembers, setRoomMembers] = useState<any[]>([]);
+  const [roomMembers, setRoomMembers] = useState<RoomMember[]>([]);
 
   const [hasMoreMessage, setHasMoreMessage] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -29,8 +41,80 @@ function TestHieu() {
   const messagesRef = useRef<HTMLDivElement | null>(null);
   const isInitialLoadRef = useRef<boolean>(true);
 
-  const connectSocket = () => {
-    if (!user?._id || !user.current_room_id || socket) return;
+  const audioCtxRef = useRef<AudioContext | null>(null);
+
+  const initAudio = () => {
+    if (!audioCtxRef.current) {
+      audioCtxRef.current = new (window.AudioContext ||
+        (window as any).webkitAudioContext)();
+    }
+  };
+
+  const playDing = () => {
+    const ctx = audioCtxRef.current;
+    if (!ctx) return;
+
+    if (ctx.state === "suspended") {
+      ctx.resume();
+    }
+
+    const t = ctx.currentTime;
+
+    // Âm chính
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    // Vang nhẹ
+    const delay = ctx.createDelay();
+    const feedback = ctx.createGain();
+    const lowpass = ctx.createBiquadFilter();
+
+    // Nén → to mà không vỡ
+    const comp = ctx.createDynamicsCompressor();
+
+    // ===== CẤU HÌNH =====
+    osc.type = "sine"; // giữ đúng chất "ting"
+    osc.frequency.setValueAtTime(1400, t);
+
+    gain.gain.setValueAtTime(20, t); // Giảm bớt chút vì 50 là quá to, dễ gây rè
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+
+    delay.delayTime.value = 0.08; // vang ngắn
+    feedback.gain.value = 0.4; // Tăng feedback để vang lâu hơn
+    lowpass.type = "lowpass";
+    lowpass.frequency.value = 900;
+
+    comp.threshold.value = -24;
+    comp.ratio.value = 6;
+
+    // ===== KẾT NỐI =====
+    osc.connect(gain);
+    gain.connect(comp);
+    comp.connect(ctx.destination);
+
+    // Echo
+    comp.connect(delay);
+    delay.connect(feedback);
+    lowpass.connect(feedback);
+    feedback.connect(delay);
+    lowpass.connect(ctx.destination);
+
+    osc.start(t);
+    osc.stop(t + 1.5);
+  };
+
+  const startTimer = () => {
+    initAudio();
+    playDing();
+  };
+
+  useEffect(() => {
+    if (!user?._id || !user.current_room_id) return;
+
+    // Reset state when room changes
+    setMessages([]);
+    setHasMoreMessage(true);
+    isInitialLoadRef.current = true;
 
     const newSocket = io("https://backend-school-pj-1.onrender.com", {
       auth: {
@@ -42,22 +126,13 @@ function TestHieu() {
       transports: ["websocket"],
     });
 
-    setSocket(newSocket);
-    console.log("Test: ", newSocket);
-  };
-
-  useEffect(() => {
-    if (!socket) return;
-
-    socket.on("connect", () => {
-      console.log("Đã kết nối socket!");
+    newSocket.on("connect", () => {
+      console.log("Socket connected to room:", user.current_room_id);
       loadMessages();
     });
 
-    socket.on("new_message", (msg) => {
-      setMessages((prev: any) => [...prev, msg]);
-
-      // Chỉ tự động cuộn xuống nếu user đang ở gần cuối
+    newSocket.on("new_message", (msg: Message) => {
+      setMessages((prev) => [...prev, msg]);
       setTimeout(() => {
         if (isNearBottom()) {
           scrollToBottom();
@@ -65,36 +140,29 @@ function TestHieu() {
       }, 100);
     });
 
-    return () => {
-      socket.disconnect();
-    };
-  }, [socket]);
+    setSocket(newSocket);
+    fetchRoomMembers();
 
-  useEffect(() => {
-    connectSocket();
-    if (user?.current_room_id) {
-      fetchRoomMembers();
-    }
-  }, [user?.current_room_id]);
+    return () => {
+      newSocket.disconnect();
+      setSocket(null);
+    };
+  }, [user?._id, user?.current_room_id]);
 
   // Cuộn xuống dưới chỉ khi lần đầu load messages
   useEffect(() => {
     if (messages.length > 0 && isInitialLoadRef.current) {
-      // Chỉ tự động cuộn khi là lần đầu load
       scrollToBottom();
       isInitialLoadRef.current = false;
     }
   }, [messages]);
 
   const loadMessages = async (before: string | null = null) => {
-    if (isLoading) return;
-
-    // Check hasMoreMessage khi load tin nhắn cũ
+    if (isLoading || !user?.current_room_id) return;
     if (before && !hasMoreMessage) return;
 
     setIsLoading(true);
 
-    // Lưu lại vị trí scroll hiện tại trước khi load tin nhắn cũ
     let previousScrollHeight = 0;
     let previousScrollTop = 0;
 
@@ -104,40 +172,35 @@ function TestHieu() {
     }
 
     try {
+      const url = before
+        ? `/${user.current_room_id}/messages?before=${before}`
+        : `/${user.current_room_id}/messages`;
+
+      const res = await axiosClient.get(url);
+      const data = res.data.message2 || [];
+
       if (before) {
-        // Load tin nhắn cũ
-        const res = await axiosClient.get(
-          `/${user?.current_room_id}/messages?before=${before}`
-        );
-        const data = res.data.message2 || [];
-
         if (data.length > 0) {
-          setMessages((prev: any) => [...data, ...prev]);
+          setMessages((prev) => [...data, ...prev]);
         }
-        setHasMoreMessage(res.data?.hasMore ?? false);
-
         // Khôi phục vị trí scroll sau khi load tin nhắn cũ
         setTimeout(() => {
           if (messagesRef.current) {
             const newScrollHeight = messagesRef.current.scrollHeight;
             const heightDiff = newScrollHeight - previousScrollHeight;
-            // Giữ nguyên vị trí bằng cách cộng thêm chiều cao mới
             messagesRef.current.scrollTop = previousScrollTop + heightDiff;
           }
         }, 50);
       } else {
-        // Load tin nhắn ban đầu
-        const res = await axiosClient.get(`/${user?.current_room_id}/messages`);
-        const data = res.data.message2 || [];
-
         setMessages(data);
-        setHasMoreMessage(res.data?.hasMore ?? false);
       }
+
+      setHasMoreMessage(res.data?.hasMore ?? false);
     } catch (err) {
       console.error("Lỗi load tin nhắn", err);
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
   const sendMessage = () => {
@@ -148,9 +211,7 @@ function TestHieu() {
 
   const isNearBottom = () => {
     if (!messagesRef.current) return false;
-
     const { scrollTop, scrollHeight, clientHeight } = messagesRef.current;
-    // Kiểm tra nếu user đang ở trong vòng 150px từ đáy
     return scrollHeight - scrollTop - clientHeight < 150;
   };
 
@@ -161,16 +222,17 @@ function TestHieu() {
   };
 
   const handleScroll = () => {
-    if (!messagesRef.current) return;
-    if (messagesRef.current.scrollTop === 0 && !isLoading) {
+    if (!messagesRef.current || isLoading) return;
+    if (messagesRef.current.scrollTop === 0) {
       const earliest = messages[0];
-      loadMessages(earliest?.createdAt || null);
+      if (earliest) {
+        loadMessages(earliest.createdAt);
+      }
     }
   };
 
   const fetchRoomMembers = async () => {
     if (!user?.current_room_id) return;
-
     try {
       const response = await axiosClient.get(
         `/room/${user.current_room_id}/members`
@@ -181,22 +243,6 @@ function TestHieu() {
     }
   };
 
-  // const getMemberName = (userId: string) => {
-  //   if (!userId) return "Unknown";
-
-  //   if (roomMembers && roomMembers.length > 0) {
-  //     const member = roomMembers.find(
-  //       (member: any) => member.user_id === userId
-  //     );
-
-  //     if (member) {
-  //       return member?.name || "Unknown";
-  //     }
-  //   }
-
-  //   return "Not found";
-  // };
-
   const formatTime = (time?: string) => {
     if (!time) return "";
     return new Date(time).toLocaleTimeString([], {
@@ -206,25 +252,44 @@ function TestHieu() {
   };
 
   const getHourStats = async () => {
-    const year = new Date().getFullYear();
-    const month = new Date().getMonth();
-    const date = new Date().getDate();
+    if (!user?._id) return;
+    try {
+      const year = new Date().getFullYear();
+      const month = new Date().getMonth();
+      const date = new Date().getDate();
 
-    const startTime = new Date(year, month, date, 0, 0, 0, 0).toISOString();
-    const endTime = new Date(year, month, date, 23, 59, 59, 999).toISOString();
+      const startTime = new Date(year, month, date, 0, 0, 0, 0).toISOString();
+      const endTime = new Date(
+        year,
+        month,
+        date,
+        23,
+        59,
+        59,
+        999
+      ).toISOString();
 
-    const response = await axiosClient.get(
-      `/session/hourly?startTime=${startTime}&endTime=${endTime}&userId=${user?._id}`
-    );
-    console.log(response.data);
+      const response = await axiosClient.get(
+        `/session/hourly?startTime=${startTime}&endTime=${endTime}&userId=${user._id}`
+      );
+      console.log(response.data);
+    } catch (err) {
+      console.error("Lỗi getHourStats:", err);
+    }
   };
+
   const mapSenderName = Object.fromEntries(
-    roomMembers && roomMembers.map((e) => [e.user_id, e.name])
+    roomMembers?.map((e) => [e.user_id, e.name]) || []
   );
 
   const getProgress = async () => {
-    const response = await axiosClient.get(`/progress/${user?._id}`);
-    console.log(response.data);
+    if (!user?._id) return;
+    try {
+      const response = await axiosClient.get(`/progress/${user._id}`);
+      console.log(response.data);
+    } catch (err) {
+      console.error("Lỗi getProgress:", err);
+    }
   };
 
   return (
@@ -238,16 +303,16 @@ function TestHieu() {
       >
         <source src="/video/Vid_BG_1.mp4" type="video/mp4" />
       </video>
-      <div className="absolute flex gap-1 z-10">
+      <div className="absolute flex gap-1 z-10 flex-wrap p-md">
         <button
-          className="px-4 py-2 bg-blue-600 text-white rounded"
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
           onClick={() => setOpened(true)}
         >
           Open Modal
         </button>
 
         <button
-          className="px-4 py-2 bg-blue-600 text-white rounded"
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
           onClick={() => {
             setProfileOpened(true);
             refreshUser();
@@ -257,7 +322,7 @@ function TestHieu() {
         </button>
 
         <button
-          className="px-4 py-2 bg-blue-600 text-white rounded"
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
           onClick={() => {
             setActivitiesOpened(true);
             refreshUser();
@@ -267,17 +332,24 @@ function TestHieu() {
         </button>
 
         <button
-          className="px-4 py-2 bg-blue-600 text-white rounded"
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
           onClick={() => getProgress()}
         >
-          Test
+          Test Progress
         </button>
 
         <button
-          className="px-4 py-2 bg-blue-600 text-white rounded"
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+          onClick={() => startTimer()}
+        >
+          Sound
+        </button>
+
+        <button
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
           onClick={() => getHourStats()}
         >
-          TestRoom
+          Test Hourly Stats
         </button>
 
         <Popover
@@ -288,45 +360,49 @@ function TestHieu() {
           onClose={() => setChatOpened(!chatOpened)}
           position="bottom-left"
         >
-          <div className="flex items-center justify-center bg-black/70 backdrop-blur-xl text-secondary rounded-3xl shadow-2xl p-md border border-gray-800 font-poppins overflow-y-hidden overflow-x-hidden">
+          <div className="flex items-center justify-center bg-black/70 backdrop-blur-xl text-secondary rounded-3xl shadow-2xl p-md border border-gray-800 font-poppins overflow-hidden w-[350px]">
             <div className="flex flex-col w-full">
-              <div className="flex justify-between mb-2 w-full">
+              <div className="flex justify-between items-center mb-4 w-full">
                 <h2 className="text-lg font-semibold">Chat</h2>
                 <div className="flex items-center gap-2 text-text-inactive">
-                  <IconUsers size={14} />
+                  <IconUsers size={16} />
                   <p className="text-sm">{roomMembers.length} members</p>
                 </div>
               </div>
               <div
                 ref={messagesRef}
                 onScroll={handleScroll}
-                className="flex flex-col items-start max-h-[350px] min-h-[250px] overflow-y-auto overflow-x-hidden custom-scrollbar scrollbar-hidden"
+                className="flex flex-col gap-3 max-h-[350px] min-h-[300px] overflow-y-auto overflow-x-hidden custom-scrollbar pr-2 mb-4"
               >
                 {messages &&
-                  messages.map((msg: any, idx: number) => {
+                  messages.map((msg, idx) => {
                     return (
-                      <div
-                        className="flex flex-col h-[50px] mb-sm"
-                        key={msg._id || idx}
-                      >
-                        <div className="flex items-center gap-1">
-                          <h2 className="text-lg font-bold">
-                            {mapSenderName[msg.sender_id] || "Anonymous User"}:
-                          </h2>
-                          <p className="text-white/80">{msg.content}</p>
+                      <div className="flex flex-col" key={msg._id || idx}>
+                        <div className="flex items-baseline gap-2">
+                          <span className="font-bold text-blue-400">
+                            {mapSenderName[msg.sender_id] || "Anonymous"}:
+                          </span>
+                          <span className="text-white/90 break-words flex-1">
+                            {msg.content}
+                          </span>
                         </div>
-                        <p className="text-text-inactive text-sm">
+                        <span className="text-text-inactive text-[10px]">
                           {formatTime(msg.createdAt)}
-                        </p>
+                        </span>
                       </div>
                     );
                   })}
+                {isLoading && (
+                  <div className="text-center text-xs text-text-inactive">
+                    Loading...
+                  </div>
+                )}
               </div>
 
-              <div className="flex items-center">
+              <div className="flex items-center gap-2 border-t border-white/10 pt-4">
                 <TextInput
                   placeholder="Type a message"
-                  className="w-9/10"
+                  className="flex-1"
                   value={input}
                   onChange={(e: any) => {
                     setInput(e.target.value);
@@ -336,7 +412,7 @@ function TestHieu() {
                   }}
                 />
                 <ResponsiveButton
-                  leftSection={<IconSend2 size={25} />}
+                  leftSection={<IconSend2 size={20} />}
                   disabled={input.trim().length === 0}
                   onClick={sendMessage}
                 ></ResponsiveButton>
