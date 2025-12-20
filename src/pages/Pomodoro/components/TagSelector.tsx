@@ -96,7 +96,7 @@ function TagSelector({ selectedTag, onTagSelect }: TagSelectorProps) {
     setTagLoading(true);
     try {
       if (editingTag) {
-        await axiosClient.patch(`/tags/${editingTag._id}`, {
+        await axiosClient.put(`/tags/${editingTag._id}`, {
           name: newTagName.trim(),
           color: newTagColor,
         });
@@ -107,6 +107,17 @@ function TagSelector({ selectedTag, onTagSelect }: TagSelectorProps) {
         });
       }
       await fetchTags();
+
+      if (editingTag) {
+        setTags((prev) => {
+          const updated = prev.find((t) => t._id === editingTag._id);
+          if (updated && selectedTag?._id === editingTag._id) {
+            onTagSelect(updated);
+          }
+          return prev;
+        });
+      }
+
       setNewTagName("");
       setNewTagColor(TAG_COLORS[0].value);
       setShowCreateTag(false);
@@ -211,7 +222,7 @@ function TagSelector({ selectedTag, onTagSelect }: TagSelectorProps) {
                       <button
                         key={color.value}
                         onClick={() => setNewTagColor(color.value)}
-                        className={`w-5 h-5 rounded-full transition-all ${
+                        className={`w-5 h-5 rounded-full transition-all cursor-pointer ${
                           newTagColor === color.value
                             ? "ring-2 ring-white ring-offset-2 ring-offset-[#1a1a1a] scale-110"
                             : "hover:scale-105"
@@ -255,7 +266,9 @@ function TagSelector({ selectedTag, onTagSelect }: TagSelectorProps) {
                       <button
                         key={tag._id}
                         onClick={() => handleTagSelect(tag)}
-                        className="w-full p-3 flex items-center gap-3 hover:bg-secondary/5 transition-colors text-left text-text-inactive group"
+                        className={`w-full p-3 flex items-center gap-3 hover:bg-secondary/5 transition-colors text-left text-text-inactive cursor-pointer group ${
+                          selectedTag?._id === tag._id ? "bg-secondary/20" : ""
+                        }`}
                       >
                         <div
                           className="w-4 h-4 rounded-full flex-shrink-0"
@@ -264,24 +277,28 @@ function TagSelector({ selectedTag, onTagSelect }: TagSelectorProps) {
                         <span className="flex-3 text-secondary/90">
                           {tag.name}
                         </span>
-                        <IconTrash
-                          size={20}
-                          className="flex-1 cursor-pointer hover:text-text-active transition-colors opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={(e) => handleDeleteTag(e, tag._id)}
-                        />
+                        <div className="flex gap-1">
+                          <IconPencil
+                            size={20}
+                            className="flex-1 cursor-pointer hover:text-text-active transition-colors opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={(e) => handleOpenEdit(e, tag)}
+                          />
+                          <IconTrash
+                            size={20}
+                            className="flex-1 cursor-pointer hover:text-text-active transition-colors opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={(e) => handleDeleteTag(e, tag._id)}
+                          />
+                        </div>
                       </button>
                     ))
                   ) : (
-                    <div className="px-4 py-6 text-center text-secondary/70">
-                      {}
-                      No tags yet
-                    </div>
+                    <></>
                   )}
                 </div>
 
                 <button
                   onClick={() => setShowCreateTag(true)}
-                  className="w-full px-4 py-3 flex items-center justify-center gap-2 bg-black hover:bg-white/10 transition-colors text-gray-300 hover:text-white border-t border-white/10"
+                  className="w-full px-3 py-2 flex items-center justify-center gap-2 bg-black hover:bg-white/10 transition-colors text-sm text-gray-300 hover:text-white border-t border-white/10 cursor-pointer"
                 >
                   <IconPlus size={18} />
                   <span>Add Tag</span>
