@@ -1,10 +1,18 @@
 import { useState, useEffect, useRef } from "react";
 import Modal from "../Modal";
 import Switch from "../Switch";
+import SelectInput from "../SelectInput";
 import {
   getTimerSettings,
   saveTimerSettings,
 } from "@rizumu/utils/timerSettings";
+import {
+  SOUND_PRESETS,
+  playSound,
+  createAudioContext,
+  type SoundPresetName,
+} from "@rizumu/utils/audioPresets";
+import { IconVolume } from "@tabler/icons-react";
 
 function AppSetting({
   opened,
@@ -18,14 +26,18 @@ function AppSetting({
   const [autoStartPomodoro, setAutoStartPomodoro] = useState(false);
   const [longBreakInterval, setLongBreakInterval] = useState(4);
   const [autoMiniTimer, setAutoMiniTimer] = useState(false);
+  const [alarmSound, setAlarmSound] = useState<SoundPresetName>("bell");
 
   // Alarm settings
-  const [alarmSound, setAlarmSound] = useState("bell");
+  const [alarmEnabled, setAlarmEnabled] = useState(true);
   const [alarmVolume, setAlarmVolume] = useState(50);
   const [alarmRepeat, setAlarmRepeat] = useState(1);
 
   // Track if this is the initial mount
   const isInitialMount = useRef(true);
+
+  // Audio context for preview
+  const audioCtxRef = useRef<AudioContext | null>(null);
 
   // Load settings on mount
   useEffect(() => {
@@ -35,6 +47,12 @@ function AppSetting({
     setAutoStartPomodoro(settings.autoStartPomodoro);
     setLongBreakInterval(settings.longBreakInterval);
     setAutoMiniTimer(settings.autoMiniTimer);
+    setAlarmSound(settings.alarmSound);
+    setAlarmEnabled(settings.alarmEnabled);
+    setAlarmVolume(settings.alarmVolume);
+
+    // Initialize audio context
+    audioCtxRef.current = createAudioContext();
   }, []);
 
   // Save timer settings when they change (skip initial mount)
@@ -49,10 +67,28 @@ function AppSetting({
       autoStartPomodoro,
       longBreakInterval,
       autoMiniTimer,
+      alarmSound,
+      alarmEnabled,
+      alarmVolume,
     };
     console.log("Saving settings:", newSettings);
     saveTimerSettings(newSettings);
-  }, [autoStartBreak, autoStartPomodoro, longBreakInterval, autoMiniTimer]);
+  }, [
+    autoStartBreak,
+    autoStartPomodoro,
+    longBreakInterval,
+    autoMiniTimer,
+    alarmSound,
+    alarmEnabled,
+    alarmVolume,
+  ]);
+
+  // Handle preview alarm sound
+  const handlePreviewSound = () => {
+    if (audioCtxRef.current) {
+      playSound(alarmSound, audioCtxRef.current, 1, alarmVolume);
+    }
+  };
   return (
     <Modal
       opened={opened}
@@ -130,21 +166,35 @@ function AppSetting({
 
       <div className="flex justify-between items-center mt-5">
         <p>Alarm enabled</p>
-        <Switch labelPosition="right" />
+        <Switch
+          labelPosition="right"
+          checked={alarmEnabled}
+          onChange={(checked) => setAlarmEnabled(checked)}
+        />
       </div>
 
       <div className="flex justify-between items-center mt-5">
         <p>Alarm Sounds</p>
-        <select
-          value={alarmSound}
-          onChange={(e) => setAlarmSound(e.target.value)}
-          className="px-4 py-2 border rounded-lg text-secondary focus:outline-none"
-        >
-          <option value="bell">Bell</option>
-          <option value="kitchen">Kitchen</option>
-          <option value="bird">Bird</option>
-          <option value="digital">Digital</option>
-        </select>
+        <div className="flex items-center gap-2">
+          <SelectInput
+            data={Object.keys(SOUND_PRESETS).map((preset) => ({
+              value: preset,
+              label: preset.charAt(0).toUpperCase() + preset.slice(1),
+            }))}
+            value={alarmSound}
+            onChange={(value) => setAlarmSound(value as SoundPresetName)}
+            placeholder="Select sound"
+            size="sm"
+            className="w-40"
+          />
+          <button
+            onClick={handlePreviewSound}
+            className="p-2 border rounded-lg hover:bg-secondary/10 transition-colors"
+            title="Preview sound"
+          >
+            <IconVolume size={20} className="text-secondary" />
+          </button>
+        </div>
       </div>
 
       <div className="flex justify-between items-center mt-5">
@@ -164,7 +214,7 @@ function AppSetting({
         </div>
       </div>
 
-      <div className="flex justify-between items-center mt-5">
+      {/* <div className="flex justify-between items-center mt-5">
         <p>Repeat</p>
         <input
           type="number"
@@ -178,7 +228,7 @@ function AppSetting({
           }
           className="w-20 px-3 py-2 border rounded-lg text-secondary text-center focus:outline-none"
         />
-      </div>
+      </div> */}
 
       {/* Motivation */}
       <div className="text-left mt-10">Motivation</div>

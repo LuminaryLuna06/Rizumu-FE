@@ -1,8 +1,13 @@
+import type { SoundPresetName } from "./audioPresets";
+
 export interface TimerSettings {
   autoStartBreak: boolean;
   autoStartPomodoro: boolean;
   longBreakInterval: number;
   autoMiniTimer: boolean;
+  alarmSound: SoundPresetName;
+  alarmVolume: number;
+  alarmEnabled: boolean;
 }
 
 const TIMER_SETTINGS_KEY = "rizumu_timer_settings";
@@ -12,6 +17,9 @@ const DEFAULT_SETTINGS: TimerSettings = {
   autoStartPomodoro: false,
   longBreakInterval: 4,
   autoMiniTimer: false,
+  alarmSound: "softBell",
+  alarmVolume: 50,
+  alarmEnabled: true,
 };
 
 /**

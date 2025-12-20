@@ -16,6 +16,7 @@ import {
   saveCurrentPresetId,
 } from "@rizumu/utils/presets";
 import { getTimerSettings } from "@rizumu/utils/timerSettings";
+import { playSound, createAudioContext } from "@rizumu/utils/audioPresets";
 import {
   IconFlag,
   IconClockHour11Filled,
@@ -683,16 +684,14 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
 
   const handleSkipSessionWrapper = () => {
     handleSkipSession();
-    // Close PiP when skipping since we're switching modes
     if (pipWindow) {
       closePictureInPicture();
     }
   };
-
+  // End session sound
   const initAudio = () => {
     if (!audioCtxRef.current) {
-      audioCtxRef.current = new (window.AudioContext ||
-        (window as any).webkitAudioContext)();
+      audioCtxRef.current = createAudioContext();
     }
   };
 
@@ -700,49 +699,13 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
     const ctx = audioCtxRef.current;
     if (!ctx) return;
 
-    if (ctx.state === "suspended") {
-      ctx.resume();
+    const settings = getTimerSettings();
+    // Only play sound if alarm is enabled
+    if (settings.alarmEnabled) {
+      playSound(settings.alarmSound, ctx, 3, settings.alarmVolume);
     }
-
-    const t = ctx.currentTime;
-
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-
-    const delay = ctx.createDelay();
-    const feedback = ctx.createGain();
-    const lowpass = ctx.createBiquadFilter();
-
-    const comp = ctx.createDynamicsCompressor();
-
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(1400, t);
-
-    gain.gain.setValueAtTime(20, t);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
-
-    delay.delayTime.value = 0.08;
-    feedback.gain.value = 0.4;
-    lowpass.type = "lowpass";
-    lowpass.frequency.value = 900;
-
-    comp.threshold.value = -24;
-    comp.ratio.value = 6;
-
-    osc.connect(gain);
-    gain.connect(comp);
-    comp.connect(ctx.destination);
-
-    comp.connect(delay);
-    delay.connect(feedback);
-    lowpass.connect(feedback);
-    feedback.connect(delay);
-    lowpass.connect(ctx.destination);
-
-    osc.start(t);
-    osc.stop(t + 1.5);
   };
-
+  // Click sound
   const playClickSound = () => {
     const ctx = audioCtxRef.current;
     if (!ctx) return;
