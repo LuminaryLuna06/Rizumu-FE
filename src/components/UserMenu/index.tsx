@@ -21,7 +21,7 @@ function UserMenu() {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isStudyRoomOpen, setIsStudyRoomOpen] = useState(false);
-  const [isSettingOpen, setIsSettingOpen] = useState(true);
+  const [isSettingOpen, setIsSettingOpen] = useState(false);
   const menuItems = [
     {
       icon: <IconUser size={16} />,

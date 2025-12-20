@@ -1,38 +1,31 @@
-import axiosClient from "@rizumu/api/config/axiosClient";
-import { DEFAULT_PRESETS, type Preset } from "@rizumu/constants/timer";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useAuth } from "@rizumu/context/AuthContext";
+import { useToast } from "@rizumu/utils/toast/toast";
+import axiosClient from "@rizumu/api/config/axiosClient";
+import {
+  DEFAULT_PRESETS,
+  type Preset,
+  type TimerDirection,
+  type TimerMode,
+} from "@rizumu/constants/timer";
+import type { ModelTimer } from "@rizumu/models/timer";
 import type { ModelTag } from "@rizumu/models/tag";
 import {
   getCurrentPresetId,
   initializePresets,
   saveCurrentPresetId,
 } from "@rizumu/utils/presets";
+import { getTimerSettings } from "@rizumu/utils/timerSettings";
+import { playSound, createAudioContext } from "@rizumu/utils/audioPresets";
 import {
   IconFlag,
   IconClockHour11Filled,
   IconPlayerSkipForwardFilled,
   IconPictureInPicture,
 } from "@tabler/icons-react";
-import { useState, useRef, useEffect, useCallback } from "react";
 import PresetModal from "./PresetModal";
 import TagSelector from "./TagSelector";
-import { useToast } from "@rizumu/utils/toast/toast";
 
-type TimerMode = "pomodoro" | "short_break" | "long_break";
-type TimerDirection = "countdown" | "countup";
-
-interface TimerData {
-  completed: boolean;
-  started_at: string;
-  ended_at: string;
-  duration: number;
-  session_type: string; //"pomodoro";
-  timer_type: string; //"focus" | "stopwatch"
-  user_id: string | undefined;
-  tag_id: string;
-}
-
-const POMODOROS_BEFORE_LONG_BREAK = 3;
 const TIMER_DIRECTION_KEY = "pomodoro_timer_direction";
 const SELECTED_TAG_KEY = "pomodoro_selected_tag";
 
@@ -70,10 +63,32 @@ interface TimerProps {
 function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
   const { user } = useAuth();
   const toast = useToast();
-  const [openedPreset, setOpenedPreset] = useState(false);
+
+  // Load timer settings
+  const timerSettings = getTimerSettings();
+  const longBreakInterval = timerSettings.longBreakInterval;
+
   const [mode, setMode] = useState<TimerMode>("pomodoro");
+  const [openedPreset, setOpenedPreset] = useState(false);
   const [currentPresetId, setCurrentPresetId] = useState(0);
   const [presets, setPresets] = useState<Preset[]>([]);
+
+  const [running, setRunning] = useState(false);
+  const [pomodoroCount, setPomodoroCount] = useState(0);
+
+  const intervalRef = useRef<number | null>(null);
+  const durationRef = useRef(0);
+  const dataRef = useRef<ModelTimer>({
+    completed: false,
+    started_at: "",
+    duration: 0,
+    ended_at: "",
+    session_type: "pomodoro",
+    timer_type: "focus",
+    user_id: "",
+    tag_id: "",
+  });
+  const shouldAutoStartRef = useRef(false); // Track if should auto-start after mode change
   const [timerDirection, setTimerDirection] = useState<TimerDirection>(() =>
     getTimerDirection()
   );
@@ -116,21 +131,6 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
     return direction === "countup" ? 0 : duration;
   });
 
-  const [running, setRunning] = useState(false);
-  const [pomodoroCount, setPomodoroCount] = useState(0);
-  const intervalRef = useRef<number | null>(null);
-  const durationRef = useRef(0);
-  const dataRef = useRef<TimerData>({
-    completed: false,
-    started_at: "",
-    duration: 0,
-    ended_at: "",
-    session_type: "pomodoro",
-    timer_type: "focus",
-    user_id: "",
-    tag_id: "",
-  });
-
   // Picture-in-Picture state
   const [pipWindow, setPipWindow] = useState<Window | null>(null);
   const [isPipSupported] = useState(() => "documentPictureInPicture" in window);
@@ -167,7 +167,7 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
     saveTimerDirection(timerDirection);
   }, [timerDirection]);
 
-  // Save selectedTag to localStorage
+  // LocalStorage Tag
   useEffect(() => {
     try {
       if (selectedTag) {
@@ -201,15 +201,45 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [running]);
 
-  // Update document title with timer countdown
+  // Update document title
   useEffect(() => {
     document.title = `Rizumu - ${formatTime(timeLeft)}`;
-
-    // Reset title when component unmounts
     return () => {
       document.title = "Rizumu";
     };
   }, [timeLeft]);
+
+  // Auto PiP when tab becomes hidden
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      const settings = getTimerSettings();
+      if (settings.autoMiniTimer && document.hidden && running && !pipWindow) {
+        openPictureInPicture();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [running, pipWindow]);
+
+  // Auto-start timer based on settings when mode changes
+  useEffect(() => {
+    if (shouldAutoStartRef.current) {
+      shouldAutoStartRef.current = false;
+      const settings = getTimerSettings();
+
+      if (mode === "pomodoro" && settings.autoStartPomodoro) {
+        setRunning(true);
+      } else if (
+        (mode === "short_break" || mode === "long_break") &&
+        settings.autoStartBreak
+      ) {
+        setRunning(true);
+      }
+    }
+  }, [mode]);
 
   const handleToggleTimerDirection = () => {
     setTimerDirection((prev) =>
@@ -334,12 +364,13 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
             queueMicrotask(() => {
               // Auto-switch to next mode
               let nextMode: TimerMode;
+              const settings = getTimerSettings();
 
               if (mode === "pomodoro") {
                 const newCount = pomodoroCount + 1;
                 setPomodoroCount(newCount);
 
-                if (newCount >= POMODOROS_BEFORE_LONG_BREAK) {
+                if (newCount >= settings.longBreakInterval) {
                   nextMode = "long_break";
                   setPomodoroCount(0);
                 } else {
@@ -351,6 +382,15 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
 
               setMode(nextMode);
               resetTimer(nextMode);
+
+              // Mark that we should auto-start after mode change
+              if (
+                (nextMode === "pomodoro" && settings.autoStartPomodoro) ||
+                ((nextMode === "short_break" || nextMode === "long_break") &&
+                  settings.autoStartBreak)
+              ) {
+                shouldAutoStartRef.current = true;
+              }
             });
 
             return timerDirection === "countup" ? targetDuration : 0;
@@ -414,11 +454,10 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
             completed: true,
             duration: dataRef.current.duration,
             ended_at: dataRef.current.ended_at,
-            tag_id: dataRef.current.tag_id,
+            // tag_id: dataRef.current.tag_id,
           });
           if (onSessionComplete) onSessionComplete();
         };
-
         const updateXpAndCoin = async () => {
           const duration = durationRef.current;
           const xp = Math.floor(duration / 60);
@@ -449,12 +488,13 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
     // Auto-switch to next mode – dùng modeRef để luôn lấy mode mới nhất (kể cả trong PiP)
     const currentMode = modeRef.current;
     let nextMode: TimerMode;
+    const settings = getTimerSettings();
 
     if (currentMode === "pomodoro") {
       const newCount = pomodoroCount + 1;
       setPomodoroCount(newCount);
 
-      if (newCount >= POMODOROS_BEFORE_LONG_BREAK) {
+      if (newCount >= settings.longBreakInterval) {
         nextMode = "long_break";
         setPomodoroCount(0);
       } else {
@@ -644,16 +684,14 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
 
   const handleSkipSessionWrapper = () => {
     handleSkipSession();
-    // Close PiP when skipping since we're switching modes
     if (pipWindow) {
       closePictureInPicture();
     }
   };
-
+  // End session sound
   const initAudio = () => {
     if (!audioCtxRef.current) {
-      audioCtxRef.current = new (window.AudioContext ||
-        (window as any).webkitAudioContext)();
+      audioCtxRef.current = createAudioContext();
     }
   };
 
@@ -661,49 +699,13 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
     const ctx = audioCtxRef.current;
     if (!ctx) return;
 
-    if (ctx.state === "suspended") {
-      ctx.resume();
+    const settings = getTimerSettings();
+    // Only play sound if alarm is enabled
+    if (settings.alarmEnabled) {
+      playSound(settings.alarmSound, ctx, 1, settings.alarmVolume);
     }
-
-    const t = ctx.currentTime;
-
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-
-    const delay = ctx.createDelay();
-    const feedback = ctx.createGain();
-    const lowpass = ctx.createBiquadFilter();
-
-    const comp = ctx.createDynamicsCompressor();
-
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(1400, t);
-
-    gain.gain.setValueAtTime(20, t);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
-
-    delay.delayTime.value = 0.08;
-    feedback.gain.value = 0.4;
-    lowpass.type = "lowpass";
-    lowpass.frequency.value = 900;
-
-    comp.threshold.value = -24;
-    comp.ratio.value = 6;
-
-    osc.connect(gain);
-    gain.connect(comp);
-    comp.connect(ctx.destination);
-
-    comp.connect(delay);
-    delay.connect(feedback);
-    lowpass.connect(feedback);
-    feedback.connect(delay);
-    lowpass.connect(ctx.destination);
-
-    osc.start(t);
-    osc.stop(t + 1.5);
   };
-
+  // Click sound
   const playClickSound = () => {
     const ctx = audioCtxRef.current;
     if (!ctx) return;
