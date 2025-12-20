@@ -59,7 +59,7 @@ function PomodoroPage() {
       axiosClient
         .get(`/room/id/${user.current_room_id}`)
         .then((res) => {
-          if (res.data?.background) {
+          if (res.data?.background.name !== "default_bg") {
             setBackground(res.data.background);
           }
         })
