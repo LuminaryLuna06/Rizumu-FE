@@ -2,8 +2,6 @@
 
 Rizumu là một ứng dụng Pomodoro Timer thế hệ mới, kết hợp giữa quản lý thời gian hiệu quả và tính năng social, giúp bạn tập trung làm việc/học tập cùng bạn bè một cách thú vị và đầy động lực.
 
-![Rizumu Banner](https://via.placeholder.com/1200x400/000000/FFFFFF?text=Rizumu+-+Focus+Together)
-
 ## ✨ Tính năng nổi bật
 
 ### 🕐 Pomodoro Timer
@@ -192,7 +190,7 @@ Rizumu-FE/
 │   │   │   │   ├── IframePopover.tsx
 │   │   │   │   └── TagSelector.tsx
 │   │   │   └── index.tsx
-│   │   └── LandingPage/   
+│   │   └── LandingPage/
 │   ├── routes/            # Route configuration
 │   ├── types/             # Additional TypeScript types
 │   ├── utils/             # Utility functions
@@ -227,6 +225,9 @@ Dự án này được phân phối dưới giấy phép MIT. Xem file [LICENSE]
 ## 👥 Authors
 
 - **Luna** - [@LuminaryLuna06](https://github.com/LuminaryLuna06) - maithetranh@gmail.com
+- **Stn** - [@stn-1](https://github.com/stn-1) - Backend
+- **Sinon** - [@Itz-Sinon](https://github.com/Itz-Sinon)
+- **Hung** - [@nguyentienhung147mhdhn](https://github.com/nguyentienhung147mhdhn)
 
 ## 🙏 Acknowledgments
 
