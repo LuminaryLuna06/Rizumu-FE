@@ -22,7 +22,6 @@ function ChatPopover() {
   const isInitialLoadRef = useRef<boolean>(true);
 
   useEffect(() => {
-    console.log(user);
     if (!user?._id || !user?.current_room_id) {
       return;
     }

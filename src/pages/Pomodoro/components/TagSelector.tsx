@@ -38,7 +38,6 @@ function TagSelector({ selectedTag, onTagSelect }: TagSelectorProps) {
   const fetchTags = async () => {
     try {
       const response = await axiosClient.get("/tags");
-      console.log(response.data);
       setTags(response.data || []);
     } catch (error) {
       console.error("Error fetching tags:", error);

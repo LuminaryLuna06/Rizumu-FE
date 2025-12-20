@@ -42,7 +42,6 @@ function AppSetting({
   // Load settings on mount
   useEffect(() => {
     const settings = getTimerSettings();
-    console.log("Loaded settings:", settings);
     setAutoStartBreak(settings.autoStartBreak);
     setAutoStartPomodoro(settings.autoStartPomodoro);
     setLongBreakInterval(settings.longBreakInterval);
@@ -71,7 +70,6 @@ function AppSetting({
       alarmEnabled,
       alarmVolume,
     };
-    console.log("Saving settings:", newSettings);
     saveTimerSettings(newSettings);
   }, [
     autoStartBreak,

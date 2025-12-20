@@ -50,7 +50,6 @@ function PomodoroPage() {
       const response = await axiosClient.get(
         `/session/hourly?startTime=${startTime}&endTime=${endTime}&userId=${user?._id}`
       );
-      console.log(response.data);
       response.data.forEach((data: number) => {
         total += data;
       });

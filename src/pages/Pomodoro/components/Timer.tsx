@@ -64,10 +64,6 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
   const { user } = useAuth();
   const toast = useToast();
 
-  // Load timer settings
-  const timerSettings = getTimerSettings();
-  const longBreakInterval = timerSettings.longBreakInterval;
-
   const [mode, setMode] = useState<TimerMode>("pomodoro");
   const [openedPreset, setOpenedPreset] = useState(false);
   const [currentPresetId, setCurrentPresetId] = useState(0);
@@ -76,7 +72,7 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
   const [running, setRunning] = useState(false);
   const [pomodoroCount, setPomodoroCount] = useState(0);
 
-  const intervalRef = useRef<number | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const durationRef = useRef(0);
   const dataRef = useRef<ModelTimer>({
     completed: false,
@@ -88,12 +84,11 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
     user_id: "",
     tag_id: "",
   });
-  const shouldAutoStartRef = useRef(false); // Track if should auto-start after mode change
+  const shouldAutoStartRef = useRef(false);
   const [timerDirection, setTimerDirection] = useState<TimerDirection>(() =>
     getTimerDirection()
   );
 
-  // Tag state - load from localStorage
   const [selectedTag, setSelectedTag] = useState<ModelTag | null>(() => {
     try {
       const stored = localStorage.getItem(SELECTED_TAG_KEY);
@@ -734,7 +729,6 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
 
     osc.start(t);
     osc.stop(t + 0.06);
-    
   };
   return (
     <div className="main-content flex flex-col justify-center items-center gap-y-xs h-[82vh]">
