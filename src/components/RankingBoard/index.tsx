@@ -63,8 +63,12 @@ const LeaderboardModal = ({
     setLoading(true);
     try {
       const { startTime, endTime } = getTimeRange(currentDate, timeFilter);
+      const endpoint =
+        activeTab === "global"
+          ? "/session/leaderboard"
+          : "/session/leaderboard_friend";
       const response = await axiosClient.get(
-        `/session/leaderboard?startTime=${startTime}&endTime=${endTime}`
+        `${endpoint}?startTime=${startTime}&endTime=${endTime}`
       );
       setLeaderboardData(response.data.data || []);
     } catch (error) {
@@ -79,7 +83,7 @@ const LeaderboardModal = ({
     if (opened) {
       fetchLeaderboard();
     }
-  }, [opened, timeFilter, currentDate]);
+  }, [opened, timeFilter, currentDate, activeTab]);
 
   const handlePrevDate = () => {
     const newDate = new Date(currentDate);

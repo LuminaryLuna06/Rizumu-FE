@@ -25,6 +25,7 @@ import type { ModelProgress } from "@rizumu/models/progress";
 import axiosClient from "@rizumu/api/config/axiosClient";
 import { months } from "../../constants/months";
 import type { ModelStat } from "@rizumu/models/stats";
+import GiftModal from "../GiftModal";
 
 interface HeatMapResponse {
   durations: number[];
@@ -48,6 +49,7 @@ function ProfileModal({
   const toast = useToast();
   const { user: currentUser } = useAuth();
   const [editOpened, setEditOpened] = useState(false);
+  const [sendGift, setSendGift] = useState(false);
 
   const [heatmapData, setHeatmapData] = useState<HeatMapData>({});
 
@@ -63,6 +65,9 @@ function ProfileModal({
 
   const [stats, setStats] = useState<ModelStat>();
   const [statsLoading, setStatsLoading] = useState(false);
+
+  const [gifts, setGifts] = useState([]);
+  const [giftLoading, setGiftLoading] = useState(false);
 
   const targetUserId = userId || currentUser?._id;
   const isOwnProfile = targetUserId === currentUser?._id;
@@ -218,6 +223,19 @@ function ProfileModal({
     }
   };
 
+  const getGift = async (userId: string) => {
+    try {
+      setGiftLoading(true);
+      const response = await axiosClient.get(`/progress/gift/${userId}`);
+      setGifts(response.data.data);
+      console.log(response.data.data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setGiftLoading(false);
+    }
+  };
+
   // Reset profile data khi targetUserId thay đổi
   useEffect(() => {
     if (opened && targetUserId) {
@@ -230,6 +248,7 @@ function ProfileModal({
       getHeatMap(targetUserId);
       getProgress(targetUserId);
       getStat(targetUserId);
+      getGift(targetUserId);
       if (!isOwnProfile) {
         checkFriendship(targetUserId);
       }
@@ -267,7 +286,19 @@ function ProfileModal({
                 Copy link
               </ResponsiveButton>
             </div>
-          ) : null
+          ) : (
+            <div className="flex items-center h-20 lg:h-10 gap-2 md:gap-sm hidden md:flex">
+              <ResponsiveButton
+                className="bg-white/10 hover:bg-white/20 h-11 md:h-5 gap-x-xs text-sm"
+                leftSection={<IconGift size={16} />}
+                onClick={() => {
+                  setSendGift(true);
+                }}
+              >
+                Send gift
+              </ResponsiveButton>
+            </div>
+          )
         }
       >
         <div className="flex flex-col md:flex-row items-center mb-xl h-1/3">
@@ -505,15 +536,54 @@ function ProfileModal({
           </div>
         </div>
 
-        <div className="flex justify-between mb-lg">
-          <div className="flex font-bold items-center text-xl gap-sm h-8 mb-md">
+        <div className="flex justify-between mb-lg items-center">
+          <div className="flex font-bold items-center text-xl gap-sm h-8">
             <IconGift />
             <h1>Gifts Received</h1>
           </div>
-          <div className="flex items-center border-1 rounded-md h-8 text-md mb-md p-4">
-            <p>Total: 0</p>
+          <div className="flex items-center border border-white/10 rounded-md h-8 text-md p-4 bg-secondary/10">
+            <p>Total: {gifts.length}</p>
           </div>
         </div>
+
+        {giftLoading ? (
+          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 mb-xl px-2">
+            {Array.from({ length: 5 }).map((_, index) => (
+              <div
+                key={index}
+                className="w-full aspect-square rounded-2xl bg-secondary/10 animate-pulse border-2 border-transparent"
+              />
+            ))}
+          </div>
+        ) : gifts.length > 0 ? (
+          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 mb-xl px-2">
+            {gifts.map((gift: any, index: number) => (
+              <div
+                key={index}
+                className="relative flex flex-col items-center p-2 rounded-2xl transition-all duration-300 border-2 border-transparent bg-secondary/10 hover:border-white/10"
+              >
+                <div className="w-24 h-24 md:w-32 md:h-32 flex flex-col items-center justify-center drop-shadow-xl mt-2">
+                  <img
+                    src={gift.icon}
+                    alt="Gift icon"
+                    className="w-full h-full object-contain transform hover:scale-110 transition-transform duration-300"
+                  />
+                  <p className="mb-md text-xs italic ">
+                    from{" "}
+                    <span className="text-base font-semibold not-italic">
+                      {gift.senderName}
+                    </span>
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-10 text-secondary/50 bg-secondary/5 rounded-2xl mb-xl border border-dashed border-white/10">
+            <IconGift size={48} className="mb-2 opacity-20" />
+            <p>No gifts received yet</p>
+          </div>
+        )}
       </Modal>
       <EditProfileModal
         opened={editOpened}
@@ -523,6 +593,11 @@ function ProfileModal({
           setEditOpened(false);
           onOpenProfile();
         }}
+      />
+      <GiftModal
+        opened={sendGift}
+        onClose={() => setSendGift(false)}
+        profile={profileUser}
       />
     </>
   );
