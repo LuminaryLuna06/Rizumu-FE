@@ -136,10 +136,10 @@ function IframePopover() {
     } else {
       // For Spotify, use official Web API SDK
       try {
-        // Initialize Spotify API with Client Credentials
+        // Initialize Spotify API with Client Credentials from environment
         const spotify = SpotifyApi.withClientCredentials(
-          "8fe470c0e1d74789b852f84c2bd0d563",
-          "7627399f917b4f669c30c160bacf58bc"
+          import.meta.env.VITE_SPOTIFY_CLIENT_ID,
+          import.meta.env.VITE_SPOTIFY_CLIENT_SECRET
         );
 
         // Extract Spotify ID from URL
