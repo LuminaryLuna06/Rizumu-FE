@@ -4,15 +4,29 @@ import Timer from "./components/Timer";
 import { useAuth } from "@rizumu/context/AuthContext";
 import { useEffect, useState } from "react";
 import axiosClient from "@rizumu/api/config/axiosClient";
+import { useSearchParams } from "react-router-dom";
+import Modal from "@rizumu/components/Modal";
+import ResponsiveButton from "@rizumu/components/ResponsiveButton";
+import { useToast } from "@rizumu/utils/toast/toast";
+import type { ModelRoom } from "@rizumu/models/room";
 
 function PomodoroPage() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const toast = useToast();
   const [background, setBackground] = useState({
     name: "/image/fuji.webp",
     type: "static",
   });
   const [totalTime, setTotalTime] = useState(0);
   const [shouldFetch, setShouldFetch] = useState(false);
+
+  // State for join room modal
+  const [joinRoomModalOpened, setJoinRoomModalOpened] = useState(false);
+  const [roomToJoin, setRoomToJoin] = useState<ModelRoom | null>(null);
+  const [isLoadingRoom, setIsLoadingRoom] = useState(false);
+  const [isJoining, setIsJoining] = useState(false);
+  const [hasCheckedQuery, setHasCheckedQuery] = useState(false);
 
   const fetchTotalTime = async () => {
     if (!user?._id) return;
@@ -53,13 +67,79 @@ function PomodoroPage() {
     }
   }, [shouldFetch]);
 
+  const handleCheckRoomInvite = async (slug: string) => {
+    try {
+      setIsLoadingRoom(true);
+      // Try to get room by slug
+      const response = await axiosClient.get(`/room/slug/${slug}`);
+      const room = response.data as ModelRoom;
+
+      // Check if user is already in this room
+      if (user?.current_room_id === room._id) {
+        // Already in this room, just remove the query param
+        setSearchParams({});
+        return;
+      }
+
+      setRoomToJoin(room);
+      setJoinRoomModalOpened(true);
+    } catch (error: any) {
+      console.error("Error fetching room:", error);
+      toast.error(error?.response?.data?.message || "Room not found", "Error");
+      // Remove invalid query param
+      setSearchParams({});
+    } finally {
+      setIsLoadingRoom(false);
+    }
+  };
+
+  const handleJoinRoom = async () => {
+    if (!roomToJoin) return;
+
+    try {
+      setIsJoining(true);
+      await axiosClient.post(`/room/${roomToJoin._id}/join`);
+      toast.success("Joined room successfully!", "Success");
+      await refreshUser();
+      setJoinRoomModalOpened(false);
+      setRoomToJoin(null);
+      // Remove query param after joining
+      setSearchParams({});
+    } catch (error: any) {
+      console.error("Error joining room:", error);
+      toast.error(
+        error?.response?.data?.message || "Failed to join room",
+        "Error"
+      );
+    } finally {
+      setIsJoining(false);
+    }
+  };
+
+  const handleDeclineJoin = () => {
+    setJoinRoomModalOpened(false);
+    setRoomToJoin(null);
+    // Remove query param
+    setSearchParams({});
+  };
+
+  // Check for rid query parameter when page loads
+  useEffect(() => {
+    const roomSlug = searchParams.get("rid");
+    if (roomSlug && user && !hasCheckedQuery) {
+      setHasCheckedQuery(true);
+      handleCheckRoomInvite(roomSlug);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, user, hasCheckedQuery]);
+
   useEffect(() => {
     if (user?.current_room_id) {
       fetchTotalTime();
       axiosClient
         .get(`/room/id/${user.current_room_id}`)
         .then((res) => {
-          if (res.data?.background) {
+          if (res.data?.background.name !== "default_bg") {
             setBackground(res.data.background);
           }
         })
@@ -103,6 +183,44 @@ function PomodoroPage() {
         {/* Footer */}
         <Footer onBackgroundChange={handleBackgroundChange} />
       </div>
+
+      {/* Join Room Modal */}
+      <Modal
+        opened={joinRoomModalOpened}
+        onClose={handleDeclineJoin}
+        title="Join a room"
+      >
+        <div className="space-y-md">
+          {isLoadingRoom ? (
+            <div className="text-center py-lg">
+              <p className="text-secondary/60">Loading room information...</p>
+            </div>
+          ) : roomToJoin ? (
+            <div className="flex flex-col justify-center items-center">
+              <p className="mb-md">You've been invited to join</p>
+              <p className="text-3xl text-text-active font-bold mb-xl">
+                {roomToJoin.name}
+              </p>
+              <div className="flex justify-center gap-x-sm pt-md">
+                <ResponsiveButton
+                  onClick={handleDeclineJoin}
+                  className="flex justify-center hover:bg-black/90 border w-[200px]"
+                  disabled={isJoining}
+                >
+                  Decline
+                </ResponsiveButton>
+                <ResponsiveButton
+                  onClick={handleJoinRoom}
+                  disabled={isJoining}
+                  className="flex justify-center bg-white hover:bg-white/90 !text-primary border w-[200px]"
+                >
+                  {isJoining ? "Joining..." : "Accept"}
+                </ResponsiveButton>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </Modal>
     </>
   );
 }

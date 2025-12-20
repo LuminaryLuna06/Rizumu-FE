@@ -61,7 +61,7 @@ function FindStudyRoomModal({
         <div className="col-span-3 md:col-span-2"></div>
       </div>
 
-      <div className="space-y-3 max-h-[60vh] overflow-y-auto [&::-webkit-scrollbar]:hidden px-1">
+      <div className="space-y-3 max-h-[60vh] overflow-y-auto custom-scrollbar scrollbar-hidden px-1">
         {isLoading
           ? Array.from({ length: 5 }).map((_, idx) => (
               <div

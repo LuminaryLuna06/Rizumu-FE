@@ -95,11 +95,28 @@ const LeaderboardModal = ({
 
   const handleNextDate = () => {
     const newDate = new Date(currentDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const compareDate = new Date(newDate);
+    compareDate.setHours(0, 0, 0, 0);
+
     if (timeFilter === "daily") {
+      if (compareDate >= today) {
+        return;
+      }
+
       newDate.setDate(newDate.getDate() + 1);
     } else if (timeFilter === "weekly") {
+      if (compareDate >= today) {
+        return;
+      }
+
       newDate.setDate(newDate.getDate() + 7);
     } else if (timeFilter === "monthly") {
+      if (compareDate >= today) {
+        return;
+      }
+
       newDate.setMonth(newDate.getMonth() + 1);
     }
     setCurrentDate(newDate);

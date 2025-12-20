@@ -734,6 +734,7 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
 
     osc.start(t);
     osc.stop(t + 0.06);
+    
   };
   return (
     <div className="main-content flex flex-col justify-center items-center gap-y-xs h-[82vh]">
