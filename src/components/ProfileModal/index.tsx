@@ -207,10 +207,10 @@ function ProfileModal({
     }
   };
 
-  const getStat = async () => {
+  const getStat = async (userId: string) => {
     try {
       setStatsLoading(true);
-      const response = await axiosClient.get("/progress/stats");
+      const response = await axiosClient.get(`/progress/stats/${userId}`);
       const data = response.data.data;
       setStats(data);
     } catch {
@@ -231,7 +231,7 @@ function ProfileModal({
       getProfile(targetUserId);
       getHeatMap(targetUserId);
       getProgress(targetUserId);
-      getStat();
+      getStat(targetUserId);
       if (!isOwnProfile) {
         checkFriendship(targetUserId);
       }

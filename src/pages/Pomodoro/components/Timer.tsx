@@ -702,7 +702,7 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
     const settings = getTimerSettings();
     // Only play sound if alarm is enabled
     if (settings.alarmEnabled) {
-      playSound(settings.alarmSound, ctx, settings.alarmVolume);
+      playSound(settings.alarmSound, ctx, 1, settings.alarmVolume);
     }
   };
   // Click sound

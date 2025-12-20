@@ -26,4 +26,9 @@ export const DEFAULT_PRESETS: Preset[] = [
     name: "Deep Work",
     durations: { pomodoro: 90, short_break: 15, long_break: 30 },
   },
+  {
+    id: 4,
+    name: "Test Session",
+    durations: { pomodoro: 0.1, short_break: 0.1, long_break: 0.1 },
+  },
 ];
