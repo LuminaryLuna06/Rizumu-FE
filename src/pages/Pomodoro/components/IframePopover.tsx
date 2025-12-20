@@ -1,12 +1,36 @@
-import { IconClock, IconMusic, IconCheck, IconX } from "@tabler/icons-react";
+import {
+  IconClock,
+  IconMusic,
+  IconCheck,
+  IconX,
+  IconBrandYoutube,
+  IconBrandSpotify,
+  IconTrash,
+} from "@tabler/icons-react";
 import { useState, useEffect } from "react";
 import Popover from "@rizumu/components/Popover";
 import ResponsiveButton from "@rizumu/components/ResponsiveButton";
+import { SpotifyApi } from "@spotify/web-api-ts-sdk";
 
-function testTranh2() {
+const STORAGE_KEY_CURRENT = "iframe_current_link";
+const STORAGE_KEY_HISTORY = "iframe_link_history";
+const MAX_HISTORY_ITEMS = 10;
+
+interface LinkData {
+  url: string;
+  type: "youtube" | "spotify";
+  embedUrl: string;
+  timestamp: number;
+  title?: string;
+  thumbnail?: string;
+}
+
+function IframePopover() {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [inputUrl, setInputUrl] = useState("");
   const [isEditing, setIsEditing] = useState(false);
+  const [showRecent, setShowRecent] = useState(false);
+  const [linkHistory, setLinkHistory] = useState<LinkData[]>([]);
   const [previewData, setPreviewData] = useState<{
     type: "youtube" | "spotify" | null;
     embedUrl: string;
@@ -15,6 +39,32 @@ function testTranh2() {
     type: "youtube" | "spotify" | null;
     embedUrl: string;
   }>({ type: null, embedUrl: "" });
+
+  // Load current link and history from localStorage on mount
+  useEffect(() => {
+    const savedCurrent = localStorage.getItem(STORAGE_KEY_CURRENT);
+    if (savedCurrent) {
+      try {
+        const currentData = JSON.parse(savedCurrent) as LinkData;
+        setPreviewData({
+          type: currentData.type,
+          embedUrl: currentData.embedUrl,
+        });
+      } catch (error) {
+        console.error("Failed to load current link:", error);
+      }
+    }
+
+    const savedHistory = localStorage.getItem(STORAGE_KEY_HISTORY);
+    if (savedHistory) {
+      try {
+        const history = JSON.parse(savedHistory) as LinkData[];
+        setLinkHistory(history);
+      } catch (error) {
+        console.error("Failed to load link history:", error);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (!inputUrl.trim() || !isEditing) {
@@ -61,9 +111,154 @@ function testTranh2() {
     }
   }, [inputUrl, isEditing]);
 
-  const handleSetIframe = () => {
+  const fetchLinkMetadata = async (
+    url: string,
+    type: "youtube" | "spotify"
+  ): Promise<{ title: string; thumbnail?: string }> => {
+    if (type === "youtube") {
+      try {
+        const response = await fetch(
+          `https://www.youtube.com/oembed?url=${encodeURIComponent(
+            url
+          )}&format=json`
+        );
+        if (response.ok) {
+          const data = await response.json();
+          return {
+            title: data.title || "YouTube Video",
+            thumbnail: data.thumbnail_url,
+          };
+        }
+      } catch (error) {
+        console.error("Failed to fetch YouTube metadata:", error);
+      }
+      return { title: "YouTube Video" };
+    } else {
+      // For Spotify, use official Web API SDK
+      try {
+        // Initialize Spotify API with Client Credentials
+        const spotify = SpotifyApi.withClientCredentials(
+          "8fe470c0e1d74789b852f84c2bd0d563",
+          "7627399f917b4f669c30c160bacf58bc"
+        );
+
+        // Extract Spotify ID from URL
+        const urlParts = url.split("/");
+        const typeIndex = urlParts.findIndex(
+          (part) => part === "track" || part === "playlist" || part === "album"
+        );
+
+        if (typeIndex === -1 || !urlParts[typeIndex + 1]) {
+          throw new Error("Invalid Spotify URL");
+        }
+
+        const contentType = urlParts[typeIndex];
+        const spotifyId = urlParts[typeIndex + 1].split("?")[0];
+
+        let title = "Spotify Content";
+        let thumbnail: string | undefined;
+
+        if (contentType === "track") {
+          const track = await spotify.tracks.get(spotifyId);
+          title = `${track.name} - ${track.artists
+            .map((a) => a.name)
+            .join(", ")}`;
+          thumbnail = track.album.images[0]?.url;
+        } else if (contentType === "playlist") {
+          const playlist = await spotify.playlists.getPlaylist(spotifyId);
+          title = playlist.name;
+          thumbnail = playlist.images[0]?.url;
+        } else if (contentType === "album") {
+          const album = await spotify.albums.get(spotifyId);
+          title = `${album.name} - ${album.artists
+            .map((a) => a.name)
+            .join(", ")}`;
+          thumbnail = album.images[0]?.url;
+        }
+
+        return { title, thumbnail };
+      } catch (error) {
+        console.error("Failed to fetch Spotify metadata:", error);
+        // Fallback to URL parsing
+        try {
+          const urlParts = url.split("/");
+          const typeIndex = urlParts.findIndex(
+            (part) =>
+              part === "track" || part === "playlist" || part === "album"
+          );
+          if (typeIndex !== -1 && urlParts[typeIndex + 1]) {
+            const contentType = urlParts[typeIndex];
+            return {
+              title: `Spotify ${
+                contentType.charAt(0).toUpperCase() + contentType.slice(1)
+              }`,
+              thumbnail: undefined,
+            };
+          }
+        } catch (parseError) {
+          console.error("Failed to parse Spotify URL:", parseError);
+        }
+      }
+      return { title: "Spotify Content" };
+    }
+  };
+
+  const saveToHistory = (
+    url: string,
+    type: "youtube" | "spotify",
+    embedUrl: string,
+    title?: string,
+    thumbnail?: string
+  ) => {
+    const newLink: LinkData = {
+      url,
+      type,
+      embedUrl,
+      timestamp: Date.now(),
+      title,
+      thumbnail,
+    };
+
+    setLinkHistory((prevHistory) => {
+      // Remove duplicate if exists
+      const filtered = prevHistory.filter((item) => item.url !== url);
+      // Add new link at the beginning
+      const updated = [newLink, ...filtered].slice(0, MAX_HISTORY_ITEMS);
+
+      // Save to localStorage
+      localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(updated));
+
+      return updated;
+    });
+  };
+
+  const saveCurrentLink = (linkData: LinkData) => {
+    localStorage.setItem(STORAGE_KEY_CURRENT, JSON.stringify(linkData));
+  };
+
+  const handleSetIframe = async () => {
     if (tempPreviewData.type && tempPreviewData.embedUrl) {
+      // Fetch metadata
+      const metadata = await fetchLinkMetadata(inputUrl, tempPreviewData.type);
+
+      const linkData: LinkData = {
+        url: inputUrl,
+        type: tempPreviewData.type,
+        embedUrl: tempPreviewData.embedUrl,
+        timestamp: Date.now(),
+        title: metadata.title,
+        thumbnail: metadata.thumbnail,
+      };
+
       setPreviewData(tempPreviewData);
+      saveCurrentLink(linkData);
+      saveToHistory(
+        inputUrl,
+        tempPreviewData.type,
+        tempPreviewData.embedUrl,
+        metadata.title,
+        metadata.thumbnail
+      );
       setIsEditing(false);
       setInputUrl("");
       setTempPreviewData({ type: null, embedUrl: "" });
@@ -74,14 +269,36 @@ function testTranh2() {
     setIsEditing(false);
     setInputUrl("");
     setTempPreviewData({ type: null, embedUrl: "" });
+    setShowRecent(false);
   };
 
   const handleChangeClick = () => {
     setIsEditing(true);
+    setShowRecent(false);
   };
 
   const handleRecentClick = () => {
-    console.log("Recent clicked");
+    setShowRecent(!showRecent);
+    setIsEditing(false);
+  };
+
+  const handleSelectRecent = (link: LinkData) => {
+    setPreviewData({
+      type: link.type,
+      embedUrl: link.embedUrl,
+    });
+    saveCurrentLink(link);
+    setShowRecent(false);
+  };
+
+  const handleDeleteLink = (e: React.MouseEvent, index: number) => {
+    e.stopPropagation(); // Prevent triggering handleSelectRecent
+
+    setLinkHistory((prevHistory) => {
+      const updated = prevHistory.filter((_, i) => i !== index);
+      localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(updated));
+      return updated;
+    });
   };
 
   return (
@@ -94,6 +311,7 @@ function testTranh2() {
         </ResponsiveButton>
       }
       position="bottom-left"
+      className="w-120"
     >
       <div className="flex items-center justify-between px-lg py-md">
         <h3 className="text-secondary capitalize">
@@ -106,21 +324,21 @@ function testTranh2() {
               type="text"
               value={inputUrl}
               onChange={(e) => setInputUrl(e.target.value)}
-              placeholder="URL from YT, Spotify, Apple Music"
-              className="flex-1 px-md py-xs rounded-md bg-secondary text-primary outline-none focus:ring-2 focus:ring-primary transition-all duration-base text-xs"
+              placeholder="URL from YT, Spotify"
+              className="flex-1 px-md py-xs rounded-md bg-secondary text-primary outline-none transition-all duration-base text-xs"
               autoFocus
             />
             <button
               onClick={handleSetIframe}
               disabled={!tempPreviewData.type}
-              className="p-xs rounded-md bg-green-600 text-secondary hover:bg-green-700 transition-all duration-base disabled:opacity-30 disabled:cursor-not-allowed"
+              className="p-xs rounded-md text-secondary hover:bg-secondary hover:text-primary transition-all duration-base disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
               title="Set iframe"
             >
               <IconCheck size={18} />
             </button>
             <button
               onClick={handleCancelEdit}
-              className="p-xs rounded-md bg-red-600 text-secondary hover:bg-red-700 transition-all duration-base"
+              className="p-xs rounded-md text-secondary hover:bg-secondary hover:text-primary transition-all duration-base cursor-pointer"
               title="Cancel"
             >
               <IconX size={18} />
@@ -147,13 +365,74 @@ function testTranh2() {
       </div>
 
       <div className="p-lg">
-        {previewData.type && previewData.embedUrl ? (
-          <div className="bg-black rounded-md overflow-hidden">
+        {showRecent ? (
+          <div className="space-y-sm max-h-96 overflow-y-auto">
+            {linkHistory.length > 0 ? (
+              linkHistory.map((link, index) => (
+                <div key={index} className="relative group">
+                  <button
+                    onClick={() => handleSelectRecent(link)}
+                    className="w-full text-left p-sm rounded-md hover:bg-secondary/10 transition-all duration-base flex items-center gap-md"
+                  >
+                    {/* Thumbnail */}
+                    <div className="flex-shrink-0 w-20 h-11 rounded-md overflow-hidden bg-secondary/50 flex items-center justify-center">
+                      {link.thumbnail ? (
+                        <img
+                          src={link.thumbnail}
+                          alt={link.title || link.type}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <IconMusic
+                          size={24}
+                          className="text-secondary opacity-50"
+                        />
+                      )}
+                    </div>
+
+                    {/* Title and Platform */}
+                    <div className="flex-1 min-w-0">
+                      <div className="text-secondary/90 text-sm font-medium truncate">
+                        {link.title || link.url}
+                      </div>
+                      <div className="flex items-center gap-xs mt-xs">
+                        {link.type === "youtube" ? (
+                          <IconBrandYoutube
+                            size={20}
+                            className="text-red-500"
+                          />
+                        ) : (
+                          <IconBrandSpotify
+                            size={20}
+                            className="text-green-500"
+                          />
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Delete Button */}
+                    <button
+                      onClick={(e) => handleDeleteLink(e, index)}
+                      className="flex-shrink-0 p-xs rounded-md text-secondary/50 hover:text-red-500 hover:bg-red-500/10 transition-all duration-base opacity-0 group-hover:opacity-100"
+                      title="Delete"
+                    >
+                      <IconTrash size={16} />
+                    </button>
+                  </button>
+                </div>
+              ))
+            ) : (
+              <div className="text-center text-secondary opacity-50 py-xl">
+                No recent links
+              </div>
+            )}
+          </div>
+        ) : previewData.type && previewData.embedUrl ? (
+          <div className="overflow-hidden rounded-lg">
             <iframe
               src={previewData.embedUrl}
               width="100%"
-              height={previewData.type === "youtube" ? "200" : "152"}
-              frameBorder="0"
+              height={previewData.type === "youtube" ? "252" : "360"}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
               className="w-full"
@@ -169,4 +448,4 @@ function testTranh2() {
   );
 }
 
-export default testTranh2;
+export default IframePopover;

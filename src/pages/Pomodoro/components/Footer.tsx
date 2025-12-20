@@ -17,9 +17,6 @@ function Footer({ onBackgroundChange }: FooterProps) {
     <div className="footer flex justify-between h-[10vh] items-center">
       {/* Footer Left */}
       <div className="flex gap-x-lg">
-        <ResponsiveButton>
-          <IconCloud size={20} />
-        </ResponsiveButton>
         <IframePopover />
         <ResponsiveButton onClick={() => setBackgroundModalOpened(true)}>
           <IconPhoto size={20} />
@@ -31,9 +28,6 @@ function Footer({ onBackgroundChange }: FooterProps) {
 
       {/* Footer Right */}
       <div className="flex gap-x-lg justify-center">
-        <ResponsiveButton>
-          <IconGift size={20} />
-        </ResponsiveButton>
         <ResponsiveButton onClick={() => setFriendOpened(true)}>
           <IconUsers size={20} />
         </ResponsiveButton>

@@ -96,6 +96,61 @@ function AppSetting({
       title="Settings"
       className="!max-w-[700px] text-white overflow-y-auto [&::-webkit-scrollbar]:hidden"
     >
+      {/* Alarm sound */}
+      <div className="mb-10">
+        <div className="text-left mt-10">Alarm Sound</div>
+        <hr className="h-[1px] bg-gray mt-1 mb-4" />
+
+        <div className="flex justify-between items-center mt-5">
+          <p>Alarm enabled</p>
+          <Switch
+            labelPosition="right"
+            checked={alarmEnabled}
+            onChange={(checked) => setAlarmEnabled(checked)}
+          />
+        </div>
+
+        <div className="flex justify-between items-center mt-5">
+          <p>Alarm Sounds</p>
+          <div className="flex items-center gap-2">
+            <SelectInput
+              data={Object.keys(SOUND_PRESETS).map((preset) => ({
+                value: preset,
+                label: preset.charAt(0).toUpperCase() + preset.slice(1),
+              }))}
+              value={alarmSound}
+              onChange={(value) => setAlarmSound(value as SoundPresetName)}
+              placeholder="Select sound"
+              size="sm"
+              className="w-40"
+            />
+            <button
+              onClick={handlePreviewSound}
+              className="p-2 border rounded-lg hover:bg-secondary/10 transition-colors"
+              title="Preview sound"
+            >
+              <IconVolume size={20} className="text-secondary" />
+            </button>
+          </div>
+        </div>
+        <div className="flex justify-between items-center mt-5">
+          <p>Volume</p>
+          <div className="flex items-center gap-3 w-48">
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={alarmVolume}
+              onChange={(e) => setAlarmVolume(parseInt(e.target.value))}
+              className="flex-1 h-2 bg-secondary/50 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-secondary [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:border-0"
+            />
+            <span className="text-sm text-secondary/80 w-10 text-right">
+              {alarmVolume}%
+            </span>
+          </div>
+        </div>
+      </div>
+
       {/* Timer */}
       <div className="text-left">Timer</div>
       <hr className="h-[1px] bg-gray mb-4 mt-1" />
@@ -160,60 +215,6 @@ function AppSetting({
         <p>Ticking speed</p>
       </div> */}
 
-      {/* Alarm sound */}
-      <div className="text-left mt-10">Alarm Sound</div>
-      <hr className="h-[1px] bg-gray mt-1 mb-4" />
-
-      <div className="flex justify-between items-center mt-5">
-        <p>Alarm enabled</p>
-        <Switch
-          labelPosition="right"
-          checked={alarmEnabled}
-          onChange={(checked) => setAlarmEnabled(checked)}
-        />
-      </div>
-
-      <div className="flex justify-between items-center mt-5">
-        <p>Alarm Sounds</p>
-        <div className="flex items-center gap-2">
-          <SelectInput
-            data={Object.keys(SOUND_PRESETS).map((preset) => ({
-              value: preset,
-              label: preset.charAt(0).toUpperCase() + preset.slice(1),
-            }))}
-            value={alarmSound}
-            onChange={(value) => setAlarmSound(value as SoundPresetName)}
-            placeholder="Select sound"
-            size="sm"
-            className="w-40"
-          />
-          <button
-            onClick={handlePreviewSound}
-            className="p-2 border rounded-lg hover:bg-secondary/10 transition-colors"
-            title="Preview sound"
-          >
-            <IconVolume size={20} className="text-secondary" />
-          </button>
-        </div>
-      </div>
-
-      <div className="flex justify-between items-center mt-5">
-        <p>Volume</p>
-        <div className="flex items-center gap-3 w-48">
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={alarmVolume}
-            onChange={(e) => setAlarmVolume(parseInt(e.target.value))}
-            className="flex-1 h-2 bg-secondary/50 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-secondary [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:border-0"
-          />
-          <span className="text-sm text-secondary/80 w-10 text-right">
-            {alarmVolume}%
-          </span>
-        </div>
-      </div>
-
       {/* <div className="flex justify-between items-center mt-5">
         <p>Repeat</p>
         <input
@@ -231,13 +232,13 @@ function AppSetting({
       </div> */}
 
       {/* Motivation */}
-      <div className="text-left mt-10">Motivation</div>
+      {/* <div className="text-left mt-10">Motivation</div>
       <hr className="h-[1px] bg-gray mt-1 mb-4" />
 
       <div className="flex justify-between items-center mt-5">
         <p>Show Widget</p>
         <Switch labelPosition="right" />
-      </div>
+      </div> */}
     </Modal>
   );
 }
