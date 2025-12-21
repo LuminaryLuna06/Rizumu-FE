@@ -9,6 +9,7 @@ import { useToast } from "@rizumu/utils/toast/toast";
 import { IconCamera, IconUser, IconX } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
 import { countries } from "../../../constants/countries";
+import { useAuth } from "@rizumu/context/AuthContext";
 
 interface EditProfileModalProps {
   opened: boolean;
@@ -23,6 +24,7 @@ function EditProfileModal({
   onOpenProfile,
 }: EditProfileModalProps) {
   const toast = useToast();
+  const { refreshUser } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -71,7 +73,7 @@ function EditProfileModal({
       }
       await axiosClient.patch(`/auth/profile`, formData);
       toast.success("Update profile successful!", "Success");
-      // refreshUser();
+      refreshUser();
     } catch (e: any) {
       toast.error("Update profile failed!", "Error");
     }
