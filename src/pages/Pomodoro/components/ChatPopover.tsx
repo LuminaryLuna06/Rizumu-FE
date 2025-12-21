@@ -69,7 +69,7 @@ function ChatPopover() {
       console.log("Disconnecting socket from room:", user.current_room_id);
       newSocket.disconnect();
     };
-  }, [user]);
+  }, [user?._id, user?.current_room_id]);
 
   // Cuộn xuống dưới chỉ khi lần đầu load messages
   useEffect(() => {

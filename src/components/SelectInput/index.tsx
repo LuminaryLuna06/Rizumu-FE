@@ -158,7 +158,7 @@ function SelectInput({
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, highlightedIndex, filteredOptions]);
+  }, [isOpen, highlightedIndex, filteredOptions.length]);
 
   // Scroll highlighted option into view
   useEffect(() => {

@@ -90,8 +90,7 @@ function RoomPopover() {
 
   useEffect(() => {
     getRoom();
-    fetchMembers();
-  }, [user]);
+  }, [user?._id, user?.current_room_id]);
 
   useEffect(() => {
     if (room) {

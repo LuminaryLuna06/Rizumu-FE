@@ -615,32 +615,56 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
       const toggleBtn = pip.document.getElementById("pip-toggle");
       const skipBtn = pip.document.getElementById("pip-skip");
 
+      // Store listener functions for cleanup
+      const toggleClickListener = () => setRunning((prev) => !prev);
+      const toggleMouseEnterListener = () => {
+        toggleBtn!.style.transform = "scale(1.05)";
+      };
+      const toggleMouseLeaveListener = () => {
+        toggleBtn!.style.transform = "scale(1)";
+      };
+
+      const skipClickListener = handleSkipSession;
+      const skipMouseEnterListener = () => {
+        skipBtn!.style.background = "rgba(255, 255, 255, 0.3)";
+        skipBtn!.style.transform = "scale(1.1)";
+      };
+      const skipMouseLeaveListener = () => {
+        skipBtn!.style.background = "rgba(255, 255, 255, 0.2)";
+        skipBtn!.style.transform = "scale(1)";
+      };
+
       if (toggleBtn) {
-        toggleBtn.addEventListener("click", () => setRunning((prev) => !prev));
-        toggleBtn.addEventListener("mouseenter", () => {
-          toggleBtn.style.transform = "scale(1.05)";
-        });
-        toggleBtn.addEventListener("mouseleave", () => {
-          toggleBtn.style.transform = "scale(1)";
-        });
+        toggleBtn.addEventListener("click", toggleClickListener);
+        toggleBtn.addEventListener("mouseenter", toggleMouseEnterListener);
+        toggleBtn.addEventListener("mouseleave", toggleMouseLeaveListener);
       }
 
       if (skipBtn) {
-        skipBtn.addEventListener("click", handleSkipSession);
-        skipBtn.addEventListener("mouseenter", () => {
-          skipBtn.style.background = "rgba(255, 255, 255, 0.3)";
-          skipBtn.style.transform = "scale(1.1)";
-        });
-        skipBtn.addEventListener("mouseleave", () => {
-          skipBtn.style.background = "rgba(255, 255, 255, 0.2)";
-          skipBtn.style.transform = "scale(1)";
-        });
+        skipBtn.addEventListener("click", skipClickListener);
+        skipBtn.addEventListener("mouseenter", skipMouseEnterListener);
+        skipBtn.addEventListener("mouseleave", skipMouseLeaveListener);
       }
 
-      // Handle PiP window close
-      pip.addEventListener("pagehide", () => {
+      // Handle PiP window close with proper cleanup
+      const pagehideListener = () => {
+        // Remove all event listeners
+        if (toggleBtn) {
+          toggleBtn.removeEventListener("click", toggleClickListener);
+          toggleBtn.removeEventListener("mouseenter", toggleMouseEnterListener);
+          toggleBtn.removeEventListener("mouseleave", toggleMouseLeaveListener);
+        }
+
+        if (skipBtn) {
+          skipBtn.removeEventListener("click", skipClickListener);
+          skipBtn.removeEventListener("mouseenter", skipMouseEnterListener);
+          skipBtn.removeEventListener("mouseleave", skipMouseLeaveListener);
+        }
+
         setPipWindow(null);
-      });
+      };
+
+      pip.addEventListener("pagehide", pagehideListener);
     } catch (error) {
       console.error("Failed to open Picture-in-Picture:", error);
     }
@@ -815,14 +839,15 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
 
           <div className="grid grid-cols-3 items-center w-full max-w-[35rem] gap-x-4">
             <div className="flex justify-end">
-              <IconClockHour11Filled
-                className="hover:scale-110 transition-all cursor-pointer"
-                size={26}
+              <div
+                className="rounded-full hover:scale-110 transition-all cursor-pointer"
                 onClick={() => setOpenedPreset(true)}
                 style={{
-                  filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))",
+                  boxShadow: "0 1px 2px rgba(0, 0, 0, 0.2)",
                 }}
-              />
+              >
+                <IconClockHour11Filled size={26} />
+              </div>
             </div>
 
             <div className="flex justify-center">
@@ -843,11 +868,10 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
             </div>
 
             <div className="flex justify-start gap-x-lg">
-              <IconPictureInPicture
-                className={`hover:scale-110 transition-all cursor-pointer ${
+              <div
+                className={`rounded-full hover:scale-110 transition-all cursor-pointer ${
                   !isPipSupported ? "opacity-30 cursor-not-allowed" : ""
                 } ${pipWindow ? "text-accent" : ""}`}
-                size={26}
                 onClick={isPipSupported ? handleTogglePiP : undefined}
                 title={
                   !isPipSupported
@@ -857,17 +881,20 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
                     : "Open Picture-in-Picture"
                 }
                 style={{
-                  filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))",
+                  boxShadow: "0 1px 2px rgba(0, 0, 0, 0.2)",
                 }}
-              />
-              <IconPlayerSkipForwardFilled
-                className="hover:scale-110 transition-all cursor-pointer"
+              >
+                <IconPictureInPicture size={26} />
+              </div>
+              <div
+                className="rounded-full hover:scale-110 transition-all cursor-pointer"
                 onClick={handleSkipSessionWrapper}
-                size={26}
                 style={{
-                  filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))",
+                  boxShadow: "0 1px 2px rgba(0, 0, 0, 0.2)",
                 }}
-              />
+              >
+                <IconPlayerSkipForwardFilled size={26} />
+              </div>
             </div>
           </div>
         </>
