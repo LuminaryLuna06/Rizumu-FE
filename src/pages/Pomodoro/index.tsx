@@ -2,7 +2,7 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Timer from "./components/Timer";
 import { useAuth } from "@rizumu/context/AuthContext";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import axiosClient from "@rizumu/api/config/axiosClient";
 import { useSearchParams } from "react-router-dom";
 import Modal from "@rizumu/components/Modal";
@@ -15,11 +15,14 @@ function PomodoroPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const toast = useToast();
   const [background, setBackground] = useState({
-    name: "/image/fuji.webp",
+    name: "/image/aurora-2k.webp",
     type: "static",
   });
   const [totalTime, setTotalTime] = useState(0);
   const [shouldFetch, setShouldFetch] = useState(false);
+  const [isBackgroundLoaded, setIsBackgroundLoaded] = useState(false);
+  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+  const previousBackgroundName = useRef<string>("");
 
   // State for join room modal
   const [joinRoomModalOpened, setJoinRoomModalOpened] = useState(false);
@@ -65,6 +68,42 @@ function PomodoroPage() {
       setShouldFetch(false);
     }
   }, [shouldFetch]);
+
+  // Preload background image for smooth transitions
+  useEffect(() => {
+    if (previousBackgroundName.current !== background.name) {
+      previousBackgroundName.current = background.name;
+
+      if (background.type === "static") {
+        setIsBackgroundLoaded(false);
+
+        let isCancelled = false;
+        const img = new Image();
+
+        img.onload = () => {
+          if (!isCancelled) {
+            setIsBackgroundLoaded(true);
+          }
+        };
+
+        img.onerror = () => {
+          if (!isCancelled) {
+            setIsBackgroundLoaded(true);
+          }
+        };
+
+        img.src = background.name;
+
+        return () => {
+          isCancelled = true;
+          img.onload = null;
+          img.onerror = null;
+        };
+      } else {
+        setIsVideoLoaded(false);
+      }
+    }
+  }, [background]);
 
   const handleCheckRoomInvite = async (slug: string) => {
     try {
@@ -155,9 +194,14 @@ function PomodoroPage() {
       <div className="flex flex-col min-h-screen w-full overflow-hidden px-md md:px-xl text-secondary font-light text-sm z-base">
         {background.type === "static" ? (
           <div
-            className="absolute top-0 left-0 w-full h-full bg-cover bg-center -z-10"
+            className={`absolute top-0 left-0 w-full h-full bg-cover bg-center -z-10 transition-opacity duration-700 ${
+              isBackgroundLoaded ? "opacity-100" : "opacity-0"
+            }`}
             style={{
               backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), url(${background.name})`,
+              willChange: "opacity",
+              backfaceVisibility: "hidden",
+              transform: "translateZ(0)",
             }}
           />
         ) : (
@@ -167,7 +211,15 @@ function PomodoroPage() {
             muted
             loop
             playsInline
-            className="absolute top-0 left-0 w-full h-full object-cover -z-10"
+            onLoadedData={() => setIsVideoLoaded(true)}
+            className={`absolute top-0 left-0 w-full h-full object-cover -z-10 transition-opacity duration-700 ${
+              isVideoLoaded ? "opacity-100" : "opacity-0"
+            }`}
+            style={{
+              willChange: "opacity",
+              backfaceVisibility: "hidden",
+              transform: "translateZ(0)",
+            }}
           />
         )}
 

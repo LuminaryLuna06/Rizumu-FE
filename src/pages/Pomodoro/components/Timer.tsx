@@ -762,6 +762,10 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
               }`}
               aria-label="Pomodoro mode"
               title="Pomodoro"
+              style={{
+                boxShadow:
+                  "0 2px 4px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)",
+              }}
             ></button>
 
             <button
@@ -773,6 +777,10 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
               }`}
               aria-label="Short break mode"
               title="Short Break"
+              style={{
+                boxShadow:
+                  "0 2px 4px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)",
+              }}
             ></button>
 
             <button
@@ -784,10 +792,20 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
               }`}
               aria-label="Long break mode"
               title="Long Break"
+              style={{
+                boxShadow:
+                  "0 2px 4px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)",
+              }}
             ></button>
           </div>
 
-          <p className="leading-tight md:text-[10em] text-[6em] font-extrabold tracking-[0.07em] transition-all duration-slower ease-in-out">
+          <p
+            className="leading-tight md:text-[10em] text-[6em] font-extrabold tracking-[0.07em] transition-all duration-slower ease-in-out"
+            style={{
+              textShadow:
+                "0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), 0 10px 20px rgba(0, 0, 0, 0.15)",
+            }}
+          >
             {formatTime(timeLeft)}
           </p>
           <button className="flex justify-center items-center gap-x-xs text-normal">
@@ -801,6 +819,9 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
                 className="hover:scale-110 transition-all cursor-pointer"
                 size={26}
                 onClick={() => setOpenedPreset(true)}
+                style={{
+                  filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))",
+                }}
               />
             </div>
 
@@ -812,6 +833,10 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
                   playClickSound();
                 }}
                 className="px-lg py-lg w-[140px] md:w-[200px] my-lg text-primary rounded-full bg-secondary text-lg font-bold hover:bg-secondary-hover cursor-pointer transition-all duration-300 hover:scale-[1.02]"
+                style={{
+                  boxShadow:
+                    "0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06)",
+                }}
               >
                 {running ? "Pause" : "Start"}
               </button>
@@ -831,11 +856,17 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
                     ? "Close Picture-in-Picture"
                     : "Open Picture-in-Picture"
                 }
+                style={{
+                  filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))",
+                }}
               />
               <IconPlayerSkipForwardFilled
                 className="hover:scale-110 transition-all cursor-pointer"
                 onClick={handleSkipSessionWrapper}
                 size={26}
+                style={{
+                  filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))",
+                }}
               />
             </div>
           </div>
