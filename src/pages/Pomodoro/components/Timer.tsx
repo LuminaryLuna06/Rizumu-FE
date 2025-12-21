@@ -616,7 +616,11 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
       const skipBtn = pip.document.getElementById("pip-skip");
 
       // Store listener functions for cleanup
-      const toggleClickListener = () => setRunning((prev) => !prev);
+      const toggleClickListener = () => {
+        setRunning((prev) => !prev);
+        initAudio();
+        playClickSound();
+      };
       const toggleMouseEnterListener = () => {
         toggleBtn!.style.transform = "scale(1.05)";
       };

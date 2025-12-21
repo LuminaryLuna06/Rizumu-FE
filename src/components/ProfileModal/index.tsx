@@ -350,7 +350,7 @@ function ProfileModal({
                   </>
                 )}
               </div>
-              {isOwnProfile && (
+              {isOwnProfile ? (
                 <div className="flex items-center h-20 lg:h-10 gap-2 md:gap-xl lg:gap-sm md:hidden flex">
                   <ResponsiveButton
                     className="flex justify-center h-11 md:h-8 lg:h-5 bg-white/10 hover:bg-white/20 gap-x-xs text-sm min-w-[100px]"
@@ -367,6 +367,18 @@ function ProfileModal({
                     leftSection={<IconShare2 size={16} />}
                   >
                     Copy link
+                  </ResponsiveButton>
+                </div>
+              ) : (
+                <div className="flex items-center h-20 lg:h-10 gap-2 md:gap-xl lg:gap-sm md:hidden flex">
+                  <ResponsiveButton
+                    className="bg-white/10 hover:bg-white/20 h-11 md:h-5 gap-x-xs text-sm"
+                    leftSection={<IconGift size={16} />}
+                    onClick={() => {
+                      setSendGift(true);
+                    }}
+                  >
+                    Send gift
                   </ResponsiveButton>
                 </div>
               )}
