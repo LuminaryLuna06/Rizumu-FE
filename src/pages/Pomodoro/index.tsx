@@ -69,6 +69,14 @@ function PomodoroPage() {
     }
   }, [shouldFetch]);
 
+  // Preload default background on mount
+  useEffect(() => {
+    const img = new Image();
+    img.onload = () => setIsBackgroundLoaded(true);
+    img.onerror = () => setIsBackgroundLoaded(true);
+    img.src = "/image/aurora-2k.webp";
+  }, []);
+
   // Preload background image for smooth transitions
   useEffect(() => {
     if (previousBackgroundName.current !== background.name) {
