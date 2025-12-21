@@ -89,7 +89,6 @@ export const playSound = (
 ): void => {
   let ctx = audioContext;
 
-  // Create context if not provided
   if (!ctx) {
     ctx = createAudioContext();
   }
@@ -99,6 +98,38 @@ export const playSound = (
   }
 
   const preset = SOUND_PRESETS[presetName];
+
+  if (!preset) {
+    console.warn(
+      `Sound preset "${presetName}" not found. Using "softBell" as fallback.`
+    );
+    const fallbackPreset = SOUND_PRESETS.softBell;
+    const volumeMultiplier = volume / 100;
+
+    for (let i = 0; i < repeat; i++) {
+      const t = ctx.currentTime + i * (fallbackPreset.duration + 0.5);
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = fallbackPreset.waveType;
+      osc.frequency.setValueAtTime(fallbackPreset.frequency, t);
+
+      const adjustedGain = fallbackPreset.gainStart * volumeMultiplier;
+      gain.gain.setValueAtTime(adjustedGain, t);
+      gain.gain.exponentialRampToValueAtTime(
+        0.001,
+        t + fallbackPreset.duration
+      );
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(t);
+      osc.stop(t + fallbackPreset.duration + 0.5);
+    }
+    return;
+  }
+
   const volumeMultiplier = volume / 100; // Convert 0-100 to 0-1
 
   // Repeat
