@@ -176,7 +176,7 @@ const LeaderboardModal = ({
             <div className="flex items-center justify-center sm:justify-start w-full md:w-auto mb-xl sm:mb-0 gap-0 sm:gap-1">
               <button
                 onClick={() => setActiveTab("global")}
-                className={`flex items-center justify-center sm:justify-start gap-2 px-4 py-2 rounded-lg text-sm font-semibold w-1/2 sm:w-auto transition-all ${
+                className={`flex items-center justify-center sm:justify-start gap-2 px-4 py-2 rounded-lg text-sm font-semibold w-1/2 sm:w-auto transition-all cursor-pointer ${
                   activeTab === "global"
                     ? "bg-white text-black shadow-lg"
                     : "text-gray-400 hover:text-white"
@@ -187,7 +187,7 @@ const LeaderboardModal = ({
 
               <button
                 onClick={() => setActiveTab("friends")}
-                className={`flex items-center justify-center sm:justify-start gap-2 px-4 py-2 rounded-lg text-sm font-semibold w-1/2 sm:w-auto transition-all ${
+                className={`flex items-center justify-center sm:justify-start gap-2 px-4 py-2 rounded-lg text-sm font-semibold w-1/2 sm:w-auto transition-all cursor-pointer ${
                   activeTab === "friends"
                     ? "bg-white text-black shadow-lg"
                     : "text-gray-400 hover:text-white"
@@ -197,10 +197,10 @@ const LeaderboardModal = ({
               </button>
             </div>
 
-            <div className="flex items-center justify-between sm:justify-start w-full md:w-auto pl-md sm:pl-0 pr-md sm:pr-0 gap-0 sm:gap-1">
+            <div className="flex items-center justify-center sm:justify-start w-full md:w-auto pl-md sm:pl-0 pr-md sm:pr-0 gap-0 sm:gap-1">
               <button
                 onClick={() => setTimeFilter("daily")}
-                className={`gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                className={`w-1/3 sm:w-full gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
                   timeFilter === "daily"
                     ? "bg-white text-black shadow-lg"
                     : "text-gray-400 hover:text-white"
@@ -211,7 +211,7 @@ const LeaderboardModal = ({
 
               <button
                 onClick={() => setTimeFilter("weekly")}
-                className={`gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                className={`w-1/3 sm:w-full gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
                   timeFilter === "weekly"
                     ? "bg-white text-black shadow-lg"
                     : "text-gray-400 hover:text-white"
@@ -222,7 +222,7 @@ const LeaderboardModal = ({
 
               <button
                 onClick={() => setTimeFilter("monthly")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                className={`w-1/3 sm:w-full gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
                   timeFilter === "monthly"
                     ? "bg-white text-black shadow-lg"
                     : "text-gray-400 hover:text-white"
@@ -236,7 +236,7 @@ const LeaderboardModal = ({
           <div className="flex justify-center items-center mb-8 mt-8">
             <button
               onClick={handlePrevDate}
-              className="p-2 text-gray-400 hover:text-white transition"
+              className="p-2 text-gray-400 hover:text-white transition cursor-pointer"
             >
               <IconArrowLeft size={20} />
             </button>
@@ -245,7 +245,7 @@ const LeaderboardModal = ({
             </div>
             <button
               onClick={handleNextDate}
-              className="p-2 text-gray-400 hover:text-white transition"
+              className="p-2 text-gray-400 hover:text-white transition cursor-pointer"
             >
               <IconArrowRight size={20} />
             </button>
@@ -354,14 +354,14 @@ const LeaderboardModal = ({
                       </td>
 
                       {/* Cột 4 */}
-                      <td>
+                      {/* <td>
                         <div className="flex items-center gap-1 text-gray-300">
                           <IconGift size={18} />
                           <span className="font-bold text-white">
                             {user.sessionsCount}
                           </span>
                         </div>
-                      </td>
+                      </td> */}
                     </tr>
                   ))
                 )}
