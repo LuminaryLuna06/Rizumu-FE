@@ -250,7 +250,7 @@ function RoomPopover() {
                       className="flex items-center gap-x-sm p-sm hover:bg-secondary/5 rounded-lg transition-all cursor-pointer"
                       onClick={() => handleMemberClick(member.user_id)}
                     >
-                      <div className="w-10 h-10 rounded-full bg-secondary text-primary flex items-center justify-center font-bold">
+                      <div className="w-10 h-10 rounded-full bg-secondary/10 text-primary flex items-center justify-center font-bold">
                         {member.avatar ? (
                           <img
                             src={`${member.avatar}`}
@@ -258,7 +258,7 @@ function RoomPopover() {
                             className="w-11 border border-white rounded-full"
                           />
                         ) : (
-                          <div className="flex justify-center items-center rounded-full border-1 p-sm border-secondary bg-primary-light hover:bg-primary-hover">
+                          <div className="flex justify-center items-center rounded-full border-1 p-sm border-secondary">
                             <IconUser className="text-secondary" />
                           </div>
                         )}
@@ -366,7 +366,7 @@ function RoomPopover() {
                       className="flex items-center gap-x-sm rounded-lg p-xs transition-all hover:bg-secondary/5 cursor-pointer"
                       onClick={() => handleMemberClick(member.user_id)}
                     >
-                      <div className="w-10 h-10 rounded-full bg-secondary text-primary flex items-center justify-center font-bold">
+                      <div className="w-10 h-10 rounded-full bg-secondary/10 text-primary flex items-center justify-center font-bold">
                         {member.avatar ? (
                           <img
                             src={`${member.avatar}`}
@@ -374,7 +374,7 @@ function RoomPopover() {
                             className="w-11 border border-white rounded-full"
                           />
                         ) : (
-                          <div className="flex justify-center items-center rounded-full border-1 p-sm border-secondary bg-primary-light hover:bg-primary-hover">
+                          <div className="flex justify-center items-center rounded-full border-1 p-sm border-secondary">
                             <IconUser className="text-secondary" />
                           </div>
                         )}

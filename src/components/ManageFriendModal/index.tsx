@@ -8,6 +8,7 @@ import { useAuth } from "@rizumu/context/AuthContext";
 import ProfileModal from "../ProfileModal";
 import type { ModelFriendRequest } from "@rizumu/models/friendRequest";
 import type { ModelFriend } from "@rizumu/models/friend";
+import { string } from "@rizumu/utils/validate";
 
 type ManageFriendModalProps = {
   opened: boolean;
@@ -29,6 +30,7 @@ function ManageFriendModal({ opened, onClose }: ManageFriendModalProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [emailError, setEmailError] = useState("");
 
   const fetchFriends = async () => {
     try {
@@ -115,8 +117,20 @@ function ManageFriendModal({ opened, onClose }: ManageFriendModalProps) {
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
       setSearchResults([]);
+      setEmailError("");
       return;
     }
+
+    // Validate email format
+    const emailValidator = string("Email").required().email();
+    const validationError = emailValidator.validate(searchQuery);
+
+    if (validationError) {
+      setEmailError(validationError);
+      return;
+    }
+
+    setEmailError("");
 
     try {
       setSearchLoading(true);
@@ -162,9 +176,13 @@ function ManageFriendModal({ opened, onClose }: ManageFriendModalProps) {
               radius="md"
               className="w-[300px]"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.currentTarget.value)}
+              onChange={(e) => {
+                setSearchQuery(e.currentTarget.value);
+                setEmailError("");
+              }}
               onKeyDown={handleKeyDown}
               rightSection={<IconSearch size={16} />}
+              error={emailError}
             />
           </div>
         }
@@ -177,9 +195,13 @@ function ManageFriendModal({ opened, onClose }: ManageFriendModalProps) {
               radius="md"
               className="w-full"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.currentTarget.value)}
+              onChange={(e) => {
+                setSearchQuery(e.currentTarget.value);
+                setEmailError("");
+              }}
               onKeyDown={handleKeyDown}
               rightSection={<IconSearch size={16} />}
+              error={emailError}
             />
           </div>
 
@@ -202,13 +224,12 @@ function ManageFriendModal({ opened, onClose }: ManageFriendModalProps) {
                         {user.avatar ? (
                           <img
                             src={user.avatar}
-                            alt={user.name || user.username}
+                            alt={user.name}
                             className="w-10 h-10 rounded-full object-cover border border-gray-700"
                           />
                         ) : (
                           <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center text-sm font-bold">
-                            {(user.name || user.username)?.[0]?.toUpperCase() ||
-                              "U"}
+                            {user.name?.[0]?.toUpperCase() || "U"}
                           </div>
                         )}
                       </div>
@@ -217,7 +238,7 @@ function ManageFriendModal({ opened, onClose }: ManageFriendModalProps) {
                           {user.name || "User"}
                         </span>
                         <span className="text-secondary/40 text-xs truncate">
-                          {user.username}
+                          {user.bio}
                         </span>
                       </div>
                     </div>
@@ -290,7 +311,7 @@ function ManageFriendModal({ opened, onClose }: ManageFriendModalProps) {
                           {friend.avatar ? (
                             <img
                               src={friend.avatar}
-                              alt={friend.username}
+                              alt={friend.name}
                               className="w-10 h-10 rounded-full object-cover border border-secondary/10"
                             />
                           ) : (

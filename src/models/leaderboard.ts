@@ -4,5 +4,5 @@ export type ModelLeaderboard = {
   sessionsCount: number;
   name: string;
   avatar: string;
-  username: string;
+  bio: string;
 };

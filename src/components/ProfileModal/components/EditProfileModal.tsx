@@ -135,7 +135,7 @@ function EditProfileModal({
         <TextInput
           label="Name"
           leftSection={<IconUser />}
-          placeholder="Enter username"
+          placeholder="Enter name"
           value={formData.name}
           onChange={(e: any) =>
             setFormData({ ...formData, name: e.target.value })

@@ -26,7 +26,7 @@ function AppSetting({
   const [autoStartPomodoro, setAutoStartPomodoro] = useState(false);
   const [longBreakInterval, setLongBreakInterval] = useState(4);
   const [autoMiniTimer, setAutoMiniTimer] = useState(false);
-  const [alarmSound, setAlarmSound] = useState<SoundPresetName>("bell");
+  const [alarmSound, setAlarmSound] = useState<SoundPresetName>("softBell");
 
   // Alarm settings
   const [alarmEnabled, setAlarmEnabled] = useState(true);

@@ -4,7 +4,6 @@ import {
   IconUsers,
   IconTrendingUp,
   IconGift,
-  IconChartBarPopular,
   IconArrowLeft,
   IconArrowRight,
   IconClockHour3,
@@ -336,9 +335,9 @@ const LeaderboardModal = ({
                                 {user.name || "Unknown"}
                               </span>
                             </div>
-                            {user.username && (
+                            {user.bio && (
                               <p className="text-xs text-gray-500 truncate hidden sm:block">
-                                {user.username}
+                                {user.bio || ""}
                               </p>
                             )}
                           </div>
