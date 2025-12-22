@@ -335,9 +335,9 @@ const LeaderboardModal = ({
                                 {user.name || "Unknown"}
                               </span>
                             </div>
-                            {user.description && (
+                            {user.bio && (
                               <p className="text-xs text-gray-500 truncate hidden sm:block">
-                                {user.description}
+                                {user.bio || ""}
                               </p>
                             )}
                           </div>

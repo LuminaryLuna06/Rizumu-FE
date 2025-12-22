@@ -202,13 +202,12 @@ function ManageFriendModal({ opened, onClose }: ManageFriendModalProps) {
                         {user.avatar ? (
                           <img
                             src={user.avatar}
-                            alt={user.name || user.username}
+                            alt={user.name}
                             className="w-10 h-10 rounded-full object-cover border border-gray-700"
                           />
                         ) : (
                           <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center text-sm font-bold">
-                            {(user.name || user.username)?.[0]?.toUpperCase() ||
-                              "U"}
+                            {user.name?.[0]?.toUpperCase() || "U"}
                           </div>
                         )}
                       </div>
@@ -217,7 +216,7 @@ function ManageFriendModal({ opened, onClose }: ManageFriendModalProps) {
                           {user.name || "User"}
                         </span>
                         <span className="text-secondary/40 text-xs truncate">
-                          {user.username}
+                          {user.bio}
                         </span>
                       </div>
                     </div>
@@ -290,7 +289,7 @@ function ManageFriendModal({ opened, onClose }: ManageFriendModalProps) {
                           {friend.avatar ? (
                             <img
                               src={friend.avatar}
-                              alt={friend.username}
+                              alt={friend.name}
                               className="w-10 h-10 rounded-full object-cover border border-secondary/10"
                             />
                           ) : (
