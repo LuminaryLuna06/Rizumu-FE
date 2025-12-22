@@ -1,10 +1,5 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axiosClient from "@rizumu/api/config/axiosClient";
 import type { ModelUserProfile } from "@rizumu/models/userProfile";
 import {
@@ -12,6 +7,7 @@ import {
   getAccessToken,
   clearAuthTokens,
 } from "@rizumu/utils/cookieManager";
+import { queryKeys } from "@rizumu/tanstack/api/query/queryKeys";
 
 interface AuthContextType {
   user: ModelUserProfile | null;
@@ -29,76 +25,125 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<ModelUserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [authModalOpened, setAuthModalOpened] = useState(false);
+  const queryClient = useQueryClient();
 
   const openAuthModal = () => setAuthModalOpened(true);
   const closeAuthModal = () => setAuthModalOpened(false);
 
-  useEffect(() => {
-    const initAuth = async () => {
+  const { data: user, isLoading } = useQuery<ModelUserProfile>({
+    queryKey: queryKeys.auth.me(),
+    queryFn: async () => {
       const token = getAccessToken();
-      if (token) {
+      if (!token) return null;
+
+      try {
         const response = await axiosClient.get("/auth/profile");
-        setUser(response.data.data);
+        return response.data.data;
+      } catch (error) {
+        console.error("Failed to fetch user profile:", error);
+        return null;
       }
-      setIsLoading(false);
-    };
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: false,
+  });
 
-    initAuth();
-  }, []);
-
-  const login = async (username: string, password: string) => {
-    const response: any = await axiosClient.post("/auth/login", {
+  // Login mutation
+  const loginMutation = useMutation({
+    mutationFn: async ({
       username,
       password,
-    });
+    }: {
+      username: string;
+      password: string;
+    }) => {
+      const response = await axiosClient.post("/auth/login", {
+        username,
+        password,
+      });
+      return response.data;
+    },
+    onSuccess: (data) => {
+      const { access_token, refresh_token, data: userData } = data;
+      setAuthTokens(access_token, refresh_token);
 
-    const { access_token, refresh_token, data } = response.data;
-    setAuthTokens(access_token, refresh_token);
-    setUser(data);
-    setIsLoading(false);
+      // Update cache with user data
+      queryClient.setQueryData(queryKeys.auth.me(), userData);
+
+      closeAuthModal();
+    },
+  });
+
+  // Register mutation
+  const registerMutation = useMutation({
+    mutationFn: async ({
+      username,
+      password,
+    }: {
+      username: string;
+      password: string;
+    }) => {
+      const response = await axiosClient.post("/auth/register", {
+        username,
+        password,
+      });
+      return response.data;
+    },
+    onSuccess: (data) => {
+      const { access_token, refresh_token, data: userData } = data;
+      setAuthTokens(access_token, refresh_token);
+
+      // Update cache with user data
+      queryClient.setQueryData(queryKeys.auth.me(), userData);
+
+      closeAuthModal();
+    },
+  });
+
+  // Logout mutation
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      await axiosClient.post("/auth/logout");
+    },
+    onSuccess: () => {
+      clearAuthTokens();
+
+      // Clear all cached data
+      queryClient.clear();
+    },
+    onError: (error) => {
+      console.error("Logout API error:", error);
+
+      // Even if API fails, clear local data
+      clearAuthTokens();
+      queryClient.clear();
+    },
+  });
+
+  // Wrapper functions to maintain the same interface
+  const login = async (username: string, password: string) => {
+    await loginMutation.mutateAsync({ username, password });
   };
 
   const register = async (username: string, password: string) => {
-    const response: any = await axiosClient.post("/auth/register", {
-      username,
-      password,
-    });
-
-    const { access_token, refresh_token, data } = response.data;
-    setAuthTokens(access_token, refresh_token);
-    setUser(data);
-    setIsLoading(false);
+    await registerMutation.mutateAsync({ username, password });
   };
 
   const logout = async () => {
-    try {
-      await axiosClient.post("/auth/logout");
-    } catch (error) {
-      console.error("Logout API error:", error);
-    } finally {
-      clearAuthTokens();
-      setUser(null);
-    }
+    await logoutMutation.mutateAsync();
   };
 
   const refreshUser = async () => {
-    setIsLoading(true);
-    try {
-      const response = await axiosClient.get("/auth/profile");
-      setUser(response.data.data);
-    } catch (e) {
-      console.error(e);
-    }
-    setIsLoading(false);
+    await queryClient.invalidateQueries({
+      queryKey: queryKeys.auth.me(),
+    });
   };
 
   return (
     <AuthContext.Provider
       value={{
-        user,
+        user: user || null,
         isAuthenticated: !!user,
         isLoading,
         authModalOpened,

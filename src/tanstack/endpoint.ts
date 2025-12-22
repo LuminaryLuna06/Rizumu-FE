@@ -1,12 +1,4 @@
 /**
- * API Endpoints Configuration
- * Centralized URL management for all API endpoints
- *
- * Note: Authorization headers are automatically added by axiosClient interceptor
- * Only specify Content-Type if different from application/json
- */
-
-/**
  * Authentication Endpoints
  */
 export const AUTH_ENDPOINTS = {
@@ -15,17 +7,15 @@ export const AUTH_ENDPOINTS = {
   LOGOUT: "/auth/logout",
   REFRESH: "/auth/refresh",
   PROFILE: "/auth/profile",
-  UPDATE_PROFILE: "/auth/profile",
 } as const;
 
 /**
  * User Endpoints
  */
-export const USER_ENDPOINTS = {
-  BASE: "/users",
-  BY_ID: (id: string | number) => `/users/${id}`,
-  AVATAR: "/users/avatar",
-  SEARCH: "/users/search",
+export const PROFILE_ENDPOINTS = {
+  PROFILE_BY_ID: (id: string) => `/auth/profile/${id}`,
+  AVATAR: "/auth/avatar",
+  SEARCH: (query: string) => `/auth/search?q=${query}`,
 } as const;
 
 /**
@@ -78,43 +68,20 @@ export const PROGRESS_ENDPOINTS = {
 } as const;
 
 /**
- * Settings Endpoints
- */
-export const SETTINGS_ENDPOINTS = {
-  BASE: "/settings",
-  RESET: "/settings/reset",
-} as const;
-
-/**
- * Upload Endpoints
- */
-export const UPLOAD_ENDPOINTS = {
-  IMAGE: "/upload/image",
-  FILE: "/upload/file",
-  AVATAR: "/upload/avatar",
-} as const;
-
-/**
  * Health Check Endpoints
  */
 export const HEALTH_ENDPOINTS = {
   PING: "/health",
-  STATUS: "/health/status",
 } as const;
 
-/**
- * Consolidated API URLs
- */
 export const API_URLS = {
   AUTH: AUTH_ENDPOINTS,
-  USER: USER_ENDPOINTS,
+  PROFILE: PROFILE_ENDPOINTS,
   POMODORO: POMODORO_ENDPOINTS,
   ROOM: ROOM_ENDPOINTS,
   TAG: TAG_ENDPOINTS,
   FRIEND: FRIEND_ENDPOINTS,
   PROGRESS: PROGRESS_ENDPOINTS,
-  SETTINGS: SETTINGS_ENDPOINTS,
-  UPLOAD: UPLOAD_ENDPOINTS,
   HEALTH: HEALTH_ENDPOINTS,
 } as const;
 
