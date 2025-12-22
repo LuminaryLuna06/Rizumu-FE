@@ -81,7 +81,7 @@ function ProfileModal({
       setProfileUser(response.data.data);
     } catch (error) {
       console.error("Error fetching profile:", error);
-      toast.error("Failed to load profile");
+      toast.error("Failed to load profile", "Error");
     } finally {
       setProfileLoading(false);
     }
@@ -111,10 +111,13 @@ function ProfileModal({
     try {
       setFriendshipLoading(true);
       await axiosClient.post("/friend/request", { recipientId: targetUserId });
-      toast.success("Friend request sent!");
+      toast.success("Friend request sent!", "Success");
     } catch (error: any) {
       console.error("Error sending friend request:", error);
-      toast.error(error?.response?.data?.message || "Failed to send request");
+      toast.error(
+        error?.response?.data?.message || "Failed to send request",
+        "Error"
+      );
     } finally {
       setFriendshipLoading(false);
     }
@@ -122,18 +125,21 @@ function ProfileModal({
 
   const handleUnfriend = async () => {
     if (!friendshipId) {
-      toast.error("Friendship ID not found");
+      toast.error("Friendship ID not found", "Error");
       return;
     }
     try {
       setFriendshipLoading(true);
       await axiosClient.delete(`/friend/${friendshipId}`);
-      toast.success("Unfriended successfully!");
+      toast.success("Unfriended successfully!", "Success");
       setIsFriend(false);
       setFriendshipId(null);
     } catch (error: any) {
       console.error("Error unfriending:", error);
-      toast.error(error?.response?.data?.message || "Failed to unfriend");
+      toast.error(
+        error?.response?.data?.message || "Failed to unfriend",
+        "Error"
+      );
     } finally {
       setFriendshipLoading(false);
     }
@@ -165,7 +171,7 @@ function ProfileModal({
       setProgressData(response.data.data);
     } catch (error) {
       console.error("Error fetching progress:", error);
-      toast.error("Failed to load progress data");
+      toast.error("Failed to load progress data", "Error");
     } finally {
       setProgressLoading(false);
     }
