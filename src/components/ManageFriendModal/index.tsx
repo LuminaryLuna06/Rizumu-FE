@@ -2,13 +2,13 @@ import React, { useState, useEffect } from "react";
 import Modal from "../Modal";
 import { IconSearch, IconCheck, IconX } from "@tabler/icons-react";
 import TextInput from "../TextInput";
-import axiosClient from "@rizumu/api/config/axiosClient";
 import { useToast } from "@rizumu/utils/toast/toast";
 import { useAuth } from "@rizumu/context/AuthContext";
 import ProfileModal from "../ProfileModal";
 import type { ModelFriendRequest } from "@rizumu/models/friendRequest";
 import type { ModelFriend } from "@rizumu/models/friend";
 import { string } from "@rizumu/utils/validate";
+import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
 
 type ManageFriendModalProps = {
   opened: boolean;

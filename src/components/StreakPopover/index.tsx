@@ -2,7 +2,7 @@ import { IconFlame, IconTrophy, IconTrophyFilled } from "@tabler/icons-react";
 import React, { useEffect, useState } from "react";
 import Popover from "../Popover";
 import ResponsiveButton from "../ResponsiveButton";
-import axiosClient from "@rizumu/api/config/axiosClient";
+import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
 import type { ModelStreak } from "@rizumu/models/streak";
 
 function StreakPopover() {

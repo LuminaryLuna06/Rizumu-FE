@@ -1,13 +1,15 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import axiosClient from "@rizumu/api/config/axiosClient";
+
 import type { ModelUserProfile } from "@rizumu/models/userProfile";
 import {
   setAuthTokens,
   getAccessToken,
   clearAuthTokens,
+  updateAccessToken,
 } from "@rizumu/utils/cookieManager";
 import { queryKeys } from "@rizumu/tanstack/api/query/queryKeys";
+import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
 
 interface AuthContextType {
   user: ModelUserProfile | null;
@@ -58,15 +60,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       username: string;
       password: string;
     }) => {
-      const response = await axiosClient.post("/auth/login", {
-        username,
-        password,
-      });
+      const response = await axiosClient.post(
+        "/auth/login",
+        {
+          username,
+          password,
+        },
+        {
+          withCredentials: true,
+        }
+      );
       return response.data;
     },
     onSuccess: (data) => {
-      const { access_token, refresh_token, data: userData } = data;
-      setAuthTokens(access_token, refresh_token);
+      console.log(data);
+      const { access_token, data: userData } = data;
+      updateAccessToken(access_token);
 
       // Update cache with user data
       queryClient.setQueryData(queryKeys.auth.me(), userData);
@@ -84,15 +93,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       username: string;
       password: string;
     }) => {
-      const response = await axiosClient.post("/auth/register", {
-        username,
-        password,
-      });
+      const response = await axiosClient.post(
+        "/auth/register",
+        {
+          username,
+          password,
+        },
+        {
+          withCredentials: true,
+        }
+      );
       return response.data;
     },
     onSuccess: (data) => {
-      const { access_token, refresh_token, data: userData } = data;
-      setAuthTokens(access_token, refresh_token);
+      const { access_token, refreshToken, data: userData } = data;
+      setAuthTokens(access_token, refreshToken);
 
       // Update cache with user data
       queryClient.setQueryData(queryKeys.auth.me(), userData);

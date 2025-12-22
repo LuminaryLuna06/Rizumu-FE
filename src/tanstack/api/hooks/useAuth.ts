@@ -13,7 +13,7 @@ interface User {
 
 interface AuthResponse {
   access_token: string;
-  refresh_token: string;
+  refreshToken: string;
   user: User;
 }
 

@@ -10,8 +10,8 @@ import {
 } from "@tabler/icons-react";
 import Modal from "../Modal";
 import ProfileModal from "../ProfileModal";
-import axiosClient from "@rizumu/api/config/axiosClient";
 import type { ModelLeaderboard } from "@rizumu/models/leaderboard";
+import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
 
 const LeaderboardModal = ({
   opened,

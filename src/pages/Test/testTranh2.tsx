@@ -1,5 +1,5 @@
-import axiosClient from "@rizumu/api/config/axiosClient";
 import ResponsiveButton from "@rizumu/components/ResponsiveButton";
+import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
 import React from "react";
 
 function testTranh2() {

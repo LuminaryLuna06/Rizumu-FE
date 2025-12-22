@@ -22,8 +22,8 @@ import {
 import { useEffect, useState } from "react";
 import BoxAnalytics from "./components/BoxAnalytics";
 import BoxReview from "./components/BoxReview";
-import axiosClient from "@rizumu/api/config/axiosClient";
 import { months, hourNames } from "./data/month";
+import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
 
 interface ActivitiesModalProps {
   opened: boolean;
