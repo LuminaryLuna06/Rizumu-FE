@@ -3,7 +3,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import type { ModelUserProfile } from "@rizumu/models/userProfile";
 import {
-  setAuthTokens,
   getAccessToken,
   clearAuthTokens,
   updateAccessToken,
@@ -60,20 +59,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       username: string;
       password: string;
     }) => {
-      const response = await axiosClient.post(
-        "/auth/login",
-        {
-          username,
-          password,
-        },
-        {
-          withCredentials: true,
-        }
-      );
+      const response = await axiosClient.post("/auth/login", {
+        username,
+        password,
+      });
       return response.data;
     },
     onSuccess: (data) => {
-      console.log(data);
       const { access_token, data: userData } = data;
       updateAccessToken(access_token);
 
@@ -93,21 +85,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       username: string;
       password: string;
     }) => {
-      const response = await axiosClient.post(
-        "/auth/register",
-        {
-          username,
-          password,
-        },
-        {
-          withCredentials: true,
-        }
-      );
+      const response = await axiosClient.post("/auth/register", {
+        username,
+        password,
+      });
       return response.data;
     },
     onSuccess: (data) => {
-      const { access_token, refreshToken, data: userData } = data;
-      setAuthTokens(access_token, refreshToken);
+      const { access_token, data: userData } = data;
+      updateAccessToken(access_token);
 
       // Update cache with user data
       queryClient.setQueryData(queryKeys.auth.me(), userData);

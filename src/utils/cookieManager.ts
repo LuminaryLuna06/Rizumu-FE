@@ -16,7 +16,7 @@ const ACCESS_TOKEN_KEY = "access_token";
 const REFRESH_TOKEN_KEY = "refreshToken";
 
 // Cookie configuration
-const isDevelopment = import.meta.env.PROD;
+const isDevelopment = import.meta.env.DEV;
 
 interface CookieOptions {
   expires?: number; // days
