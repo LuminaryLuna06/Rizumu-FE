@@ -13,7 +13,7 @@ import Cookies from "js-cookie";
 
 // Cookie keys
 const ACCESS_TOKEN_KEY = "access_token";
-const REFRESH_TOKEN_KEY = "refresh_token";
+const REFRESH_TOKEN_KEY = "refreshToken";
 
 // Cookie configuration
 const isDevelopment = import.meta.env.DEV;
