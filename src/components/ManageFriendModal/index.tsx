@@ -13,9 +13,14 @@ import { string } from "@rizumu/utils/validate";
 type ManageFriendModalProps = {
   opened: boolean;
   onClose: () => void;
+  onRefreshRequests?: () => void;
 };
 
-function ManageFriendModal({ opened, onClose }: ManageFriendModalProps) {
+function ManageFriendModal({
+  opened,
+  onClose,
+  onRefreshRequests,
+}: ManageFriendModalProps) {
   const toast = useToast();
   const { user: currentUser } = useAuth();
   const [activeTab, setActiveTab] = useState<"activity" | "requests">(
@@ -72,6 +77,7 @@ function ManageFriendModal({ opened, onClose }: ManageFriendModalProps) {
       // Refresh both lists
       fetchRequests();
       fetchFriends();
+      onRefreshRequests?.();
     } catch (error: any) {
       console.error("Error accepting request:", error);
       toast.error(
@@ -86,6 +92,7 @@ function ManageFriendModal({ opened, onClose }: ManageFriendModalProps) {
       await axiosClient.delete(`/friend/${requestId}`);
       toast.success("Friend request cancelled!", "Success");
       fetchRequests();
+      onRefreshRequests?.();
     } catch (error: any) {
       console.error("Error cancelling request:", error);
       toast.error(
@@ -100,6 +107,7 @@ function ManageFriendModal({ opened, onClose }: ManageFriendModalProps) {
       await axiosClient.delete(`/friend/request/${requestId}`);
       toast.success("Friend request rejected!", "Success");
       fetchRequests();
+      onRefreshRequests?.();
     } catch (error: any) {
       console.error("Error rejecting request:", error);
       toast.error(

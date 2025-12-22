@@ -67,7 +67,7 @@ function GiftModal({ opened, onClose, profile }: GiftModalProps) {
       <div className="flex flex-col items-center gap-6 p-4">
         <div className="text-center">
           <p className="text-xl font-semibold text-white">
-            Send Gift to {profile?.name}
+            Send Gift to {profile?.name || "User"}
           </p>
           <div className="flex items-center justify-center gap-2 mt-2">
             <span className="text-gray-400">Your coins:</span>
