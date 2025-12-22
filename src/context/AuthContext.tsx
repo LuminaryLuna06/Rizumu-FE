@@ -7,6 +7,11 @@ import {
 } from "react";
 import axiosClient from "@rizumu/api/config/axiosClient";
 import type { ModelUserProfile } from "@rizumu/models/userProfile";
+import {
+  setAuthTokens,
+  getAccessToken,
+  clearAuthTokens,
+} from "@rizumu/utils/cookieManager";
 
 interface AuthContextType {
   user: ModelUserProfile | null;
@@ -33,7 +38,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const initAuth = async () => {
-      const token = localStorage.getItem("access_token");
+      const token = getAccessToken();
       if (token) {
         const response = await axiosClient.get("/auth/profile");
         setUser(response.data.data);
@@ -51,8 +56,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     const { access_token, refresh_token, data } = response.data;
-    localStorage.setItem("access_token", access_token);
-    localStorage.setItem("refresh_token", refresh_token);
+    setAuthTokens(access_token, refresh_token);
     setUser(data);
     setIsLoading(false);
   };
@@ -64,8 +68,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     const { access_token, refresh_token, data } = response.data;
-    localStorage.setItem("access_token", access_token);
-    localStorage.setItem("refresh_token", refresh_token);
+    setAuthTokens(access_token, refresh_token);
     setUser(data);
     setIsLoading(false);
   };
@@ -76,8 +79,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       console.error("Logout API error:", error);
     } finally {
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("refresh_token");
+      clearAuthTokens();
       setUser(null);
     }
   };

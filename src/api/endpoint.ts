@@ -1,6 +1,8 @@
 // API Endpoint Configuration
 // Quản lý tập trung các đường dẫn API và headers
 
+import { getAccessToken } from "@rizumu/utils/cookieManager";
+
 /**
  * Headers Configuration
  */
@@ -18,7 +20,7 @@ export const HEADERS = {
     "Content-Type": "multipart/form-data",
   }),
   tokenHeader: () => {
-    const token = localStorage.getItem("access_token");
+    const token = getAccessToken();
     return {
       "Content-Type": "application/json; charset=UTF-8",
       Authorization: `Bearer ${token}`,
