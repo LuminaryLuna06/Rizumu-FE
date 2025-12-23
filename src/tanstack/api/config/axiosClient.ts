@@ -6,7 +6,6 @@ import axios, {
 } from "axios";
 import {
   getAccessToken,
-  getRefreshToken,
   updateAccessToken,
   clearAuthTokens,
 } from "@rizumu/utils/cookieManager";
@@ -45,8 +44,8 @@ const refreshAccessToken = async (): Promise<string> => {
   try {
     const response = await axios.post(
       `${import.meta.env.VITE_API_URL}/auth/refresh`,
-      {}, // Empty body - refresh token is sent via httpOnly cookie
-      { withCredentials: true } // Config object
+      {},
+      { withCredentials: true }
     );
 
     const { access_token } = response.data;

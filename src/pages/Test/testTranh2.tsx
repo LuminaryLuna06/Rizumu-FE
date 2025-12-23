@@ -1,18 +1,17 @@
 import ResponsiveButton from "@rizumu/components/ResponsiveButton";
-import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
 import axios from "axios";
-import React from "react";
 
 function testTranh2() {
   const refreshAccessToken = async (): Promise<string> => {
     try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/auth/refresh`,
-        {},
-        {
-          withCredentials: true,
-        }
-      );
+      fetch(`${import.meta.env.VITE_DEV_API_URL}/auth/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      // axios.post(`${import.meta.env.VITE_DEV_API_URL}/auth/refresh`, {
+      //   withCredentials: true,
+      // });
 
       return "wtf";
     } catch (error) {
