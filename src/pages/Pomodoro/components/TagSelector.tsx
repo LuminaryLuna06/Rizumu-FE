@@ -1,4 +1,5 @@
 import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
+import { useAuth } from "@rizumu/context/AuthContext";
 import ResponsiveButton from "@rizumu/components/ResponsiveButton";
 import TextInput from "@rizumu/components/TextInput";
 import { TAG_COLORS } from "@rizumu/constants/tagColors";
@@ -20,6 +21,7 @@ interface TagSelectorProps {
 }
 
 function TagSelector({ selectedTag, onTagSelect }: TagSelectorProps) {
+  const { user } = useAuth();
   const [tags, setTags] = useState<ModelTag[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showCreateTag, setShowCreateTag] = useState(false);
@@ -49,7 +51,7 @@ function TagSelector({ selectedTag, onTagSelect }: TagSelectorProps) {
 
   useEffect(() => {
     fetchTags();
-  }, []);
+  }, [user?._id]);
 
   useEffect(() => {
     if (hasFetched && selectedTag) {

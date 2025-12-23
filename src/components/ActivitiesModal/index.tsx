@@ -40,6 +40,7 @@ function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
     "Analytics"
   );
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [tags, setTags] = useState([]);
 
   const getStats = async () => {
     if (!user?._id || !hourStats) return;
@@ -84,9 +85,20 @@ function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
     }
   };
 
+  const getTags = async () => {
+    try {
+      const response = await axiosClient.get("/tags");
+      console.log(response.data);
+      setTags(response.data || []);
+    } catch (error) {
+      console.log("Error fetching tags:", error);
+    }
+  };
+
   useEffect(() => {
     if (opened) {
       getStats();
+      getTags();
     }
   }, [opened, user?._id, selectedDate]);
 
@@ -429,7 +441,7 @@ function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
           dailySession.map((session) => (
             <div className="relative">
               <div className="absolute left-14 sm:left-24 top-0 bottom-0 border-1 border-white/20 border-dashed"></div>
-              <BoxReview data={session} />
+              <BoxReview data={session} tags={tags} />
             </div>
           ))
         ) : (

@@ -22,6 +22,7 @@ function PomodoroPage() {
   });
   const [totalTime, setTotalTime] = useState(0);
   const [shouldFetch, setShouldFetch] = useState(false);
+  const [isFocusMode, setIsFocusMode] = useState(false);
   const [isBackgroundLoaded, setIsBackgroundLoaded] = useState(false);
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const previousBackgroundName = useRef<string>("");
@@ -99,7 +100,7 @@ function PomodoroPage() {
       getStreak();
       setShouldFetch(false);
     }
-  }, [shouldFetch]);
+  }, [shouldFetch, isFocusMode]);
 
   // Preload default background on mount
   useEffect(() => {
@@ -287,18 +288,25 @@ function PomodoroPage() {
         )}
 
         {/* Header */}
-        <Header totalTime={totalTime} streaks={streaks} />
+        <Header
+          totalTime={totalTime}
+          streaks={streaks}
+          focusMode={isFocusMode}
+        />
         {/* Main Content */}
         <Timer
           bgType={background.type}
           bgName={background.name}
+          focusMode={isFocusMode}
           onSessionComplete={() => setShouldFetch(true)}
+          setFocusMode={() => setIsFocusMode((prev) => !prev)}
         />
         {/* Footer */}
         <Footer
           onBackgroundChange={handleBackgroundChange}
           numberRequest={numberRequest}
           onRefreshRequests={fetchRequests}
+          focusMode={isFocusMode}
         />
       </div>
 

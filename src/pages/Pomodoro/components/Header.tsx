@@ -14,9 +14,11 @@ import type { ModelStreak } from "@rizumu/models/streak";
 function Header({
   totalTime,
   streaks,
+  focusMode,
 }: {
   totalTime: number;
   streaks?: ModelStreak;
+  focusMode: boolean;
 }) {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -45,7 +47,11 @@ function Header({
         </h1>
       </div>
       {/* Header Right */}
-      <div className="header-right flex items-center justify-center gap-x-sm">
+      <div
+        className={`header-right flex items-center justify-center gap-x-sm transition-all duration-500 ${
+          focusMode ? "opacity-0 pointer-events-none" : "opacity-100"
+        }`}
+      >
         <StreakPopover streaks={streaks} />
         <ResponsiveButton
           leftSection={<IconClock size={16} />}
