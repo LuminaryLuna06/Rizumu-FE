@@ -7,7 +7,7 @@ import ChatPopover from "./ChatPopover";
 import BackgroundModal from "@rizumu/components/BackgroundModal";
 import { useMemo } from "react";
 import { useAuth } from "@rizumu/context/AuthContext";
-import { useFriendRequests } from "@rizumu/tanstack/api/hooks";
+import { useFriendRequests, useRoomById } from "@rizumu/tanstack/api/hooks";
 
 interface FooterProps {
   onBackgroundChange: (bg: { name: string; type: string }) => void;
@@ -20,6 +20,7 @@ function Footer({ onBackgroundChange, focusMode }: FooterProps) {
   const [backgroundModalOpened, setBackgroundModalOpened] = useState(false);
 
   const { data: friendRequests } = useFriendRequests(!!user?._id);
+  const { data: room } = useRoomById(user?.current_room_id || "");
 
   const numberRequest = useMemo(() => {
     return friendRequests?.length || 0;
@@ -43,26 +44,36 @@ function Footer({ onBackgroundChange, focusMode }: FooterProps) {
       </div>
 
       {/* Footer Right */}
-      <div
-        className={`flex gap-x-lg justify-center transition-all duration-500 ${
-          focusMode ? "opacity-0 pointer-events-none" : "opacity-100"
-        }`}
-      >
-        <ResponsiveButton onClick={() => setFriendOpened(true)}>
-          <div className="grid grid-cols-1 grid-rows-1">
-            <div className="col-start-1 row-start-1">
-              <IconUsers size={20} />
-            </div>
-            {numberRequest > 0 && (
-              <div className="col-start-1 row-start-1 self-start justify-self-end -mt-2.5 -mr-2.5">
-                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-secondary text-[10px] font-bold text-primary shadow-sm">
-                  {numberRequest > 9 ? "9+" : numberRequest}
-                </span>
+      <div className={`flex gap-x-lg justify-center`}>
+        <div
+          className={`transition-all duration-500 ${
+            focusMode ? "opacity-0 pointer-events-none" : "opacity-100"
+          }`}
+        >
+          <ResponsiveButton onClick={() => setFriendOpened(true)}>
+            <div className="grid grid-cols-1 grid-rows-1">
+              <div className="col-start-1 row-start-1">
+                <IconUsers size={20} />
               </div>
-            )}
-          </div>
-        </ResponsiveButton>
-        <ChatPopover />
+              {numberRequest > 0 && (
+                <div className="col-start-1 row-start-1 self-start justify-self-end -mt-2.5 -mr-2.5">
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-secondary text-[10px] font-bold text-primary shadow-sm">
+                    {numberRequest > 9 ? "9+" : numberRequest}
+                  </span>
+                </div>
+              )}
+            </div>
+          </ResponsiveButton>
+        </div>
+        <div
+          className={`transition-all duration-500 ${
+            focusMode && !room?.chat_during_pomodoro
+              ? "opacity-0 pointer-events-none"
+              : "opacity-100"
+          }`}
+        >
+          <ChatPopover />
+        </div>
       </div>
       <ManageFriendModal
         opened={friendOpened}
