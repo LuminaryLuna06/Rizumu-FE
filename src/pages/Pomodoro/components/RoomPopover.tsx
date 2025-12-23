@@ -149,6 +149,7 @@ function RoomPopover() {
         opened={roomOpened && !!room}
         onClose={() => setRoomOpened(!roomOpened)}
         position="top-right"
+        className="w-90"
       >
         <div className="p-lg space-y-md">
           <div className="flex justify-between text-secondary items-center overflow-hidden">

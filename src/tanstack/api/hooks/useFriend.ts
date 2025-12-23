@@ -62,8 +62,8 @@ export const useAcceptFriendRequest = () => {
 
   return useMutation({
     mutationFn: async (requestId: string) => {
-      const response = await axiosClient.post(FRIEND_ENDPOINTS.ACCEPT, {
-        requestId,
+      const response = await axiosClient.put(FRIEND_ENDPOINTS.ACCEPT, {
+        friendshipId: requestId,
       });
       return response.data;
     },

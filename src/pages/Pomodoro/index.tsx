@@ -109,15 +109,17 @@ function PomodoroPage() {
 
   // Check for rid query parameter when page loads
   useEffect(() => {
-    if (roomSlug && user && !hasCheckedQuery) {
-      setHasCheckedQuery(true);
-      if (room && user.current_room_id !== room._id) {
-        setJoinRoomModalOpened(true);
-      } else if (room && user.current_room_id === room._id) {
-        setSearchParams({});
+    if (roomSlug && user && !hasCheckedQuery && !isLoading) {
+      if (room) {
+        setHasCheckedQuery(true);
+        if (user.current_room_id !== room._id) {
+          setJoinRoomModalOpened(true);
+        } else if (user.current_room_id === room._id) {
+          setSearchParams({});
+        }
       }
     }
-  }, [roomSlug, user, hasCheckedQuery, room]);
+  }, [roomSlug, user, hasCheckedQuery, room, isLoading]);
 
   // Handle room fetch error
   useEffect(() => {

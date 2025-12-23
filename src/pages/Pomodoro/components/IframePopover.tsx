@@ -311,7 +311,7 @@ function IframePopover() {
         </ResponsiveButton>
       }
       position="bottom-left"
-      className="w-120"
+      className="w-100 md:w-120"
     >
       <div className="flex items-center justify-between px-lg py-md">
         <h3 className="text-secondary capitalize">

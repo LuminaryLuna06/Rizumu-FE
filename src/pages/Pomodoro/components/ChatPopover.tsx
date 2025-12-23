@@ -180,6 +180,7 @@ function ChatPopover() {
       opened={chatOpened}
       onClose={() => setChatOpened(!chatOpened)}
       position="bottom-right"
+      className="w-80 md:w-90"
     >
       <div className="flex items-center justify-center bg-primary/70 backdrop-blur-xl text-secondary rounded-3xl shadow-2xl p-md border border-primary font-poppins overflow-y-hidden overflow-x-hidden">
         <div className="flex flex-col w-full">

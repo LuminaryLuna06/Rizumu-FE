@@ -24,6 +24,7 @@ function StreakPopover() {
           </ResponsiveButton>
         }
         position="top-right"
+        className="w-78 md:w-90"
       >
         <div className="p-lg font-semibold text-secondary">
           <div className="flex items-center justify-between">
