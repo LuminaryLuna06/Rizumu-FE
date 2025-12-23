@@ -3,13 +3,13 @@ import Footer from "./components/Footer";
 import Timer from "./components/Timer";
 import { useAuth } from "@rizumu/context/AuthContext";
 import { useEffect, useState, useRef } from "react";
-import axiosClient from "@rizumu/api/config/axiosClient";
 import { useSearchParams } from "react-router-dom";
 import Modal from "@rizumu/components/Modal";
 import ResponsiveButton from "@rizumu/components/ResponsiveButton";
 import { useToast } from "@rizumu/utils/toast/toast";
 import type { ModelRoom } from "@rizumu/models/room";
 import type { ModelStreak } from "@rizumu/models/streak";
+import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
 
 function PomodoroPage() {
   const { user, refreshUser } = useAuth();

@@ -6,7 +6,6 @@ import axios, {
 } from "axios";
 import {
   getAccessToken,
-  getRefreshToken,
   updateAccessToken,
   clearAuthTokens,
 } from "@rizumu/utils/cookieManager";
@@ -42,21 +41,11 @@ const processQueue = (
 };
 
 const refreshAccessToken = async (): Promise<string> => {
-  const refreshToken = getRefreshToken();
-
-  if (!refreshToken) {
-    throw new Error("No refresh token available");
-  }
-
   try {
     const response = await axios.post(
       `${import.meta.env.VITE_API_URL}/auth/refresh`,
-      { refresh_token: refreshToken },
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
+      {},
+      { withCredentials: true }
     );
 
     const { access_token } = response.data;

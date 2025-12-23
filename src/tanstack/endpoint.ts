@@ -51,17 +51,24 @@ export const TAG_ENDPOINTS = {
  * Friend Endpoints
  */
 export const FRIEND_ENDPOINTS = {
-  BASE: "/friends",
-  REQUESTS: "/friends/requests",
-  REQUEST_BY_ID: (id: string | number) => `/friends/requests/${id}`,
-  BY_ID: (id: string | number) => `/friends/${id}`,
+  FRIEND: "/friend/list",
+  GET_REQUESTS: "/friend/requests/received",
+  POST_REQUEST: "/friend/request",
+  ACCEPT: "/friend/accept",
+  DELETE: (id: string) => `/friend/${id}`,
 } as const;
 
 /**
  * Progress Endpoints
  */
 export const PROGRESS_ENDPOINTS = {
-  STATS: "/progress",
+  STATS: "/progress/stats",
+  STATS_BY_ID: (id: string) => `/progress/stats/${id}`,
+  UPDATE_STATS: "/progress/stats",
+  GIFT: "/progress/gift",
+  GIFT_BY_ID: (id: string) => `/progress/gift/${id}`,
+  SEND_GIFT: "progress/gift",
+
   DAILY: "/progress/daily",
   WEEKLY: "/progress/weekly",
   MONTHLY: "/progress/monthly",

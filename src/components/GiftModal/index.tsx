@@ -2,9 +2,9 @@ import type { ModelUserProfile } from "@rizumu/models/userProfile";
 import Modal from "../Modal";
 import { useAuth } from "@rizumu/context/AuthContext";
 import { useEffect, useState } from "react";
-import axiosClient from "@rizumu/api/config/axiosClient";
 import { gifts } from "../../constants/gift";
 import { useToast } from "@rizumu/utils/toast/toast";
+import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
 
 interface GiftModalProps {
   opened: boolean;

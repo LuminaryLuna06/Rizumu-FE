@@ -1,39 +1,36 @@
-import axiosClient from "@rizumu/api/config/axiosClient";
 import ResponsiveButton from "@rizumu/components/ResponsiveButton";
-import React from "react";
+import axios from "axios";
 
 function testTranh2() {
   const refreshAccessToken = async (): Promise<string> => {
-    const refreshToken = localStorage.getItem("refresh_token");
-
-    if (!refreshToken) {
-      throw new Error("No refresh token available");
-    }
-
     try {
-      const response = await axiosClient.post(
-        `${import.meta.env.VITE_API_URL}/auth/refresh`,
-        { refresh_token: refreshToken },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      const { access_token } = response.data;
+      fetch(`${import.meta.env.VITE_DEV_API_URL}/auth/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      // axios.post(`${import.meta.env.VITE_DEV_API_URL}/auth/refresh`, {
+      //   withCredentials: true,
+      // });
 
-      if (!access_token) {
-        throw new Error("No access token in response");
-      }
-
-      localStorage.setItem("access_token", access_token);
-      return access_token;
+      return "wtf";
     } catch (error) {
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("refresh_token");
+      throw error;
+    }
+  };
+  const refreshAccessToken2 = async (): Promise<string> => {
+    try {
+      fetch(`${import.meta.env.VITE_API_URL}/auth/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      // axios.post(`${import.meta.env.VITE_DEV_API_URL}/auth/refresh`, {
+      //   withCredentials: true,
+      // });
 
-      window.dispatchEvent(new CustomEvent("open-auth-modal"));
-
+      return "wtf";
+    } catch (error) {
       throw error;
     }
   };
@@ -44,7 +41,10 @@ function testTranh2() {
   return (
     <div>
       <ResponsiveButton onClick={() => refreshAccessToken()}>
-        Refresh
+        Refresh DEV
+      </ResponsiveButton>
+      <ResponsiveButton onClick={() => refreshAccessToken2()}>
+        Refresh2
       </ResponsiveButton>
       <ResponsiveButton onClick={() => editAccessToken()}>
         Doi access token

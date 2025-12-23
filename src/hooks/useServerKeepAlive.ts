@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
-import axiosClient from "../api/config/axiosClient";
-import API_URLS from "../api/endpoint";
+import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
+import API_URLS from "@rizumu/tanstack/endpoint";
 
 /**
  * Custom hook để tự động ping server mỗi 14 phút
@@ -21,7 +21,8 @@ export const useServerKeepAlive = (
 
     const pingServer = async () => {
       try {
-        const { url, method } = API_URLS.HEALTH.ping();
+        const url = API_URLS.HEALTH.PING;
+        const method = "GET";
         await axiosClient({
           method,
           url,

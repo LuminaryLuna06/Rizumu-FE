@@ -1,8 +1,8 @@
 import { useState } from "react";
 import Modal from "../Modal";
 import ResponsiveButton from "../ResponsiveButton";
-import axiosClient from "@rizumu/api/config/axiosClient";
 import { useAuth } from "@rizumu/context/AuthContext";
+import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
 
 interface BackgroundModalProps {
   opened: boolean;

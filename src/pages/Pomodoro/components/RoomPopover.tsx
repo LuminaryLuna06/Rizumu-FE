@@ -1,4 +1,4 @@
-import axiosClient from "@rizumu/api/config/axiosClient";
+import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
 import Popover from "@rizumu/components/Popover";
 import ProfileModal from "@rizumu/components/ProfileModal";
 import ResponsiveButton from "@rizumu/components/ResponsiveButton";
