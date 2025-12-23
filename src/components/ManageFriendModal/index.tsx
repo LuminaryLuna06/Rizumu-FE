@@ -1,120 +1,92 @@
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 import Modal from "../Modal";
 import { IconSearch, IconCheck, IconX } from "@tabler/icons-react";
 import TextInput from "../TextInput";
 import { useToast } from "@rizumu/utils/toast/toast";
 import { useAuth } from "@rizumu/context/AuthContext";
 import ProfileModal from "../ProfileModal";
-import type { ModelFriendRequest } from "@rizumu/models/friendRequest";
-import type { ModelFriend } from "@rizumu/models/friend";
 import { string } from "@rizumu/utils/validate";
-import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
+import {
+  useFriendRequests,
+  useFriends,
+  useSearchUsers,
+  useAcceptFriendRequest,
+  useDeleteFriend,
+} from "@rizumu/tanstack/api/hooks";
 
 type ManageFriendModalProps = {
   opened: boolean;
   onClose: () => void;
-  onRefreshRequests?: () => void;
 };
 
-function ManageFriendModal({
-  opened,
-  onClose,
-  onRefreshRequests,
-}: ManageFriendModalProps) {
+function ManageFriendModal({ opened, onClose }: ManageFriendModalProps) {
   const toast = useToast();
+  const acceptRequest = useAcceptFriendRequest();
+  const deleteFriend = useDeleteFriend();
   const { user: currentUser } = useAuth();
+  const { data: friends, isLoading: friendsLoading } = useFriends(opened);
+  const { data: requests, isLoading: requestsLoading } =
+    useFriendRequests(opened);
+
   const [activeTab, setActiveTab] = useState<"activity" | "requests">(
     "activity"
   );
-  const [friends, setFriends] = useState<ModelFriend[]>([]);
-  const [requests, setRequests] = useState<ModelFriendRequest[]>([]);
-  const [friendsLoading, setFriendsLoading] = useState(false);
-  const [requestsLoading, setRequestsLoading] = useState(false);
   const [profileModalOpened, setProfileModalOpened] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [searchLoading, setSearchLoading] = useState(false);
+  const [submittedQuery, setSubmittedQuery] = useState("");
   const [emailError, setEmailError] = useState("");
 
-  const fetchFriends = async () => {
-    try {
-      setFriendsLoading(true);
-      const response = await axiosClient.get("/friend/list");
-      setFriends(response.data || []);
-    } catch (error: any) {
-      console.error("Error fetching friends:", error);
-      toast.error(
-        error?.response?.data?.message || "Failed to load friends",
-        "Error"
-      );
-    } finally {
-      setFriendsLoading(false);
-    }
+  const emailValidator = string("Email").required().email();
+  const isValidEmail =
+    !!submittedQuery.trim() && !emailValidator.validate(submittedQuery);
+
+  const { data: searchResults, isLoading: searchLoading } = useSearchUsers(
+    submittedQuery,
+    isValidEmail
+  );
+
+  const handleAcceptRequest = (friendshipId: string) => {
+    acceptRequest.mutate(friendshipId, {
+      onSuccess: () => {
+        toast.success("Friend request accepted!", "Success");
+      },
+      onError: (error: any) => {
+        toast.error(
+          error?.response?.data?.message || "Failed to accept request",
+          "Error"
+        );
+      },
+    });
   };
 
-  const fetchRequests = async () => {
-    try {
-      setRequestsLoading(true);
-      // Fetch all requests (both sent and received)
-      const response = await axiosClient.get("/friend/requests/received");
-      setRequests(response.data || []);
-    } catch (error: any) {
-      console.error("Error fetching requests:", error);
-      toast.error(
-        error?.response?.data?.message || "Failed to load requests",
-        "Error"
-      );
-    } finally {
-      setRequestsLoading(false);
-    }
+  const handleCancelRequest = (requestId: string) => {
+    deleteFriend.mutate(requestId, {
+      onSuccess: () => {
+        toast.success("Friend request cancelled!", "Success");
+      },
+      onError: (error: any) => {
+        toast.error(
+          error?.response?.data?.message || "Failed to cancel request",
+          "Error"
+        );
+      },
+    });
   };
 
-  const handleAcceptRequest = async (friendshipId: string) => {
-    try {
-      await axiosClient.put("/friend/accept", { friendshipId: friendshipId });
-      toast.success("Friend request accepted!", "Success");
-      // Refresh both lists
-      fetchRequests();
-      fetchFriends();
-      onRefreshRequests?.();
-    } catch (error: any) {
-      console.error("Error accepting request:", error);
-      toast.error(
-        error?.response?.data?.message || "Failed to accept request",
-        "Error"
-      );
-    }
-  };
-
-  const handleCancelRequest = async (requestId: string) => {
-    try {
-      await axiosClient.delete(`/friend/${requestId}`);
-      toast.success("Friend request cancelled!", "Success");
-      fetchRequests();
-      onRefreshRequests?.();
-    } catch (error: any) {
-      console.error("Error cancelling request:", error);
-      toast.error(
-        error?.response?.data?.message || "Failed to cancel request",
-        "Error"
-      );
-    }
-  };
-
-  const handleRejectRequest = async (requestId: string) => {
-    try {
-      await axiosClient.delete(`/friend/request/${requestId}`);
-      toast.success("Friend request rejected!", "Success");
-      fetchRequests();
-      onRefreshRequests?.();
-    } catch (error: any) {
-      console.error("Error rejecting request:", error);
-      toast.error(
-        error?.response?.data?.message || "Failed to reject request",
-        "Error"
-      );
-    }
+  const handleRejectRequest = (requestId: string) => {
+    deleteFriend.mutate(requestId, {
+      onSuccess: () => {
+        toast.success("Friend request rejected!", "Success");
+      },
+      onError: (error: any) => {
+        toast.error(
+          error?.response?.data?.message || "Failed to reject request",
+          "Error"
+        );
+      },
+    });
   };
 
   const handleFriendClick = (userId: string) => {
@@ -122,54 +94,25 @@ function ManageFriendModal({
     setProfileModalOpened(true);
   };
 
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) {
-      setSearchResults([]);
+  const handleSearchQueryChange = (value: string) => {
+    setSearchQuery(value);
+    if (!value.trim()) {
       setEmailError("");
-      return;
-    }
-
-    // Validate email format
-    const emailValidator = string("Email").required().email();
-    const validationError = emailValidator.validate(searchQuery);
-
-    if (validationError) {
-      setEmailError(validationError);
-      return;
-    }
-
-    setEmailError("");
-
-    try {
-      setSearchLoading(true);
-      const response = await axiosClient.get(
-        `/auth/search?q=${encodeURIComponent(searchQuery)}`
-      );
-      setSearchResults(response.data || []);
-    } catch (error: any) {
-      console.error("Error searching users:", error);
-      toast.error(
-        error?.response?.data?.message || "Failed to search users",
-        "Error"
-      );
-      setSearchResults([]);
-    } finally {
-      setSearchLoading(false);
+      setSubmittedQuery("");
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      handleSearch();
+    if (e.key === "Enter" && searchQuery.trim()) {
+      const validationError = emailValidator.validate(searchQuery);
+      if (validationError) {
+        setEmailError(validationError);
+        return;
+      }
+      setEmailError("");
+      setSubmittedQuery(searchQuery);
     }
   };
-
-  useEffect(() => {
-    if (opened) {
-      fetchFriends();
-      fetchRequests();
-    }
-  }, [opened]);
 
   return (
     <>
@@ -184,10 +127,7 @@ function ManageFriendModal({
               radius="md"
               className="w-[300px]"
               value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.currentTarget.value);
-                setEmailError("");
-              }}
+              onChange={(e) => handleSearchQueryChange(e.currentTarget.value)}
               onKeyDown={handleKeyDown}
               rightSection={<IconSearch size={16} />}
               error={emailError}
@@ -203,10 +143,7 @@ function ManageFriendModal({
               radius="md"
               className="w-full"
               value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.currentTarget.value);
-                setEmailError("");
-              }}
+              onChange={(e) => handleSearchQueryChange(e.currentTarget.value)}
               onKeyDown={handleKeyDown}
               rightSection={<IconSearch size={16} />}
               error={emailError}
@@ -220,7 +157,7 @@ function ManageFriendModal({
                 <div className="text-center py-4 text-secondary">
                   Searching...
                 </div>
-              ) : searchResults.length > 0 ? (
+              ) : searchResults && searchResults.length > 0 ? (
                 <div className="flex flex-col gap-2">
                   {searchResults.map((user) => (
                     <div
@@ -303,7 +240,7 @@ function ManageFriendModal({
                       </div>
                     ))}
                   </div>
-                ) : friends.length > 0 ? (
+                ) : friends && friends.length > 0 ? (
                   <div className="flex flex-col gap-2 pb-4">
                     <div className="text-left text-xs text-secondary/40 font-medium mb-3 uppercase tracking-wider sticky top-0 py-2 z-10 w-full">
                       Friends activities ({friends.length})
@@ -372,7 +309,7 @@ function ManageFriendModal({
                       </div>
                     ))}
                   </div>
-                ) : requests.length > 0 ? (
+                ) : requests && requests.length > 0 ? (
                   <div className="flex flex-col gap-2 pb-4">
                     <div className="text-left text-xs text-secondary/40 font-medium mb-3 uppercase tracking-wider sticky top-0 py-2 z-10 w-full">
                       Friend requests ({requests.length})

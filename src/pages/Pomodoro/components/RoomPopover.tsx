@@ -1,11 +1,9 @@
-import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
 import Popover from "@rizumu/components/Popover";
 import ProfileModal from "@rizumu/components/ProfileModal";
 import ResponsiveButton from "@rizumu/components/ResponsiveButton";
 import Switch from "@rizumu/components/Switch";
 import TextInput from "@rizumu/components/TextInput";
 import { useAuth } from "@rizumu/context/AuthContext";
-import type { ModelRoom } from "@rizumu/models/room";
 import { useToast } from "@rizumu/utils/toast/toast";
 import {
   IconHome,
@@ -18,15 +16,19 @@ import {
   IconKarate,
 } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
+import {
+  useKickFromRoom,
+  useLeaveRoom,
+  useRoomById,
+  useRoomMembers,
+  useUpdateRoom,
+} from "@rizumu/tanstack/api/hooks";
 
 function RoomPopover() {
   const toast = useToast();
-  const { user, isLoading, refreshUser } = useAuth();
-  const [room, setRoom] = useState<ModelRoom>();
+  const { user, isLoading } = useAuth();
+  const roomId = user?.current_room_id;
   const [roomOpened, setRoomOpened] = useState(false);
-  const [roomLoading, setRoomLoading] = useState(false);
-  const [members, setMembers] = useState<any[]>([]);
-  const [membersLoading, setMembersLoading] = useState(false);
   const [showMembers, setShowMembers] = useState(false);
   const [profileModalOpened, setProfileModalOpened] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | undefined>();
@@ -38,60 +40,32 @@ function RoomPopover() {
     locked: false,
     is_public: false,
   });
+  const { data: room, isLoading: roomLoading } = useRoomById(roomId || "");
+  const { data: members, isLoading: membersLoading } = useRoomMembers(
+    roomId || "",
+    roomOpened
+  );
+  const updateRoom = useUpdateRoom();
+  const kick = useKickFromRoom();
+  const leave = useLeaveRoom();
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
-    try {
-      setRoomLoading(true);
-      const response = await axiosClient.patch(`/room/${room?._id}`, formData);
-      toast.success("Room updated!", "Success");
-      setRoom(response.data.room as ModelRoom);
-    } catch (e: any) {
-      toast.error(e?.response?.data?.message || "Update error!", "Error");
-    } finally {
-      setRoomLoading(false);
-    }
-  };
-
-  const getRoom = async () => {
-    if (user && !isLoading) {
-      try {
-        setRoomLoading(true);
-        const response = await axiosClient.get(
-          `/room/id/${user?.current_room_id}`
-        );
-        setRoom(response.data as ModelRoom);
-      } catch (e: any) {
-        toast.error(e.message || "", "Error");
-      } finally {
-        setRoomLoading(false);
+    updateRoom.mutate(
+      { roomId: room?._id || "", data: formData },
+      {
+        onSuccess: () => {
+          toast.success("Room updated!", "Success");
+        },
+        onError: (error: any) => {
+          toast.error(
+            error?.response?.data?.message || "Update error!",
+            "Error"
+          );
+        },
       }
-    }
+    );
   };
-  const fetchMembers = async () => {
-    if (roomOpened && user?.current_room_id) {
-      try {
-        setMembersLoading(true);
-        const response = await axiosClient.get(
-          `/room/${user.current_room_id}/members`
-        );
-        setMembers(response.data || []);
-        console.log("Room members:", response.data);
-      } catch (e: any) {
-        console.error("Failed to fetch members:", e);
-        toast.error(
-          e?.response?.data?.message || "Failed to fetch members",
-          "Error"
-        );
-      } finally {
-        setMembersLoading(false);
-      }
-    }
-  };
-
-  useEffect(() => {
-    getRoom();
-  }, [user?._id, user?.current_room_id]);
 
   useEffect(() => {
     if (room) {
@@ -106,32 +80,42 @@ function RoomPopover() {
     }
   }, [room]);
 
-  useEffect(() => {
-    fetchMembers();
-  }, [roomOpened, user?.current_room_id]);
-
-  if (!user) {
-    return null;
-  }
-
   const isLoadingRoom = roomLoading || (!room && !isLoading);
 
   const isOwner = room?.owner_id === user?._id;
   const isAdmin =
-    isOwner || members.find((m) => m.user_id === user?._id)?.role === "admin";
+    isOwner ||
+    (members && members.find((m) => m.user_id === user?._id)?.role === "admin");
 
   const handleLeaveRoom = async () => {
-    try {
-      await axiosClient.post(`/room/${room?._id}/leave`);
-      toast.success("Left room successfully!", "Success");
-      // getRoom(); // Refresh room data
-      await refreshUser();
-    } catch (e: any) {
-      toast.error(
-        e?.response?.data?.message || "Failed to leave room",
-        "Error"
-      );
-    }
+    leave.mutate(room?._id || "", {
+      onSuccess: () => {
+        toast.success("Left room successfully!", "Success");
+      },
+      onError: (error: any) => {
+        toast.error(
+          error?.response?.data?.message || "Failed to leave room",
+          "Error"
+        );
+      },
+    });
+  };
+
+  const handleMemberKick = async (memberId: string) => {
+    kick.mutate(
+      { roomId: roomId || "", userId: memberId },
+      {
+        onSuccess: () => {
+          toast.success("Member kicked successfully!", "Success");
+        },
+        onError: (error: any) => {
+          toast.error(
+            error?.response?.data?.message || "Failed to kick member",
+            "Error"
+          );
+        },
+      }
+    );
   };
 
   const handleShareRoom = async () => {
@@ -147,22 +131,6 @@ function RoomPopover() {
   const handleMemberClick = (memberId: string) => {
     setSelectedUserId(memberId);
     setProfileModalOpened(true);
-  };
-
-  const handleMemberKick = async (memberId: string) => {
-    try {
-      await axiosClient.post(`/room/${room?._id}/kick`, {
-        user_id: memberId,
-      });
-      toast.success("Member kicked successfully", "Success");
-      fetchMembers();
-    } catch (error: any) {
-      toast.error(
-        error?.response?.data?.message || "Failed to kick member",
-        "Error"
-      );
-      console.error(error);
-    }
   };
 
   return (
@@ -258,11 +226,12 @@ function RoomPopover() {
                       </div>
                     </div>
                   ))
-                ) : members.length === 0 ? (
+                ) : members && members.length === 0 ? (
                   <p className="text-secondary/60 text-center py-lg">
                     No members found
                   </p>
                 ) : (
+                  members &&
                   members.map((member: any, index: number) => (
                     <div
                       key={member._id || index}
@@ -293,7 +262,10 @@ function RoomPopover() {
                       </div>
                       {isAdmin && member.user_id !== user?._id && (
                         <div className="justify-end">
-                          <ResponsiveButton className="!bg-transparent">
+                          <ResponsiveButton
+                            className="!bg-transparent"
+                            disabled={kick.isPending}
+                          >
                             <IconKarate
                               className="text-red-500"
                               onClick={() => handleMemberKick(member.user_id)}
@@ -315,7 +287,7 @@ function RoomPopover() {
                 onChange={(e) => {
                   setFormData({ ...formData, name: e.target.value });
                 }}
-                disabled={roomLoading}
+                disabled={updateRoom.isPending}
               />
               <TextInput
                 label="About"
@@ -324,7 +296,7 @@ function RoomPopover() {
                 onChange={(e) => {
                   setFormData({ ...formData, description: e.target.value });
                 }}
-                disabled={roomLoading}
+                disabled={updateRoom.isPending}
               />
               <TextInput
                 label="Invitation code"
@@ -334,7 +306,7 @@ function RoomPopover() {
                 onChange={(e) => {
                   setFormData({ ...formData, slug: e.target.value });
                 }}
-                disabled={roomLoading}
+                disabled={updateRoom.isPending}
               />
               <Switch
                 label="Enable chat during Pomodoro"
@@ -346,6 +318,7 @@ function RoomPopover() {
                     chat_during_pomodoro: !formData.chat_during_pomodoro,
                   })
                 }
+                disabled={updateRoom.isPending}
               />
               <Switch
                 label="Lock room (No new members)"
@@ -354,6 +327,7 @@ function RoomPopover() {
                 onChange={() =>
                   setFormData({ ...formData, locked: !formData.locked })
                 }
+                disabled={updateRoom.isPending}
               />
               <Switch
                 label="Discoverable"
@@ -363,6 +337,7 @@ function RoomPopover() {
                 onChange={() =>
                   setFormData({ ...formData, is_public: !formData.is_public })
                 }
+                disabled={updateRoom.isPending}
               />
               <div className="flex justify-end">
                 <ResponsiveButton
@@ -388,11 +363,12 @@ function RoomPopover() {
                       </div>
                     </div>
                   ))
-                ) : members.length === 0 ? (
+                ) : members && members.length === 0 ? (
                   <p className="text-secondary/60 text-center py-lg">
                     No members found
                   </p>
                 ) : (
+                  members &&
                   members.map((member: any, index: number) => (
                     <div
                       key={member._id || index}
@@ -424,7 +400,10 @@ function RoomPopover() {
 
                       {isAdmin && member.user_id !== user?._id && (
                         <div className="justify-end">
-                          <ResponsiveButton className="!bg-transparent">
+                          <ResponsiveButton
+                            className="!bg-transparent"
+                            disabled={kick.isPending}
+                          >
                             <IconKarate
                               className="text-red-500"
                               onClick={() => handleMemberKick(member.user_id)}

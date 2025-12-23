@@ -21,30 +21,55 @@ export const PROFILE_ENDPOINTS = {
 /**
  * Pomodoro Session Endpoints
  */
-export const POMODORO_ENDPOINTS = {
-  SESSIONS: "/pomodoro/sessions",
-  SESSION_BY_ID: (id: string | number) => `/pomodoro/sessions/${id}`,
-  STATS: "/pomodoro/stats",
-  HISTORY: "/pomodoro/history",
+export const SESSION_ENDPOINTS = {
+  CREATE_SESSION: "/session",
+  PATCH_SESSION: "/session",
+  PATCH_NOTE: (id: string) => `/session/${id}/note`,
+
+  HOURLY: (startTime: string, endTime: string, userId: string) =>
+    `/session/hourly?startTime=${startTime}&endTime=${endTime}&userId=${userId}`,
+  DAILY: (startTime: string, endTime: string, userId: string) =>
+    `/session/daily?startTime=${startTime}&endTime=${endTime}&userId=${userId}`,
+  HEATMAP: (startTime: string, endTime: string, userId: string) =>
+    `/session/heatmap?startTime=${startTime}&endTime=${endTime}&userId=${userId}`,
+  LEADERBOARD: (startTime: string, endTime: string) =>
+    `/session/leaderboard?startTime=${startTime}&endTime=${endTime}`,
+  LEADERBOARD_FRIEND: (startTime: string, endTime: string) =>
+    `/session/leaderboard_friend?startTime=${startTime}&endTime=${endTime}`,
 } as const;
 
 /**
  * Room Endpoints
  */
 export const ROOM_ENDPOINTS = {
-  BASE: "/rooms",
-  BY_ID: (id: string | number) => `/rooms/${id}`,
-  JOIN: (id: string | number) => `/rooms/${id}/join`,
-  LEAVE: (id: string | number) => `/rooms/${id}/leave`,
-  MESSAGES: (id: string | number) => `/rooms/${id}/messages`,
+  PUBLIC: "/room/public",
+  BY_ID: (id: string) => `/room/id/${id}`,
+  BY_SLUG: (slug: string) => `/room/slug/${slug}`,
+  JOIN: (id: string) => `/room/${id}/join`,
+  LEAVE: (id: string) => `/room/${id}/leave`,
+  MEMBERS: (id: string) => `/room/${id}/members`,
+  UPDATE_ROOM: (id: string) => `/room/${id}`,
+  BACKGROUND: (id: string) => `/room/${id}/background`,
+  KARATE_KICK: (id: string) => `/room/${id}/kick`,
+} as const;
+
+/**
+ * Message Endpoints
+ */
+export const MESSAGE_ENDPOINTS = {
+  MESSAGES: (id: string, before?: string) => `/${id}/messages?before=${before}`,
 } as const;
 
 /**
  * Tag Endpoints
  */
 export const TAG_ENDPOINTS = {
-  BASE: "/tags",
-  BY_ID: (id: string | number) => `/tags/${id}`,
+  TAGS: "/tags",
+  CREATE: "/tags",
+  UPDATE: (id: string) => `/tags/${id}`,
+  DELETE: (id: string) => `/tags/${id}`,
+
+  // BY_ID: (id: string | number) => `/tags/${id}`,
 } as const;
 
 /**
@@ -53,7 +78,7 @@ export const TAG_ENDPOINTS = {
 export const FRIEND_ENDPOINTS = {
   FRIEND: "/friend/list",
   GET_REQUESTS: "/friend/requests/received",
-  POST_REQUEST: "/friend/request",
+  SEND_REQUEST: "/friend/request", //POST
   ACCEPT: "/friend/accept",
   DELETE: (id: string) => `/friend/${id}`,
 } as const;
@@ -64,14 +89,16 @@ export const FRIEND_ENDPOINTS = {
 export const PROGRESS_ENDPOINTS = {
   STATS: "/progress/stats",
   STATS_BY_ID: (id: string) => `/progress/stats/${id}`,
-  UPDATE_STATS: "/progress/stats",
+  UPDATE_STATS: "/progress/stats", //PATCH
   GIFT: "/progress/gift",
   GIFT_BY_ID: (id: string) => `/progress/gift/${id}`,
-  SEND_GIFT: "progress/gift",
+  SEND_GIFT: "progress/gift", //POST
 
-  DAILY: "/progress/daily",
-  WEEKLY: "/progress/weekly",
-  MONTHLY: "/progress/monthly",
+  STREAK: "/progress",
+  PROGRESS_BY_ID: (id: string) => `/progress/${id}`,
+  // DAILY: "/progress/daily",
+  // WEEKLY: "/progress/weekly",
+  // MONTHLY: "/progress/monthly",
 } as const;
 
 /**
@@ -84,7 +111,7 @@ export const HEALTH_ENDPOINTS = {
 export const API_URLS = {
   AUTH: AUTH_ENDPOINTS,
   PROFILE: PROFILE_ENDPOINTS,
-  POMODORO: POMODORO_ENDPOINTS,
+  SESSION: SESSION_ENDPOINTS,
   ROOM: ROOM_ENDPOINTS,
   TAG: TAG_ENDPOINTS,
   FRIEND: FRIEND_ENDPOINTS,

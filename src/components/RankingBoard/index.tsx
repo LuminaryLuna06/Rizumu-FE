@@ -1,17 +1,77 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import {
   IconWorld,
   IconUsers,
-  IconTrendingUp,
-  IconGift,
   IconArrowLeft,
   IconArrowRight,
   IconClockHour3,
 } from "@tabler/icons-react";
 import Modal from "../Modal";
 import ProfileModal from "../ProfileModal";
-import type { ModelLeaderboard } from "@rizumu/models/leaderboard";
-import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
+import {
+  useLeaderboard,
+  useLeaderboardFriend,
+} from "@rizumu/tanstack/api/hooks";
+
+const getTimeRange = (date: Date, filter: "daily" | "weekly" | "monthly") => {
+  const start = new Date(date);
+  const end = new Date(date);
+
+  if (filter === "daily") {
+    start.setHours(0, 0, 0, 0);
+    end.setHours(23, 59, 59, 999);
+  } else if (filter === "weekly") {
+    const day = start.getDay();
+    const diff = start.getDate() - day + (day === 0 ? -6 : 1);
+    start.setDate(diff);
+    start.setHours(0, 0, 0, 0);
+    end.setDate(start.getDate() + 6);
+    end.setHours(23, 59, 59, 999);
+  } else if (filter === "monthly") {
+    start.setDate(1);
+    start.setHours(0, 0, 0, 0);
+    end.setMonth(start.getMonth() + 1);
+    end.setDate(0);
+    end.setHours(23, 59, 59, 999);
+  }
+
+  return {
+    startTime: start.toISOString(),
+    endTime: end.toISOString(),
+  };
+};
+const formatDisplayDate = (timeFilter: string, currentDate: Date) => {
+  if (timeFilter === "daily") {
+    return currentDate.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  } else if (timeFilter === "weekly") {
+    const { startTime, endTime } = getTimeRange(currentDate, "weekly");
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+    return `${start.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+    })} - ${end.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })}`;
+  } else {
+    return currentDate.toLocaleDateString("en-GB", {
+      month: "long",
+      year: "numeric",
+    });
+  }
+};
+
+const formatDuration = (seconds: number) => {
+  const hours = Math.floor(seconds / 3600);
+  const mins = Math.round((seconds % 3600) / 60);
+  return `${hours}h ${mins}m`;
+};
 
 const LeaderboardModal = ({
   opened,
@@ -20,69 +80,33 @@ const LeaderboardModal = ({
   opened: boolean;
   setOpened: (e: boolean) => void;
 }) => {
+  const [profileOpened, setProfileOpened] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [currentDate, setCurrentDate] = useState(new Date());
   const [activeTab, setActiveTab] = useState<"global" | "friends">("global");
   const [timeFilter, setTimeFilter] = useState<"daily" | "weekly" | "monthly">(
     "daily"
   );
-  const [leaderboardData, setLeaderboardData] = useState<ModelLeaderboard[]>();
-  const [loading, setLoading] = useState(false);
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [profileOpened, setProfileOpened] = useState(false);
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
-  const getTimeRange = (date: Date, filter: "daily" | "weekly" | "monthly") => {
-    const start = new Date(date);
-    const end = new Date(date);
+  const { startTime, endTime } = useMemo(
+    () => getTimeRange(currentDate, timeFilter),
+    [currentDate, timeFilter]
+  );
 
-    if (filter === "daily") {
-      start.setHours(0, 0, 0, 0);
-      end.setHours(23, 59, 59, 999);
-    } else if (filter === "weekly") {
-      const day = start.getDay();
-      const diff = start.getDate() - day + (day === 0 ? -6 : 1);
-      start.setDate(diff);
-      start.setHours(0, 0, 0, 0);
-      end.setDate(start.getDate() + 6);
-      end.setHours(23, 59, 59, 999);
-    } else if (filter === "monthly") {
-      start.setDate(1);
-      start.setHours(0, 0, 0, 0);
-      end.setMonth(start.getMonth() + 1);
-      end.setDate(0);
-      end.setHours(23, 59, 59, 999);
-    }
+  const { data: global, isLoading: globalLoading } = useLeaderboard(
+    startTime,
+    endTime,
+    opened && activeTab === "global"
+  );
 
-    return {
-      startTime: start.toISOString(),
-      endTime: end.toISOString(),
-    };
-  };
+  const { data: friends, isLoading: friendsLoading } = useLeaderboardFriend(
+    startTime,
+    endTime,
+    opened && activeTab === "friends"
+  );
 
-  const fetchLeaderboard = async () => {
-    setLoading(true);
-    try {
-      const { startTime, endTime } = getTimeRange(currentDate, timeFilter);
-      const endpoint =
-        activeTab === "global"
-          ? "/session/leaderboard"
-          : "/session/leaderboard_friend";
-      const response = await axiosClient.get(
-        `${endpoint}?startTime=${startTime}&endTime=${endTime}`
-      );
-      setLeaderboardData(response.data.data || []);
-    } catch (error) {
-      console.error("Error fetching leaderboard:", error);
-      setLeaderboardData([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (opened) {
-      fetchLeaderboard();
-    }
-  }, [opened, timeFilter, currentDate, activeTab]);
+  const data = activeTab === "global" ? global : friends;
+  const isLoading = activeTab === "global" ? globalLoading : friendsLoading;
 
   const handlePrevDate = () => {
     const newDate = new Date(currentDate);
@@ -123,39 +147,6 @@ const LeaderboardModal = ({
       newDate.setMonth(newDate.getMonth() + 1);
     }
     setCurrentDate(newDate);
-  };
-
-  const formatDisplayDate = () => {
-    if (timeFilter === "daily") {
-      return currentDate.toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      });
-    } else if (timeFilter === "weekly") {
-      const { startTime, endTime } = getTimeRange(currentDate, "weekly");
-      const start = new Date(startTime);
-      const end = new Date(endTime);
-      return `${start.toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-      })} - ${end.toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })}`;
-    } else {
-      return currentDate.toLocaleDateString("en-GB", {
-        month: "long",
-        year: "numeric",
-      });
-    }
-  };
-
-  const formatDuration = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const mins = Math.round((seconds % 3600) / 60);
-    return `${hours}h ${mins}m`;
   };
 
   const handleUserClick = (userId: string) => {
@@ -241,7 +232,7 @@ const LeaderboardModal = ({
               <IconArrowLeft size={20} />
             </button>
             <div className="mx-4 border border-gray-700 bg-[#1a1a1a] px-6 py-2 rounded-full text-sm font-medium">
-              {formatDisplayDate()}
+              {formatDisplayDate(timeFilter, currentDate)}
             </div>
             <button
               onClick={handleNextDate}
@@ -274,7 +265,7 @@ const LeaderboardModal = ({
               </thead>
 
               <tbody>
-                {loading ? (
+                {isLoading ? (
                   <tr>
                     <td colSpan={4} className="py-8 text-center">
                       <div className="flex items-center justify-center">
@@ -282,15 +273,15 @@ const LeaderboardModal = ({
                       </div>
                     </td>
                   </tr>
-                ) : leaderboardData?.length === 0 ? (
+                ) : data?.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="py-8 text-center text-gray-400">
                       No data available for this period
                     </td>
                   </tr>
                 ) : (
-                  leaderboardData &&
-                  leaderboardData.map((user, index) => (
+                  data &&
+                  data.map((user, index) => (
                     <tr
                       key={user._id}
                       onClick={() => handleUserClick(user._id)}
