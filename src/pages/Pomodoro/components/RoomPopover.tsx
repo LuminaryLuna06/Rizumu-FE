@@ -306,7 +306,7 @@ function RoomPopover() {
                 onChange={(e) => {
                   setFormData({ ...formData, slug: e.target.value });
                 }}
-                disabled={updateRoom.isPending}
+                disabled={true}
               />
               <Switch
                 label="Enable chat during Pomodoro"
