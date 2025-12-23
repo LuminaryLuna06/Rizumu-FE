@@ -873,7 +873,7 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
 
             <div className="flex justify-start gap-x-lg">
               <div
-                className={`rounded-full hover:scale-110 transition-all cursor-pointer ${
+                className={`hidden md:block rounded-full hover:scale-110 transition-all cursor-pointer ${
                   !isPipSupported ? "opacity-30 cursor-not-allowed" : ""
                 } ${pipWindow ? "text-accent" : ""}`}
                 onClick={isPipSupported ? handleTogglePiP : undefined}

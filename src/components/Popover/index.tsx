@@ -49,7 +49,7 @@ const Popover: React.FC<PopoverProps> = ({
         ref={popoverRef}
         className={`fixed ${
           positionClasses[position]
-        } z-popover w-96 transition-all duration-slower rounded-xl backdrop-blur-xl ${
+        } z-popover w-80 w-[calc(100vw-2.5rem)] md:w-96 transition-all duration-slower rounded-xl backdrop-blur-xl ${
           opened
             ? "opacity-100 translate-y-0"
             : "opacity-0 -translate-y-2 pointer-events-none"

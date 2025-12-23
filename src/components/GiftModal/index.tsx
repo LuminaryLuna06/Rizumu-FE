@@ -77,18 +77,18 @@ function GiftModal({ opened, onClose, profile }: GiftModalProps) {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-6 w-full max-h-[400px] px-2 overflow-y-auto custom-scrollbar scrollbar-hidden">
+        <div className="grid grid-cols-3 gap-3 w-full max-h-[400px] px-2 overflow-y-auto custom-scrollbar scrollbar-hidden">
           {gifts.map((gift) => (
             <div
               key={gift.id}
               onClick={() => setSelectedGift(gift.id)}
-              className={`relative flex flex-col items-center p-1 rounded-2xl cursor-pointer transition-all duration-300 border-2 mt-2 ${
+              className={`relative flex flex-col items-center py-4 p-1 rounded-2xl cursor-pointer transition-all duration-300 border-2 mt-2 ${
                 selectedGift === gift.id
                   ? "border-active bg-secondary/20 scale-105 shadow-lg shadow-active/30"
                   : "border-transparent bg-secondary/30 hover:border-white/10"
               }`}
             >
-              <div className="w-35 h-35 flex items-center justify-center drop-shadow-xl">
+              <div className="w-20 h-20 flex items-center justify-center drop-shadow-xl">
                 <img
                   src={gift.image}
                   alt={`Gift ${gift.id}`}
