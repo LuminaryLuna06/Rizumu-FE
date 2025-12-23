@@ -1,24 +1,28 @@
 import ResponsiveButton from "@rizumu/components/ResponsiveButton";
-import { IconCloud, IconPhoto, IconGift, IconUsers } from "@tabler/icons-react";
+import { IconPhoto, IconUsers } from "@tabler/icons-react";
 import { useState } from "react";
 import IframePopover from "./IframePopover";
 import ManageFriendModal from "@rizumu/components/ManageFriendModal";
 import ChatPopover from "./ChatPopover";
 import BackgroundModal from "@rizumu/components/BackgroundModal";
+import { useMemo } from "react";
+import { useAuth } from "@rizumu/context/AuthContext";
+import { useFriendRequests } from "@rizumu/tanstack/api/hooks";
 
 interface FooterProps {
   onBackgroundChange: (bg: { name: string; type: string }) => void;
-  numberRequest: number;
-  onRefreshRequests?: () => void;
 }
 
-function Footer({
-  onBackgroundChange,
-  numberRequest,
-  onRefreshRequests,
-}: FooterProps) {
+function Footer({ onBackgroundChange }: FooterProps) {
+  const { user } = useAuth();
   const [friendOpened, setFriendOpened] = useState(false);
   const [backgroundModalOpened, setBackgroundModalOpened] = useState(false);
+
+  const { data: friendRequests } = useFriendRequests(!!user?._id);
+
+  const numberRequest = useMemo(() => {
+    return friendRequests?.length || 0;
+  }, [friendRequests]);
   return (
     <div className="footer flex justify-between h-[10vh] items-center">
       {/* Footer Left */}
@@ -53,7 +57,6 @@ function Footer({
       <ManageFriendModal
         opened={friendOpened}
         onClose={() => setFriendOpened(false)}
-        onRefreshRequests={onRefreshRequests}
       />
       <BackgroundModal
         opened={backgroundModalOpened}

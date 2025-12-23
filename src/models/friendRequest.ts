@@ -3,18 +3,15 @@ export type ModelFriendRequest = {
   user1: string;
   user2: string;
   status: string;
-  requester: {
-    _id: string;
-    username: string;
-    name: string;
-    avatar?: string;
-  };
-  receiver: {
-    _id: string;
-    username: string;
-    name: string;
-    avatar?: string;
-  };
+  requester: User;
+  receiver: User;
   created_at: string;
   updated_at: string;
+};
+
+type User = {
+  _id: string;
+  username: string;
+  name: string;
+  avatar?: string;
 };

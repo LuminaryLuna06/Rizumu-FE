@@ -13,6 +13,11 @@ import {
 } from "@tabler/icons-react";
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import {
+  useCreateTag,
+  useTags,
+  useUpdateTag,
+} from "@rizumu/tanstack/api/hooks/useTag";
 
 interface TagSelectorProps {
   selectedTag: ModelTag | null;
@@ -20,7 +25,6 @@ interface TagSelectorProps {
 }
 
 function TagSelector({ selectedTag, onTagSelect }: TagSelectorProps) {
-  const [tags, setTags] = useState<ModelTag[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showCreateTag, setShowCreateTag] = useState(false);
   const [newTagName, setNewTagName] = useState("");
@@ -35,25 +39,13 @@ function TagSelector({ selectedTag, onTagSelect }: TagSelectorProps) {
   const [hasFetched, setHasFetched] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  const fetchTags = async () => {
-    try {
-      const response = await axiosClient.get("/tags");
-      setTags(response.data || []);
-    } catch (error) {
-      console.error("Error fetching tags:", error);
-      setTags([]);
-    } finally {
-      setHasFetched(true);
-    }
-  };
-
-  useEffect(() => {
-    fetchTags();
-  }, []);
+  const { data: tags, isLoading: tagsLoading } = useTags();
+  const update = useUpdateTag();
+  const create = useCreateTag();
 
   useEffect(() => {
     if (hasFetched && selectedTag) {
-      const exists = tags.some((t) => t._id === selectedTag._id);
+      const exists = tags && tags.some((t) => t._id === selectedTag._id);
       if (!exists) {
         onTagSelect(null);
       }
@@ -104,8 +96,8 @@ function TagSelector({ selectedTag, onTagSelect }: TagSelectorProps) {
           name: newTagName.trim(),
           color: newTagColor,
         });
+        create.mutate({name});
       }
-      await fetchTags();
 
       if (editingTag) {
         setTags((prev) => {
@@ -144,7 +136,6 @@ function TagSelector({ selectedTag, onTagSelect }: TagSelectorProps) {
       if (selectedTag?._id === tagId) {
         onTagSelect(null);
       }
-      await fetchTags();
     } catch (error) {
       console.error("Error deleting tag:", error);
     }
@@ -260,7 +251,7 @@ function TagSelector({ selectedTag, onTagSelect }: TagSelectorProps) {
               /* Tag List */
               <>
                 <div className="max-h-[300px] overflow-y-auto custom-scrollbar scrollbar-hidden font-light">
-                  {tags.length > 0 ? (
+                  {tags && tags.length > 0 ? (
                     tags.map((tag) => (
                       <button
                         key={tag._id}

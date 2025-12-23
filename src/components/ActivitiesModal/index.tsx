@@ -19,11 +19,11 @@ import {
   IconFlame,
   IconList,
 } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+import { useState, useMemo } from "react";
 import BoxAnalytics from "./components/BoxAnalytics";
 import BoxReview from "./components/BoxReview";
 import { months, hourNames } from "./data/month";
-import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
+import { useHourlyData, useDailyData } from "@rizumu/tanstack/api/hooks";
 
 interface ActivitiesModalProps {
   opened: boolean;
@@ -31,64 +31,85 @@ interface ActivitiesModalProps {
 }
 function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
   const { user } = useAuth();
-  const [hourStats, setHourStats] = useState<
-    { hourName: string; duration: number }[]
-  >([]);
-  const [dailySession, setDailySession] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"Analytics" | "Review">(
     "Analytics"
   );
   const [selectedDate, setSelectedDate] = useState(new Date());
 
-  const getStats = async () => {
-    if (!user?._id || !hourStats) return;
+  const { startTime, endTime } = useMemo(() => {
+    const year = selectedDate.getFullYear();
+    const month = selectedDate.getMonth();
+    const date = selectedDate.getDate();
 
-    setIsLoading(true);
-    try {
-      const year = selectedDate.getFullYear();
-      const month = selectedDate.getMonth();
-      const date = selectedDate.getDate();
+    return {
+      startTime: new Date(year, month, date, 0, 0, 0, 0).toISOString(),
+      endTime: new Date(year, month, date, 23, 59, 59, 999).toISOString(),
+    };
+  }, [selectedDate]);
 
-      const startTime = new Date(year, month, date, 0, 0, 0, 0).toISOString();
-      const endTime = new Date(
-        year,
-        month,
-        date,
-        23,
-        59,
-        59,
-        999
-      ).toISOString();
+  const { data: hourlyDurations, isLoading: hourlyLoading } = useHourlyData(
+    startTime,
+    endTime,
+    user?._id || "",
+    !!user?._id
+  );
 
-      const response = await axiosClient.get(
-        `/session/hourly?startTime=${startTime}&endTime=${endTime}&userId=${user?._id}`
-      );
-      const duration = response.data;
-      const newHourStats = hourNames.map((name, index) => ({
-        hourName: name,
-        duration: Math.floor(duration[index]),
-      }));
+  const { data: dailySession, isLoading: dailyLoading } = useDailyData(
+    startTime,
+    endTime,
+    user?._id || "",
+    !!user?._id
+  );
 
-      const responseTotalSession = await axiosClient.get(
-        `/session/daily?userId=${user?._id}&startTime=${startTime}&endTime=${endTime}`
-      );
+  const hourStats = useMemo(() => {
+    if (!hourlyDurations) return [];
+    return hourNames.map((name, index) => ({
+      hourName: name,
+      duration: Math.floor(hourlyDurations[index] || 0),
+    }));
+  }, [hourlyDurations]);
 
-      setHourStats(newHourStats);
-      setDailySession(responseTotalSession.data);
+  const isLoading = hourlyLoading || dailyLoading;
 
-      setIsLoading(false);
-    } catch (error) {
-      console.error(error);
-      setIsLoading(false);
-    }
+  const getTotalSession = () => {
+    return dailySession?.length || 0;
   };
 
-  useEffect(() => {
-    if (opened) {
-      getStats();
+  const getBestTime = () => {
+    if (!dailySession || dailySession.length === 0) return "0m";
+    let Max = dailySession[0].duration;
+    dailySession.forEach((session) => {
+      if (session.duration > Max) {
+        Max = session.duration;
+      }
+    });
+
+    if (Max < 60) {
+      return Max.toString().padStart(2, "0") + "s";
     }
-  }, [opened, user?._id, selectedDate]);
+    if (Max < 3600) {
+      return (
+        Math.floor(Max / 60)
+          .toString()
+          .padStart(2, "0") +
+        "m " +
+        Math.floor(Max - Math.floor(Max / 60) * 60)
+          .toString()
+          .padStart(2, "0") +
+        "s"
+      );
+    }
+    return (
+      Math.floor(Max / 3600)
+        .toString()
+        .padStart(2, "0") +
+      "h " +
+      Math.floor((Max - Math.floor(Max / 3600) * 3600) / 60)
+        .toString()
+        .padStart(2, "0") +
+      "m"
+    );
+  };
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -128,46 +149,6 @@ function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
       return hours + "h " + mins + "m";
     }
     return totalMinute + "m";
-  };
-
-  const getTotalSession = () => {
-    return dailySession.length;
-  };
-
-  const getBestTime = () => {
-    if (dailySession.length === 0) return "0m";
-    let Max = dailySession[0].duration;
-    dailySession.map((session) => {
-      if (session.duration > Max) {
-        Max = session.duration;
-      }
-    });
-
-    if (Max < 60) {
-      return Max.toString().padStart(2, "0") + "s";
-    }
-    if (Max < 3600) {
-      return (
-        Math.floor(Max / 60)
-          .toString()
-          .padStart(2, "0") +
-        "m " +
-        Math.floor(Max - Math.floor(Max / 60) * 60)
-          .toString()
-          .padStart(2, "0") +
-        "s"
-      );
-    }
-    return (
-      Math.floor(Max / 3600)
-        .toString()
-        .padStart(2, "0") +
-      "h " +
-      Math.floor((Max - Math.floor(Max / 3600) * 3600) / 60)
-        .toString()
-        .padStart(2, "0") +
-      "m"
-    );
   };
 
   return (
@@ -425,7 +406,7 @@ function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
               </div>
             ))}
           </div>
-        ) : dailySession.length > 0 ? (
+        ) : dailySession && dailySession.length > 0 ? (
           dailySession.map((session) => (
             <div className="relative">
               <div className="absolute left-14 sm:left-24 top-0 bottom-0 border-1 border-white/20 border-dashed"></div>

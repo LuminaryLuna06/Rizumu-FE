@@ -15,23 +15,22 @@ import {
 import Modal from "../Modal";
 import ResponsiveButton from "../ResponsiveButton";
 import BoxStatistic from "./components/BoxStatistic";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import EditProfileModal from "./components/EditProfileModal";
-import HeatMap, { type HeatMapData } from "./components/HeatMap";
+import HeatMap from "./components/HeatMap";
 import { useAuth } from "@rizumu/context/AuthContext";
 import { useToast } from "@rizumu/utils/toast/toast";
 import type { ModelUserProfile } from "@rizumu/models/userProfile";
-import type { ModelProgress } from "@rizumu/models/progress";
 import { months } from "../../constants/months";
-import type { ModelStat } from "@rizumu/models/stats";
 import GiftModal from "../GiftModal";
 import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
-
-interface HeatMapResponse {
-  durations: number[];
-  start_date: string;
-  end_date: string;
-}
+import {
+  useGiftById,
+  useHeatmapData,
+  useProfileById,
+  useProgressById,
+  useStats,
+} from "@rizumu/tanstack/api/hooks";
 
 interface ProfileModalProps {
   opened: boolean;
@@ -39,6 +38,35 @@ interface ProfileModalProps {
   onOpenProfile: () => void;
   userId?: string; // ID của user cần xem profile, mặc định là user hiện tại
 }
+const year = new Date().getFullYear();
+const startOfYear = new Date(year, 0, 1, 0, 0, 0, 0);
+const endOfYear = new Date(year, 11, 31, 23, 59, 59, 999);
+
+const startTime = startOfYear.toISOString();
+const endTime = endOfYear.toISOString();
+
+const formatDuration = (hours: number) => {
+  const hrs = Math.floor(hours);
+  const mins = Math.round((hours - hrs) * 60);
+  return `${hrs}h ${mins}m`;
+};
+
+const getAvatar = (userAvatar: any) => {
+  if (!userAvatar) {
+    return (
+      <div className="w-30 h-30 md:w-24 md:h-24 rounded-full bg-primary flex items-center justify-center text-4xl font-bold shadow-2xl">
+        U
+      </div>
+    );
+  }
+  return (
+    <img
+      src={userAvatar}
+      alt="Avatar"
+      className="w-30 h-30 md:w-24 md:h-24 rounded-full"
+    />
+  );
+};
 
 function ProfileModal({
   opened,
@@ -50,42 +78,14 @@ function ProfileModal({
   const { user: currentUser } = useAuth();
   const [editOpened, setEditOpened] = useState(false);
   const [sendGift, setSendGift] = useState(false);
-
-  const [heatmapData, setHeatmapData] = useState<HeatMapData>({});
-
-  const [profileUser, setProfileUser] = useState<ModelUserProfile | null>(null);
-  const [profileLoading, setProfileLoading] = useState(false);
-
   const [isFriend, setIsFriend] = useState(false);
   const [friendshipId, setFriendshipId] = useState<string | null>(null);
   const [friendshipLoading, setFriendshipLoading] = useState(false);
 
-  const [progressData, setProgressData] = useState<ModelProgress | null>(null);
-  const [progressLoading, setProgressLoading] = useState(false);
-
-  const [stats, setStats] = useState<ModelStat>();
-  const [statsLoading, setStatsLoading] = useState(false);
-
-  const [gifts, setGifts] = useState([]);
-  const [giftLoading, setGiftLoading] = useState(false);
-
   const targetUserId = userId || currentUser?._id;
   const isOwnProfile = targetUserId === currentUser?._id;
 
-  const getProfile = async (id: string) => {
-    setProfileLoading(true);
-    try {
-      const response = await axiosClient.get<{ data: ModelUserProfile }>(
-        `/auth/profile/${id}`
-      );
-      setProfileUser(response.data.data);
-    } catch (error) {
-      console.error("Error fetching profile:", error);
-      toast.error("Failed to load profile", "Error");
-    } finally {
-      setProfileLoading(false);
-    }
-  };
+  const { data, isLoading } = useProfileById(targetUserId || "");
 
   const checkFriendship = async (userId: string) => {
     try {
@@ -145,116 +145,43 @@ function ProfileModal({
     }
   };
 
-  const getAvatar = (userAvatar: any) => {
-    if (!userAvatar) {
-      return (
-        <div className="w-30 h-30 md:w-24 md:h-24 rounded-full bg-primary flex items-center justify-center text-4xl font-bold shadow-2xl">
-          U
-        </div>
-      );
-    }
-    return (
-      <img
-        src={userAvatar}
-        alt="Avatar"
-        className="w-30 h-30 md:w-24 md:h-24 rounded-full"
-      />
-    );
-  };
+  const { data: stats, isLoading: statsLoading } = useStats(opened);
+  const { data: progress, isLoading: progressLoading } = useProgressById(
+    targetUserId || "",
+    opened
+  );
+  const { data: heatmap, isLoading: heatmapLoading } = useHeatmapData(
+    startTime,
+    endTime,
+    targetUserId || "",
+    opened
+  );
+  const { data: gifts, isLoading: giftLoading } = useGiftById(
+    targetUserId || "",
+    opened
+  );
 
-  const getProgress = async (userId: string) => {
-    setProgressLoading(true);
-    try {
-      const response = await axiosClient.get<{ data: ModelProgress }>(
-        `/progress/${userId}`
-      );
-      setProgressData(response.data.data);
-    } catch (error) {
-      console.error("Error fetching progress:", error);
-      toast.error("Failed to load progress data", "Error");
-    } finally {
-      setProgressLoading(false);
-    }
-  };
+  const heatmapData = useMemo(() => {
+    if (!heatmap || !heatmap.durations) return {};
 
-  const formatDuration = (hours: number) => {
-    const hrs = Math.floor(hours);
-    const mins = Math.round((hours - hrs) * 60);
-    return `${hrs}h ${mins}m`;
-  };
+    const heatmapDataObj: { [key: string]: number } = {};
+    const startDate = new Date(startTime);
 
-  const getHeatMap = async (userId: string) => {
-    if (!userId) return;
+    heatmap.durations.forEach((duration, index) => {
+      const currentDate = new Date(startDate);
+      currentDate.setDate(startDate.getDate() + index);
 
-    try {
-      const year = new Date().getFullYear();
-      const startOfYear = new Date(year, 0, 1, 0, 0, 0, 0);
-      const endOfYear = new Date(year, 11, 31, 23, 59, 59, 999);
+      const dateKey = currentDate.toISOString().split("T")[0];
+      heatmapDataObj[dateKey] = duration;
+    });
 
-      const startTime = startOfYear.toISOString();
-      const endTime = endOfYear.toISOString();
+    return heatmapDataObj;
+  }, [heatmap, startTime]);
 
-      const response = await axiosClient.get<HeatMapResponse>(
-        `/session/heatmap?user_id=${userId}&startTime=${startTime}&endTime=${endTime}`
-      );
-
-      const heatmapDataObj: HeatMapData = {};
-      const startDate = new Date(response.data.start_date);
-
-      response.data.durations.forEach((duration, index) => {
-        const currentDate = new Date(startDate);
-        currentDate.setDate(startDate.getDate() + index);
-
-        const dateKey = currentDate.toISOString().split("T")[0];
-        heatmapDataObj[dateKey] = duration;
-      });
-
-      setHeatmapData(heatmapDataObj);
-    } catch (error) {
-      console.error("Error fetching heatmap data:", error);
-      setHeatmapData({});
-    }
-  };
-
-  const getStat = async (userId: string) => {
-    try {
-      setStatsLoading(true);
-      const response = await axiosClient.get(`/progress/stats/${userId}`);
-      const data = response.data.data;
-      setStats(data);
-    } catch {
-      console.error("Error fetching stats");
-    } finally {
-      setStatsLoading(false);
-    }
-  };
-
-  const getGift = async (userId: string) => {
-    try {
-      setGiftLoading(true);
-      const response = await axiosClient.get(`/progress/gift/${userId}`);
-      setGifts(response.data.data);
-      console.log(response.data.data);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setGiftLoading(false);
-    }
-  };
-
-  // Reset profile data khi targetUserId thay đổi
   useEffect(() => {
     if (opened && targetUserId) {
-      setProfileUser(null);
-      setHeatmapData({});
       setIsFriend(false);
       setFriendshipId(null);
-      setProgressData(null);
-      getProfile(targetUserId);
-      getHeatMap(targetUserId);
-      getProgress(targetUserId);
-      getStat(targetUserId);
-      getGift(targetUserId);
       if (!isOwnProfile) {
         checkFriendship(targetUserId);
       }
@@ -266,11 +193,7 @@ function ProfileModal({
       <Modal
         opened={opened}
         onClose={onClose}
-        title={
-          profileUser?.name
-            ? `${profileUser?.name}'s Profile`
-            : "User's Profile"
-        }
+        title={data?.name ? `${data?.name}'s Profile` : "User's Profile"}
         className="w-full max-w-[1000px] max-h-[70vh] overflow-y-auto overflow-x-hidden custom-scrollbar scrollbar-hidden"
         more={
           isOwnProfile ? (
@@ -309,13 +232,13 @@ function ProfileModal({
       >
         <div className="flex flex-col md:flex-row items-center mb-xl h-1/3">
           <div className="flex-1 flex flex-col justify-center items-center mb-md md:mb-0 gap-md">
-            {profileLoading ? (
+            {isLoading ? (
               <div className="w-30 h-30 md:w-24 md:h-24 rounded-full bg-secondary/20 animate-pulse" />
             ) : (
-              getAvatar(profileUser?.avatar)
+              getAvatar(data?.avatar)
             )}
             {/* Add Friend / Unfriend Button */}
-            {!isOwnProfile && !profileLoading && (
+            {!isOwnProfile && !isLoading && (
               <button
                 onClick={isFriend ? handleUnfriend : handleAddFriend}
                 disabled={friendshipLoading}
@@ -339,16 +262,16 @@ function ProfileModal({
           <div className="flex-5 flex-col w-full">
             <div className="flex flex-col-reverse md:flex-row items-center gap-sm w-full h-25 md:h-10 mb-xs">
               <div className="flex items-center gap-2">
-                {profileLoading ? (
+                {isLoading ? (
                   <div className="h-8 bg-secondary/20 rounded animate-pulse w-48" />
                 ) : (
                   <>
                     <h1 className="text-2xl md:text-xl font-bold">
-                      {profileUser?.name ? `${profileUser?.name}` : "User"}
+                      {data?.name ? `${data?.name}` : "User"}
                     </h1>
-                    {profileUser?.country ? (
+                    {data?.country ? (
                       <div className="flex justify-center items-center bg-secondary/10 px-2 py-1 rounded-lg w-[50px] text-xs">
-                        {profileUser?.country}
+                        {data?.country}
                       </div>
                     ) : (
                       <></>
@@ -389,16 +312,14 @@ function ProfileModal({
                 </div>
               )}
             </div>
-            {profileLoading ? (
+            {isLoading ? (
               <div className="h-4 bg-secondary/20 rounded animate-pulse w-full mb-sm" />
             ) : (
-              <p className="mb-sm">
-                {profileUser?.bio ? `${profileUser?.bio}` : ""}
-              </p>
+              <p className="mb-sm">{data?.bio ? `${data?.bio}` : ""}</p>
             )}
             <div>
               <div className="flex justify-between text-sm font-semibold mb-xs">
-                {profileLoading || statsLoading || !stats ? (
+                {isLoading || statsLoading || !stats ? (
                   <>
                     <div className="h-5 w-12 bg-secondary/20 rounded animate-pulse" />
                     <div className="h-5 w-24 bg-secondary/20 rounded animate-pulse" />
@@ -417,7 +338,7 @@ function ProfileModal({
                   className="bg-gradient-to-r from-green-400 to-emerald-500 h-1 rounded-full transition-all duration-500"
                   style={{
                     width: `${
-                      profileLoading
+                      isLoading
                         ? 0
                         : ((stats?.current_xp || 0) /
                             ((stats?.current_xp || 0) +
@@ -428,7 +349,7 @@ function ProfileModal({
                 />
               </div>
               <div className="flex justify-end text-xs mb-xs text-secondary">
-                {profileLoading || statsLoading || !stats ? (
+                {isLoading || statsLoading || !stats ? (
                   <div className="h-4 w-20 bg-secondary/20 rounded animate-pulse" />
                 ) : (
                   <p>
@@ -440,7 +361,7 @@ function ProfileModal({
             <div>
               <div className="flex items-center gap-2">
                 Your coins:{" "}
-                {profileLoading || statsLoading || !stats ? (
+                {isLoading || statsLoading || !stats ? (
                   <div className="h-5 w-10 bg-secondary/20 rounded animate-pulse" />
                 ) : (
                   <span className="font-bold">{stats.coins}</span>
@@ -459,9 +380,7 @@ function ProfileModal({
             <BoxStatistic
               className="from-orange-400 to-pink-500"
               header="Current Streak"
-              detail={
-                progressLoading ? "..." : String(progressData?.streak ?? 0)
-              }
+              detail={progressLoading ? "..." : String(progress?.streak ?? 0)}
               note="DAYS"
               icon={<IconFlame size={50} />}
             />
@@ -469,7 +388,7 @@ function ProfileModal({
               className="from-orange-400 to-pink-600"
               header="Best Streak"
               detail={
-                progressLoading ? "..." : String(progressData?.streak ?? 0)
+                progressLoading ? "..." : String(progress?.streak ?? 0)
               }
               note="DAYS"
               icon={<IconTrophy size={50} />}
@@ -480,7 +399,7 @@ function ProfileModal({
               detail={
                 progressLoading
                   ? "..."
-                  : formatDuration(progressData?.total_hours ?? 0)
+                  : formatDuration(progress?.total_hours ?? 0)
               }
               note=""
               icon={<IconClock size={50} />}
@@ -489,9 +408,7 @@ function ProfileModal({
               className="from-purple-500 to-indigo-600"
               header="Pomodoros"
               detail={
-                progressLoading
-                  ? "..."
-                  : String(progressData?.promo_complete ?? 0)
+                progressLoading ? "..." : String(progress?.promo_complete ?? 0)
               }
               note="Completed"
               icon={<IconCircleCheck size={50} />}
@@ -502,7 +419,7 @@ function ProfileModal({
               detail={
                 progressLoading
                   ? "..."
-                  : String(progressData?.week_promo_complete ?? 0)
+                  : String(progress?.week_promo_complete ?? 0)
               }
               note="POMODOROS"
               icon={<IconCalendarWeek size={50} />}
@@ -513,7 +430,7 @@ function ProfileModal({
               detail={
                 progressLoading
                   ? "..."
-                  : formatDuration(progressData?.daily_average ?? 0)
+                  : formatDuration(progress?.daily_average ?? 0)
               }
               note="LAST 30 DAYS"
               icon={<IconChartLine size={50} />}
@@ -527,7 +444,7 @@ function ProfileModal({
                 ) : (
                   <div className="flex items-center gap-xs">
                     <IconGift size={24} />
-                    <span>{progressData?.gifts_sent ?? 0}</span>
+                    <span>{progress?.gifts_sent ?? 0}</span>
                   </div>
                 )
               }
@@ -560,7 +477,7 @@ function ProfileModal({
             <h1>Gifts Received</h1>
           </div>
           <div className="flex items-center border border-white/10 rounded-md h-8 text-md p-4 bg-secondary/10">
-            <p>Total: {gifts.length}</p>
+            <p>Total: {gifts?.length}</p>
           </div>
         </div>
 
@@ -573,7 +490,7 @@ function ProfileModal({
               />
             ))}
           </div>
-        ) : gifts.length > 0 ? (
+        ) : gifts && gifts.length > 0 ? (
           <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 mb-xl px-2">
             {gifts.map((gift: any, index: number) => (
               <div
@@ -606,7 +523,7 @@ function ProfileModal({
       <EditProfileModal
         opened={editOpened}
         onClose={() => setEditOpened(false)}
-        user={profileUser as ModelUserProfile}
+        user={data as ModelUserProfile}
         onOpenProfile={() => {
           setEditOpened(false);
           onOpenProfile();
@@ -615,7 +532,7 @@ function ProfileModal({
       <GiftModal
         opened={sendGift}
         onClose={() => setSendGift(false)}
-        profile={profileUser}
+        profile={data || null}
       />
     </>
   );

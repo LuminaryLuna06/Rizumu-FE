@@ -1,4 +1,3 @@
-import { useState } from "react";
 import ResponsiveButton from "@rizumu/components/ResponsiveButton";
 import UserMenu from "@rizumu/components/UserMenu";
 import { IconChartColumn, IconClock, IconMusicCode } from "@tabler/icons-react";
@@ -8,20 +7,37 @@ import LeaderboardModal from "@rizumu/components/RankingBoard";
 import ActivitiesModal from "@rizumu/components/ActivitiesModal";
 import StreakPopover from "@rizumu/components/StreakPopover";
 import { useAuth } from "@rizumu/context/AuthContext";
+import { useState, useMemo } from "react";
+import { useHourlyData } from "@rizumu/tanstack/api/hooks";
 
-import type { ModelStreak } from "@rizumu/models/streak";
-
-function Header({
-  totalTime,
-  streaks,
-}: {
-  totalTime: number;
-  streaks?: ModelStreak;
-}) {
+function Header() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [opened, setOpened] = useState(false);
-  const [activityOpened, setActivityOpened] = useState(false);
+  const [activitiesModalOpened, setActivitiesModalOpened] = useState(false);
+
+  const { startTime, endTime } = useMemo(() => {
+    const year = new Date().getFullYear();
+    const month = new Date().getMonth();
+    const date = new Date().getDate();
+
+    return {
+      startTime: new Date(year, month, date, 0, 0, 0, 0).toISOString(),
+      endTime: new Date(year, month, date, 23, 59, 59, 999).toISOString(),
+    };
+  }, []);
+
+  const { data: hourlyDurations } = useHourlyData(
+    startTime,
+    endTime,
+    user?._id || "",
+    !!user?._id
+  );
+
+  const totalTime = useMemo(() => {
+    if (!hourlyDurations) return 0;
+    return Math.floor(hourlyDurations.reduce((sum, val) => sum + val, 0));
+  }, [hourlyDurations]);
 
   const formatTime = (minutes: number) => {
     if (minutes >= 60) {
@@ -46,11 +62,11 @@ function Header({
       </div>
       {/* Header Right */}
       <div className="header-right flex items-center justify-center gap-x-sm">
-        <StreakPopover streaks={streaks} />
+        <StreakPopover />
         <ResponsiveButton
           leftSection={<IconClock size={16} />}
           className="font-semibold md:py-sm"
-          onClick={() => setActivityOpened(!activityOpened)}
+          onClick={() => setActivitiesModalOpened(!activitiesModalOpened)}
         >
           {formatTime(totalTime)}
         </ResponsiveButton>
@@ -66,8 +82,8 @@ function Header({
       </div>
       <LeaderboardModal opened={opened} setOpened={setOpened} />
       <ActivitiesModal
-        opened={activityOpened}
-        onClose={() => setActivityOpened(false)}
+        opened={activitiesModalOpened}
+        onClose={() => setActivitiesModalOpened(false)}
       />
     </div>
   );

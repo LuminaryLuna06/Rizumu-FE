@@ -1,11 +1,9 @@
 import Modal from "../Modal";
 import { IconLibrary, IconLogin2 } from "@tabler/icons-react";
 import ResponsiveButton from "../ResponsiveButton";
-import { useEffect, useState } from "react";
-import { type ModelPublicRoom } from "@rizumu/models/publicRoom";
+import { useJoinRoom, usePublicRooms } from "@rizumu/tanstack/api/hooks";
 import { useToast } from "@rizumu/utils/toast/toast";
 import { useAuth } from "@rizumu/context/AuthContext";
-import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
 
 function FindStudyRoomModal({
   opened,
@@ -15,35 +13,23 @@ function FindStudyRoomModal({
   onClose: () => void;
 }) {
   const toast = useToast();
-  const { refreshUser } = useAuth();
-  const [rooms, setRooms] = useState<ModelPublicRoom[]>();
-  const [isLoading, setIsLoading] = useState(false);
+  const { user } = useAuth();
+  const { data: rooms, isLoading } = usePublicRooms(opened);
+  const join = useJoinRoom();
 
-  const getPublicRoom = async () => {
-    try {
-      setIsLoading(true);
-      const response = await axiosClient.get("/room/public");
-      setRooms(response.data);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsLoading(false);
-    }
-  };
   const joinRoom = async (id: string) => {
-    try {
-      await axiosClient.post(`/room/${id}/join`);
-      toast.success("Joined room!", "Success");
-      getPublicRoom();
-      refreshUser();
-    } catch (e) {
-      console.error(e);
-      toast.error("Error joining room!", "Error");
-    }
+    join.mutate(id, {
+      onSuccess: () => {
+        toast.success("Joined room successfully!", "Success");
+      },
+      onError: (error: any) => {
+        toast.error(
+          error?.response?.data?.message || "Failed to join!",
+          "Error"
+        );
+      },
+    });
   };
-  useEffect(() => {
-    if (opened === true) getPublicRoom();
-  }, [opened]);
 
   return (
     <Modal
@@ -134,15 +120,18 @@ function FindStudyRoomModal({
                   {room.host_name}
                 </div>
                 <div className="col-span-3 md:col-span-2 flex justify-end">
-                  <ResponsiveButton
-                    rightSection={<IconLogin2 size={18} />}
-                    className="font-semibold bg-secondary/10 hover:bg-secondary/20"
-                    onClick={() => {
-                      joinRoom(room.id);
-                    }}
-                  >
-                    Join
-                  </ResponsiveButton>
+                  {user?.current_room_id === room.id ? null : (
+                    <ResponsiveButton
+                      rightSection={<IconLogin2 size={18} />}
+                      className="font-semibold bg-secondary/10 hover:bg-secondary/20"
+                      onClick={() => {
+                        joinRoom(room.id);
+                      }}
+                      disabled={join.isPending}
+                    >
+                      Join
+                    </ResponsiveButton>
+                  )}
                 </div>
               </div>
             ))}

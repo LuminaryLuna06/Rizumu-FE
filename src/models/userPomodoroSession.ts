@@ -1,7 +1,7 @@
 export type ModelUserPomodoroSession = {
   id: string;
   user_id: string;
-  room_id: string;
+  // room_id: string;
   tag_id: string;
   completed: boolean;
   invalid: boolean;
