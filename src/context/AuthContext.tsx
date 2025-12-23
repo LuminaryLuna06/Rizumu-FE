@@ -35,22 +35,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { data: user, isLoading } = useQuery<ModelUserProfile>({
     queryKey: queryKeys.auth.me(),
     queryFn: async () => {
-      const token = getAccessToken();
-      if (!token) return null;
-
-      try {
-        const response = await axiosClient.get("/auth/profile");
-        return response.data.data;
-      } catch (error) {
-        console.error("Failed to fetch user profile:", error);
-        return null;
-      }
+      const response = await axiosClient.get("/auth/profile");
+      return response.data.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: false,
   });
 
-  // Login mutation
   const loginMutation = useMutation({
     mutationFn: async ({
       username,
@@ -69,14 +60,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const { access_token, data: userData } = data;
       updateAccessToken(access_token);
 
-      // Update cache with user data
       queryClient.setQueryData(queryKeys.auth.me(), userData);
-
       closeAuthModal();
     },
   });
 
-  // Register mutation
   const registerMutation = useMutation({
     mutationFn: async ({
       username,
@@ -95,9 +83,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const { access_token, data: userData } = data;
       updateAccessToken(access_token);
 
-      // Update cache with user data
       queryClient.setQueryData(queryKeys.auth.me(), userData);
-
       closeAuthModal();
     },
   });
@@ -109,20 +95,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     },
     onSuccess: () => {
       clearAuthTokens();
-
-      // Clear all cached data
       queryClient.clear();
     },
     onError: (error) => {
       console.error("Logout API error:", error);
-
-      // Even if API fails, clear local data
       clearAuthTokens();
       queryClient.clear();
     },
   });
 
-  // Wrapper functions to maintain the same interface
   const login = async (username: string, password: string) => {
     await loginMutation.mutateAsync({ username, password });
   };
