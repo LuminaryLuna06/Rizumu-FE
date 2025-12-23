@@ -6,7 +6,7 @@ import { useServerKeepAlive } from "./hooks/useServerKeepAlive";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./tanstack/api/config/queryClient";
-import { Analytics } from "@vercel/analytics/next";
+import { Analytics } from "@vercel/analytics/react";
 
 function App() {
   useServerKeepAlive(true, 14);
