@@ -1,39 +1,21 @@
 import ResponsiveButton from "@rizumu/components/ResponsiveButton";
 import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
+import axios from "axios";
 import React from "react";
 
 function testTranh2() {
   const refreshAccessToken = async (): Promise<string> => {
-    const refreshToken = localStorage.getItem("refresh_token");
-
-    if (!refreshToken) {
-      throw new Error("No refresh token available");
-    }
-
     try {
-      const response = await axiosClient.post(
+      const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/auth/refresh`,
-        { refresh_token: refreshToken },
+        {},
         {
-          headers: {
-            "Content-Type": "application/json",
-          },
+          withCredentials: true,
         }
       );
-      const { access_token } = response.data;
 
-      if (!access_token) {
-        throw new Error("No access token in response");
-      }
-
-      localStorage.setItem("access_token", access_token);
-      return access_token;
+      return "wtf";
     } catch (error) {
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("refresh_token");
-
-      window.dispatchEvent(new CustomEvent("open-auth-modal"));
-
       throw error;
     }
   };
