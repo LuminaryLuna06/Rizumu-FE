@@ -16,7 +16,7 @@ const axiosClient: AxiosInstance = axios.create({
     "Content-Type": "application/json",
   },
   timeout: 25000,
-  withCredentials: true,
+  // withCredentials: true,
 });
 
 let isRefreshing = false;
@@ -71,6 +71,7 @@ axiosClient.interceptors.request.use(
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    config.withCredentials = true;
 
     return config;
   },

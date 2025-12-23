@@ -18,8 +18,8 @@ export const getAccessToken = (): string | undefined => {
 export const updateAccessToken = (accessToken: string): void => {
   const options: CookieOptions = {
     expires: 15 / (24 * 60), // 15 minutes
-    secure: true, // Bắt buộc HTTPS để sử dụng sameSite: "none"
-    sameSite: "none", // Cho phép gửi cookie cross-origin
+    secure: true,
+    sameSite: "none",
     path: "/",
   };
 
@@ -29,8 +29,4 @@ export const updateAccessToken = (accessToken: string): void => {
 export const clearAuthTokens = (): void => {
   Cookies.remove(ACCESS_TOKEN_KEY, { path: "/" });
   Cookies.remove(REFRESH_TOKEN_KEY, { path: "/" });
-};
-
-export const isAuthenticated = (): boolean => {
-  return !!getAccessToken();
 };
