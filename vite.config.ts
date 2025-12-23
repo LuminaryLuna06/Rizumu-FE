@@ -13,9 +13,13 @@ export default defineConfig({
     },
   },
   server: {
-    https: {
-      key: fs.readFileSync("./localhost-key.pem"),
-      cert: fs.readFileSync("./localhost.pem"),
-    },
+    https:
+      process.env.NODE_ENV !== "production" &&
+      fs.existsSync("./localhost-key.pem")
+        ? {
+            key: fs.readFileSync("./localhost-key.pem"),
+            cert: fs.readFileSync("./localhost.pem"),
+          }
+        : undefined,
   },
 });
