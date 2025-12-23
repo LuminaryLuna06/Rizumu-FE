@@ -11,9 +11,10 @@ import { useFriendRequests } from "@rizumu/tanstack/api/hooks";
 
 interface FooterProps {
   onBackgroundChange: (bg: { name: string; type: string }) => void;
+  focusMode: boolean;
 }
 
-function Footer({ onBackgroundChange }: FooterProps) {
+function Footer({ onBackgroundChange, focusMode }: FooterProps) {
   const { user } = useAuth();
   const [friendOpened, setFriendOpened] = useState(false);
   const [backgroundModalOpened, setBackgroundModalOpened] = useState(false);

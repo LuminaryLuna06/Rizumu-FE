@@ -15,6 +15,7 @@ function PomodoroPage() {
   const toast = useToast();
   const { user, refreshUser } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [isFocusMode, setIsFocusMode] = useState<boolean>(false);
   const [background, setBackground] = useState({
     name: "/image/aurora-2k.webp",
     type: "static",
@@ -28,6 +29,8 @@ function PomodoroPage() {
   const [isLoadingRoom, setIsLoadingRoom] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
   const [hasCheckedQuery, setHasCheckedQuery] = useState(false);
+  const [sharedUserId, setSharedUserId] = useState<string | null>();
+  const [profileModalOpened, setProfileModalOpened] = useState(false);
 
   useEffect(() => {
     const img = new Image();
@@ -202,13 +205,19 @@ function PomodoroPage() {
         )}
 
         {/* Header */}
-        <Header 
-          focusMode={isFocusMode}
-          />
+        <Header focusMode={isFocusMode} />
         {/* Main Content */}
-        <Timer bgType={background.type} bgName={background.name} focusMode={isFocusMode} setFocusMode={() => setIsFocusMode((prev) => !prev)} />
+        <Timer
+          bgType={background.type}
+          bgName={background.name}
+          focusMode={isFocusMode}
+          setFocusMode={() => setIsFocusMode((prev) => !prev)}
+        />
         {/* Footer */}
-        <Footer onBackgroundChange={handleBackgroundChange} focusMode={isFocusMode}/>
+        <Footer
+          onBackgroundChange={handleBackgroundChange}
+          focusMode={isFocusMode}
+        />
       </div>
 
       {/* Join Room Modal */}
