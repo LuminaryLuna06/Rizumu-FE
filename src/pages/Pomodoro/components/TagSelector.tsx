@@ -1,5 +1,3 @@
-import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
-import { useAuth } from "@rizumu/context/AuthContext";
 import ResponsiveButton from "@rizumu/components/ResponsiveButton";
 import TextInput from "@rizumu/components/TextInput";
 import { TAG_COLORS } from "@rizumu/constants/tagColors";
@@ -16,9 +14,11 @@ import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import {
   useCreateTag,
+  useDeleteTag,
   useTags,
   useUpdateTag,
 } from "@rizumu/tanstack/api/hooks/useTag";
+import { useToast } from "@rizumu/utils/toast/toast";
 
 interface TagSelectorProps {
   selectedTag: ModelTag | null;
@@ -26,6 +26,7 @@ interface TagSelectorProps {
 }
 
 function TagSelector({ selectedTag, onTagSelect }: TagSelectorProps) {
+  const toast = useToast();
   const [showDropdown, setShowDropdown] = useState(false);
   const [showCreateTag, setShowCreateTag] = useState(false);
   const [newTagName, setNewTagName] = useState("");
@@ -37,21 +38,21 @@ function TagSelector({ selectedTag, onTagSelect }: TagSelectorProps) {
     left: 0,
     width: 0,
   });
-  const [hasFetched, setHasFetched] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  const { data: tags, isLoading: tagsLoading } = useTags();
+  const { data: tags } = useTags();
   const update = useUpdateTag();
+  const deleteTag = useDeleteTag();
   const create = useCreateTag();
 
   useEffect(() => {
-    if (hasFetched && selectedTag) {
+    if (tags && selectedTag) {
       const exists = tags && tags.some((t) => t._id === selectedTag._id);
       if (!exists) {
         onTagSelect(null);
       }
     }
-  }, [hasFetched, tags, selectedTag, onTagSelect]);
+  }, [tags, selectedTag, onTagSelect]);
 
   useEffect(() => {
     if (showDropdown && buttonRef.current) {
@@ -88,26 +89,38 @@ function TagSelector({ selectedTag, onTagSelect }: TagSelectorProps) {
     setTagLoading(true);
     try {
       if (editingTag) {
-        await axiosClient.put(`/tags/${editingTag._id}`, {
-          name: newTagName.trim(),
-          color: newTagColor,
-        });
-      } else {
-        await axiosClient.post("/tags", {
-          name: newTagName.trim(),
-          color: newTagColor,
-        });
-        create.mutate({name});
-      }
-
-      if (editingTag) {
-        setTags((prev) => {
-          const updated = prev.find((t) => t._id === editingTag._id);
-          if (updated && selectedTag?._id === editingTag._id) {
-            onTagSelect(updated);
+        update.mutate(
+          {
+            tagId: editingTag._id,
+            data: { name: newTagName.trim(), color: newTagColor },
+          },
+          {
+            onSuccess: () => {
+              toast.success("Update tag successfully!", "Success");
+            },
+            onError: (error: any) => {
+              toast.error(
+                error?.response?.data?.message || "Failed to update tag",
+                "Error"
+              );
+            },
           }
-          return prev;
-        });
+        );
+      } else {
+        create.mutate(
+          { name: newTagName.trim(), color: newTagColor },
+          {
+            onSuccess: () => {
+              toast.success("Create tag successfully!", "Success");
+            },
+            onError: (error: any) => {
+              toast.error(
+                error?.response?.data?.message || "Failed to create tag",
+                "Error"
+              );
+            },
+          }
+        );
       }
 
       setNewTagName("");
@@ -129,17 +142,23 @@ function TagSelector({ selectedTag, onTagSelect }: TagSelectorProps) {
     setShowCreateTag(true);
   };
 
-  const handleDeleteTag = async (e: React.MouseEvent, tagId: string) => {
+  const handleDeleteTag = (e: React.MouseEvent, tagId: string) => {
     e.stopPropagation();
 
-    try {
-      await axiosClient.delete(`/tags/${tagId}`);
-      if (selectedTag?._id === tagId) {
-        onTagSelect(null);
-      }
-    } catch (error) {
-      console.error("Error deleting tag:", error);
-    }
+    deleteTag.mutate(tagId, {
+      onSuccess: () => {
+        toast.success("Delete tag successfully!", "Success");
+        if (selectedTag?._id === tagId) {
+          onTagSelect(null);
+        }
+      },
+      onError: (error: any) => {
+        toast.error(
+          error?.response?.data?.message || "Failed to delete tag",
+          "Error"
+        );
+      },
+    });
   };
 
   const handleCancelCreateTag = () => {

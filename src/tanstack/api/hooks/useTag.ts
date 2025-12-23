@@ -50,10 +50,7 @@ export const useUpdateTag = () => {
       tagId: string;
       data: Partial<ModelTag>;
     }) => {
-      const response = await axiosClient.patch(
-        TAG_ENDPOINTS.UPDATE(tagId),
-        data
-      );
+      const response = await axiosClient.put(TAG_ENDPOINTS.UPDATE(tagId), data);
       return response.data;
     },
     onSuccess: () => {

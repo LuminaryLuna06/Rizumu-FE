@@ -145,6 +145,24 @@ function ProfileModal({
     }
   };
 
+  const handleShareProfile = () => {
+    if (!targetUserId) {
+      toast.error("User ID not found", "Error");
+      return;
+    }
+
+    try {
+      const currentUrl = window.location.origin + window.location.pathname;
+      const shareUrl = `${currentUrl}?uid=${targetUserId}`;
+
+      navigator.clipboard.writeText(shareUrl);
+      toast.success("Profile link copied to clipboard!", "Success");
+    } catch (error) {
+      console.error("Error copying link:", error);
+      toast.error("Failed to copy link", "Error");
+    }
+  };
+
   const { data: stats, isLoading: statsLoading } = useStats(opened);
   const { data: progress, isLoading: progressLoading } = useProgressById(
     targetUserId || "",

@@ -24,6 +24,7 @@ import BoxAnalytics from "./components/BoxAnalytics";
 import BoxReview from "./components/BoxReview";
 import { months, hourNames } from "./data/month";
 import { useHourlyData, useDailyData } from "@rizumu/tanstack/api/hooks";
+import { useTags } from "@rizumu/tanstack/api/hooks/useTag";
 
 interface ActivitiesModalProps {
   opened: boolean;
@@ -35,7 +36,7 @@ function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
     "Analytics"
   );
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [tags, setTags] = useState([]);
+  const { data: tags } = useTags();
 
   const { startTime, endTime } = useMemo(() => {
     const year = selectedDate.getFullYear();
@@ -411,7 +412,7 @@ function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
           dailySession.map((session) => (
             <div className="relative">
               <div className="absolute left-14 sm:left-24 top-0 bottom-0 border-1 border-white/20 border-dashed"></div>
-              <BoxReview data={session} tags={tags} />
+              <BoxReview data={session} tags={tags || []} />
             </div>
           ))
         ) : (

@@ -8,6 +8,7 @@ type ModalProps = {
   children?: React.ReactNode;
   className?: string;
   more?: React.ReactNode;
+  closeOnClickOutside?: boolean;
 };
 
 const Modal: React.FC<ModalProps> = ({
@@ -17,12 +18,13 @@ const Modal: React.FC<ModalProps> = ({
   children,
   className,
   more,
+  closeOnClickOutside = true,
 }) => {
   if (!opened) return null;
   return (
     <div
       className="fixed inset-0 flex items-center justify-center bg-transparent z-modal w-full transition-all duration-base backdrop-blur-xs"
-      onClick={onClose}
+      onClick={closeOnClickOutside ? onClose : undefined}
     >
       <div
         className={`${(

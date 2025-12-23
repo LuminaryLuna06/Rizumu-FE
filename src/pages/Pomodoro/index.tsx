@@ -7,13 +7,18 @@ import { useSearchParams } from "react-router-dom";
 import Modal from "@rizumu/components/Modal";
 import ResponsiveButton from "@rizumu/components/ResponsiveButton";
 import { useToast } from "@rizumu/utils/toast/toast";
-import type { ModelRoom } from "@rizumu/models/room";
-import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
+
 import ProfileModal from "@rizumu/components/ProfileModal";
+import {
+  useJoinRoom,
+  useProfileById,
+  useRoomBySlug,
+  useRoomById,
+} from "@rizumu/tanstack/api/hooks";
 
 function PomodoroPage() {
   const toast = useToast();
-  const { user, refreshUser } = useAuth();
+  const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [isFocusMode, setIsFocusMode] = useState<boolean>(false);
   const [background, setBackground] = useState({
@@ -25,12 +30,17 @@ function PomodoroPage() {
   const previousBackgroundName = useRef<string>("");
 
   const [joinRoomModalOpened, setJoinRoomModalOpened] = useState(false);
-  const [roomToJoin, setRoomToJoin] = useState<ModelRoom | null>(null);
-  const [isLoadingRoom, setIsLoadingRoom] = useState(false);
-  const [isJoining, setIsJoining] = useState(false);
   const [hasCheckedQuery, setHasCheckedQuery] = useState(false);
   const [sharedUserId, setSharedUserId] = useState<string | null>();
   const [profileModalOpened, setProfileModalOpened] = useState(false);
+  const roomSlug = searchParams.get("rid");
+  const userId = searchParams.get("uid");
+  const join = useJoinRoom();
+  const { data: room, isLoading } = useRoomBySlug(roomSlug || "", !!roomSlug);
+  const { data: currentRoom } = useRoomById(
+    user?.current_room_id || "",
+    !!user?.current_room_id
+  );
 
   useEffect(() => {
     const img = new Image();
@@ -75,66 +85,50 @@ function PomodoroPage() {
     }
   }, [background]);
 
-  const handleCheckRoomInvite = async (slug: string) => {
-    try {
-      setIsLoadingRoom(true);
-      const response = await axiosClient.get(`/room/slug/${slug}`);
-      const room = response.data as ModelRoom;
-
-      if (user?.current_room_id === room._id) {
+  const handleJoinRoom = () => {
+    if (!room) return;
+    join.mutate(room._id, {
+      onSuccess: () => {
+        toast.success("Joined room successfully!", "Success");
+        setJoinRoomModalOpened(false);
         setSearchParams({});
-        return;
-      }
-
-      setRoomToJoin(room);
-      setJoinRoomModalOpened(true);
-    } catch (error: any) {
-      console.error("Error fetching room:", error);
-      toast.error(error?.response?.data?.message || "Room not found", "Error");
-      setSearchParams({});
-    } finally {
-      setIsLoadingRoom(false);
-    }
-  };
-
-  const handleJoinRoom = async () => {
-    if (!roomToJoin) return;
-
-    try {
-      setIsJoining(true);
-      await axiosClient.post(`/room/${roomToJoin._id}/join`);
-      toast.success("Joined room successfully!", "Success");
-      await refreshUser();
-      setJoinRoomModalOpened(false);
-      setRoomToJoin(null);
-      setSearchParams({});
-    } catch (error: any) {
-      console.error("Error joining room:", error);
-      toast.error(
-        error?.response?.data?.message || "Failed to join room",
-        "Error"
-      );
-    } finally {
-      setIsJoining(false);
-    }
+      },
+      onError: (error: any) => {
+        toast.error(
+          error?.response?.data?.message || "Failed to join!",
+          "Error"
+        );
+      },
+    });
   };
 
   const handleDeclineJoin = () => {
     setJoinRoomModalOpened(false);
-    setRoomToJoin(null);
     setSearchParams({});
   };
 
   // Check for rid query parameter when page loads
   useEffect(() => {
-    const roomSlug = searchParams.get("rid");
-    const userId = searchParams.get("uid");
-
     if (roomSlug && user && !hasCheckedQuery) {
       setHasCheckedQuery(true);
-      handleCheckRoomInvite(roomSlug);
+      if (room && user.current_room_id !== room._id) {
+        setJoinRoomModalOpened(true);
+      } else if (room && user.current_room_id === room._id) {
+        setSearchParams({});
+      }
     }
+  }, [roomSlug, user, hasCheckedQuery, room]);
 
+  // Handle room fetch error
+  useEffect(() => {
+    if (roomSlug && !isLoading && !room) {
+      toast.error("Room not found", "Error");
+      setSearchParams({});
+    }
+  }, [roomSlug, isLoading, room]);
+
+  // Check for uid query parameter when page loads
+  useEffect(() => {
     if (userId) {
       setSharedUserId(userId);
       setProfileModalOpened(true);
@@ -144,28 +138,25 @@ function PomodoroPage() {
         return prev;
       });
     }
-  }, [searchParams, user, hasCheckedQuery]);
+  }, [userId]);
 
+  // Update background when user joins a room
   useEffect(() => {
-    if (user) {
-      if (user.current_room_id) {
-        axiosClient
-          .get(`/room/id/${user.current_room_id}`)
-          .then((res) => {
-            if (res.data?.background.name !== "default_bg") {
-              setBackground(res.data.background);
-            }
-          })
-          .catch((err) => console.log(err));
-      }
-    } else {
+    if (
+      currentRoom?.background?.name &&
+      currentRoom.background.name !== "default_bg"
+    ) {
+      setBackground({
+        name: currentRoom.background.name,
+        type: currentRoom.background.type,
+      });
+    } else if (!user) {
       setBackground({
         name: "/image/aurora-2k.webp",
         type: "static",
       });
     }
-  }, [user?.current_room_id, user]);
-
+  }, [currentRoom, user]);
   const handleBackgroundChange = (bg: { name: string; type: string }) => {
     setBackground(bg);
   };
@@ -225,32 +216,33 @@ function PomodoroPage() {
         opened={joinRoomModalOpened}
         onClose={handleDeclineJoin}
         title="Join a room"
+        closeOnClickOutside={false}
       >
         <div className="space-y-md">
-          {isLoadingRoom ? (
+          {isLoading ? (
             <div className="text-center py-lg">
               <p className="text-secondary/60">Loading room information...</p>
             </div>
-          ) : roomToJoin ? (
+          ) : room ? (
             <div className="flex flex-col justify-center items-center">
               <p className="mb-md">You've been invited to join</p>
               <p className="text-3xl text-text-active font-bold mb-xl">
-                {roomToJoin.name}
+                {room.name}
               </p>
               <div className="flex justify-center gap-x-sm pt-md">
                 <ResponsiveButton
                   onClick={handleDeclineJoin}
                   className="flex justify-center hover:bg-black/90 border w-[200px]"
-                  disabled={isJoining}
+                  disabled={join.isPending}
                 >
                   Decline
                 </ResponsiveButton>
                 <ResponsiveButton
                   onClick={handleJoinRoom}
-                  disabled={isJoining}
+                  disabled={join.isPending}
                   className="flex justify-center bg-white hover:bg-white/90 !text-primary border w-[200px]"
                 >
-                  {isJoining ? "Joining..." : "Accept"}
+                  {join.isPending ? "Joining..." : "Accept"}
                 </ResponsiveButton>
               </div>
             </div>
