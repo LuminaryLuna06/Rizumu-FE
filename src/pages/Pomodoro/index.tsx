@@ -10,6 +10,7 @@ import { useToast } from "@rizumu/utils/toast/toast";
 import type { ModelRoom } from "@rizumu/models/room";
 import type { ModelStreak } from "@rizumu/models/streak";
 import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
+import ProfileModal from "@rizumu/components/ProfileModal";
 
 function PomodoroPage() {
   const { user, refreshUser } = useAuth();
@@ -31,6 +32,9 @@ function PomodoroPage() {
   const [isLoadingRoom, setIsLoadingRoom] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
   const [hasCheckedQuery, setHasCheckedQuery] = useState(false);
+
+  const [sharedUserId, setSharedUserId] = useState<string | null>(null);
+  const [profileModalOpened, setProfileModalOpened] = useState(false);
 
   const [numberRequest, setNumberRequest] = useState(0);
   const [streaks, setStreaks] = useState<ModelStreak>();
@@ -200,11 +204,22 @@ function PomodoroPage() {
   // Check for rid query parameter when page loads
   useEffect(() => {
     const roomSlug = searchParams.get("rid");
+    const userId = searchParams.get("uid");
+
     if (roomSlug && user && !hasCheckedQuery) {
       setHasCheckedQuery(true);
       handleCheckRoomInvite(roomSlug);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    if (userId) {
+      setSharedUserId(userId);
+      setProfileModalOpened(true);
+
+      setSearchParams((prev) => {
+        prev.delete("uid");
+        return prev;
+      });
+    }
   }, [searchParams, user, hasCheckedQuery]);
 
   useEffect(() => {
@@ -324,6 +339,16 @@ function PomodoroPage() {
           ) : null}
         </div>
       </Modal>
+
+      <ProfileModal
+        opened={profileModalOpened}
+        onClose={() => {
+          setProfileModalOpened(false);
+          setSharedUserId(null);
+        }}
+        onOpenProfile={() => {}}
+        userId={sharedUserId || undefined}
+      />
     </>
   );
 }

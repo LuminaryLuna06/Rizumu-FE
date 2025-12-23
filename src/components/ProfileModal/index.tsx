@@ -145,6 +145,16 @@ function ProfileModal({
     }
   };
 
+  const handleShareProfile = async () => {
+    try {
+      const link = `${window.location.origin}/pomodoro?uid=${currentUser?._id}`;
+      await navigator.clipboard.writeText(link);
+      toast.success("Profile link copied to clipboard");
+    } catch (error) {
+      toast.error("Failed to copy link", "Error");
+    }
+  };
+
   const getAvatar = (userAvatar: any) => {
     if (!userAvatar) {
       return (
@@ -288,6 +298,7 @@ function ProfileModal({
               <ResponsiveButton
                 className="!bg-emerald-500 hover:bg-emarald-600 h-11 md:h-5 gap-x-xs text-sm"
                 leftSection={<IconShare2 size={16} />}
+                onClick={() => handleShareProfile()}
               >
                 Copy link
               </ResponsiveButton>
@@ -371,6 +382,7 @@ function ProfileModal({
                   <ResponsiveButton
                     className="!bg-emerald-500 hover:bg-emarald-600 h-11 md:h-8 lg:h-5 gap-x-xs text-sm min-w-[100px]"
                     leftSection={<IconShare2 size={16} />}
+                    onClick={() => handleShareProfile()}
                   >
                     Copy link
                   </ResponsiveButton>
