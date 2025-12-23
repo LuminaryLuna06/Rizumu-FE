@@ -299,12 +299,6 @@ const LeaderboardModal = ({
                       {/* Cột 1 */}
                       <td className="py-4 text-center align-middle">
                         <div className="flex items-center justify-center">
-                          {index < 3 && (
-                            <IconTrendingUp
-                              size={14}
-                              className="text-green-500"
-                            />
-                          )}
                           <span className="font-bold text-lg text-white">
                             {index + 1}
                           </span>

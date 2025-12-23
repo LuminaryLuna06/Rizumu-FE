@@ -9,7 +9,15 @@ import ActivitiesModal from "@rizumu/components/ActivitiesModal";
 import StreakPopover from "@rizumu/components/StreakPopover";
 import { useAuth } from "@rizumu/context/AuthContext";
 
-function Header({ totalTime }: { totalTime: number }) {
+import type { ModelStreak } from "@rizumu/models/streak";
+
+function Header({
+  totalTime,
+  streaks,
+}: {
+  totalTime: number;
+  streaks?: ModelStreak;
+}) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [opened, setOpened] = useState(false);
@@ -38,7 +46,7 @@ function Header({ totalTime }: { totalTime: number }) {
       </div>
       {/* Header Right */}
       <div className="header-right flex items-center justify-center gap-x-sm">
-        <StreakPopover />
+        <StreakPopover streaks={streaks} />
         <ResponsiveButton
           leftSection={<IconClock size={16} />}
           className="font-semibold md:py-sm"

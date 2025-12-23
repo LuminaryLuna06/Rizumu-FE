@@ -1,13 +1,21 @@
-import { IconFlame, IconTrophy, IconTrophyFilled } from "@tabler/icons-react";
-import React, { useEffect, useState } from "react";
+import { IconFlame, IconTrophyFilled } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
 import Popover from "../Popover";
 import ResponsiveButton from "../ResponsiveButton";
 import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
 import type { ModelStreak } from "@rizumu/models/streak";
+import { useAuth } from "@rizumu/context/AuthContext";
 
-function StreakPopover() {
+function StreakPopover({ streaks: propStreaks }: { streaks?: ModelStreak }) {
+  const { user } = useAuth();
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-  const [streaks, setStreaks] = useState<ModelStreak>();
+  const [streaks, setStreaks] = useState<ModelStreak | undefined>(propStreaks);
+
+  useEffect(() => {
+    if (propStreaks) {
+      setStreaks(propStreaks);
+    }
+  }, [propStreaks]);
   const getStreak = async () => {
     try {
       const response = await axiosClient.get("/progress");
@@ -17,8 +25,12 @@ function StreakPopover() {
     }
   };
   useEffect(() => {
-    getStreak();
-  }, []);
+    if (user) {
+      getStreak();
+    } else {
+      setStreaks(undefined);
+    }
+  }, [user]);
   return (
     <>
       <Popover

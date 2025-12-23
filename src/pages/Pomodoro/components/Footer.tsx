@@ -8,9 +8,15 @@ import BackgroundModal from "@rizumu/components/BackgroundModal";
 
 interface FooterProps {
   onBackgroundChange: (bg: { name: string; type: string }) => void;
+  numberRequest: number;
+  onRefreshRequests?: () => void;
 }
 
-function Footer({ onBackgroundChange }: FooterProps) {
+function Footer({
+  onBackgroundChange,
+  numberRequest,
+  onRefreshRequests,
+}: FooterProps) {
   const [friendOpened, setFriendOpened] = useState(false);
   const [backgroundModalOpened, setBackgroundModalOpened] = useState(false);
   return (
@@ -29,13 +35,25 @@ function Footer({ onBackgroundChange }: FooterProps) {
       {/* Footer Right */}
       <div className="flex gap-x-lg justify-center">
         <ResponsiveButton onClick={() => setFriendOpened(true)}>
-          <IconUsers size={20} />
+          <div className="grid grid-cols-1 grid-rows-1">
+            <div className="col-start-1 row-start-1">
+              <IconUsers size={20} />
+            </div>
+            {numberRequest > 0 && (
+              <div className="col-start-1 row-start-1 self-start justify-self-end -mt-2.5 -mr-2.5">
+                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm">
+                  {numberRequest > 9 ? "9+" : numberRequest}
+                </span>
+              </div>
+            )}
+          </div>
         </ResponsiveButton>
         <ChatPopover />
       </div>
       <ManageFriendModal
         opened={friendOpened}
         onClose={() => setFriendOpened(false)}
+        onRefreshRequests={onRefreshRequests}
       />
       <BackgroundModal
         opened={backgroundModalOpened}
