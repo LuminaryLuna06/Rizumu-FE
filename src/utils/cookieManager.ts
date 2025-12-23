@@ -15,9 +15,6 @@ import Cookies from "js-cookie";
 const ACCESS_TOKEN_KEY = "access_token";
 const REFRESH_TOKEN_KEY = "refreshToken";
 
-// Cookie configuration
-const isDevelopment = import.meta.env.DEV;
-
 interface CookieOptions {
   expires?: number; // days
   secure?: boolean;
@@ -36,15 +33,15 @@ export const setAuthTokens = (
 ): void => {
   const accessTokenOptions: CookieOptions = {
     expires: 15 / (24 * 60), // 15 minutes
-    secure: !isDevelopment, // Chỉ HTTPS trong production
-    sameSite: "strict",
+    secure: true, // Bắt buộc HTTPS để sử dụng sameSite: "none"
+    sameSite: "none", // Cho phép gửi cookie cross-origin
     path: "/",
   };
 
   const refreshTokenOptions: CookieOptions = {
     expires: 7, // 7 days
-    secure: !isDevelopment, // Chỉ HTTPS trong production
-    sameSite: "strict",
+    secure: true, // Bắt buộc HTTPS để sử dụng sameSite: "none"
+    sameSite: "none", // Cho phép gửi cookie cross-origin
     path: "/",
   };
 
@@ -75,8 +72,8 @@ export const getRefreshToken = (): string | undefined => {
 export const updateAccessToken = (accessToken: string): void => {
   const options: CookieOptions = {
     expires: 15 / (24 * 60), // 15 minutes
-    secure: !isDevelopment,
-    sameSite: "strict",
+    secure: true, // Bắt buộc HTTPS để sử dụng sameSite: "none"
+    sameSite: "none", // Cho phép gửi cookie cross-origin
     path: "/",
   };
 
