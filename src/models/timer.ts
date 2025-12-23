@@ -7,4 +7,5 @@ export type ModelTimer = {
   timer_type: string; //"focus" | "stopwatch"
   user_id: string | undefined;
   tag_id: string;
+  notes?: string;
 };

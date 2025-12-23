@@ -57,10 +57,18 @@ const formatTime = (seconds: number) => {
 interface TimerProps {
   bgType: string;
   bgName: string;
+  focusMode: boolean;
   onSessionComplete?: () => void;
+  setFocusMode?: () => void;
 }
 
-function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
+function Timer({
+  bgType,
+  bgName,
+  focusMode,
+  onSessionComplete,
+  setFocusMode,
+}: TimerProps) {
   const { user } = useAuth();
   const toast = useToast();
 
@@ -282,7 +290,7 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
       if (!dataRef.current.started_at) {
         dataRef.current.started_at = new Date().toISOString();
         dataRef.current.user_id = user?._id;
-        dataRef.current.tag_id = selectedTag?._id || "";
+        dataRef.current.tag_id = selectedTag?._id || " ";
         console.log("Started: ", dataRef.current);
         if (dataRef.current.session_type === "pomodoro") {
           console.log("Started Pomodoro: ", dataRef.current);
@@ -449,7 +457,6 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
             completed: true,
             duration: dataRef.current.duration,
             ended_at: dataRef.current.ended_at,
-            // tag_id: dataRef.current.tag_id,
           });
           if (onSessionComplete) onSessionComplete();
         };
@@ -620,6 +627,7 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
         setRunning((prev) => !prev);
         initAudio();
         playClickSound();
+        setFocusMode?.();
       };
       const toggleMouseEnterListener = () => {
         toggleBtn!.style.transform = "scale(1.05)";
@@ -778,9 +786,22 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
         // Show full timer when PiP is not active
         <>
           {/* Tag Selection */}
-          <TagSelector selectedTag={selectedTag} onTagSelect={setSelectedTag} />
+          <div
+            className={`transition-all duration-500 ${
+              focusMode ? "opacity-0 pointer-events-none" : "opacity-100"
+            }`}
+          >
+            <TagSelector
+              selectedTag={selectedTag}
+              onTagSelect={setSelectedTag}
+            />
+          </div>
 
-          <div className="flex gap-x-xl items-center mt-10">
+          <div
+            className={`flex gap-x-xl items-center mt-10 transition-all duration-500 ${
+              focusMode ? "opacity-0 pointer-events-none" : "opacity-100"
+            }`}
+          >
             <button
               onClick={() => handleModeChange("pomodoro")}
               className={`rounded-full bg-secondary transition-all duration-slow ${
@@ -842,7 +863,11 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
           </button>
 
           <div className="grid grid-cols-3 items-center w-full max-w-[35rem] gap-x-4">
-            <div className="flex justify-end">
+            <div
+              className={`flex justify-end transition-all duration-500 ${
+                focusMode ? "opacity-0 pointer-events-none" : "opacity-100"
+              }`}
+            >
               <div
                 className="rounded-full hover:scale-110 transition-all cursor-pointer"
                 onClick={() => setOpenedPreset(true)}
@@ -860,6 +885,7 @@ function Timer({ bgType, bgName, onSessionComplete }: TimerProps) {
                   setRunning(!running);
                   initAudio();
                   playClickSound();
+                  setFocusMode?.();
                 }}
                 className="px-lg py-lg w-[140px] md:w-[200px] my-lg text-primary rounded-full bg-secondary text-lg font-bold hover:bg-secondary-hover cursor-pointer transition-all duration-300 hover:scale-[1.02]"
                 style={{

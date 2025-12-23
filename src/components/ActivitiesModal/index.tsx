@@ -35,6 +35,7 @@ function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
     "Analytics"
   );
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [tags, setTags] = useState([]);
 
   const { startTime, endTime } = useMemo(() => {
     const year = selectedDate.getFullYear();
@@ -410,7 +411,7 @@ function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
           dailySession.map((session) => (
             <div className="relative">
               <div className="absolute left-14 sm:left-24 top-0 bottom-0 border-1 border-white/20 border-dashed"></div>
-              <BoxReview data={session} />
+              <BoxReview data={session} tags={tags} />
             </div>
           ))
         ) : (

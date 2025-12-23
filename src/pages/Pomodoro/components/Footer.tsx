@@ -28,7 +28,12 @@ function Footer({ onBackgroundChange }: FooterProps) {
       {/* Footer Left */}
       <div className="flex gap-x-lg">
         <IframePopover />
-        <ResponsiveButton onClick={() => setBackgroundModalOpened(true)}>
+        <ResponsiveButton
+          onClick={() => setBackgroundModalOpened(true)}
+          className={`transition-all duration-500 ${
+            focusMode ? "opacity-0 pointer-events-none" : "opacity-100"
+          }`}
+        >
           <IconPhoto size={20} />
         </ResponsiveButton>
         {/* <ResponsiveButton>
@@ -37,7 +42,11 @@ function Footer({ onBackgroundChange }: FooterProps) {
       </div>
 
       {/* Footer Right */}
-      <div className="flex gap-x-lg justify-center">
+      <div
+        className={`flex gap-x-lg justify-center transition-all duration-500 ${
+          focusMode ? "opacity-0 pointer-events-none" : "opacity-100"
+        }`}
+      >
         <ResponsiveButton onClick={() => setFriendOpened(true)}>
           <div className="grid grid-cols-1 grid-rows-1">
             <div className="col-start-1 row-start-1">
@@ -45,7 +54,7 @@ function Footer({ onBackgroundChange }: FooterProps) {
             </div>
             {numberRequest > 0 && (
               <div className="col-start-1 row-start-1 self-start justify-self-end -mt-2.5 -mr-2.5">
-                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm">
+                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-secondary text-[10px] font-bold text-primary shadow-sm">
                   {numberRequest > 9 ? "9+" : numberRequest}
                 </span>
               </div>

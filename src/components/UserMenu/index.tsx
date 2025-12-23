@@ -44,6 +44,7 @@ function UserMenu() {
       onClick: async () => {
         await logout();
         toast.info("Loged out", "Info");
+        setIsPopoverOpen(!isPopoverOpen);
       },
     },
   ];

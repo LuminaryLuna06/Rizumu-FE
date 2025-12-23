@@ -211,6 +211,7 @@ function ProfileModal({
               <ResponsiveButton
                 className="!bg-emerald-500 hover:bg-emarald-600 h-11 md:h-5 gap-x-xs text-sm"
                 leftSection={<IconShare2 size={16} />}
+                onClick={() => handleShareProfile()}
               >
                 Copy link
               </ResponsiveButton>
@@ -294,6 +295,7 @@ function ProfileModal({
                   <ResponsiveButton
                     className="!bg-emerald-500 hover:bg-emarald-600 h-11 md:h-8 lg:h-5 gap-x-xs text-sm min-w-[100px]"
                     leftSection={<IconShare2 size={16} />}
+                    onClick={() => handleShareProfile()}
                   >
                     Copy link
                   </ResponsiveButton>

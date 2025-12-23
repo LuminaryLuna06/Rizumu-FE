@@ -10,7 +10,11 @@ import { useAuth } from "@rizumu/context/AuthContext";
 import { useState, useMemo } from "react";
 import { useHourlyData } from "@rizumu/tanstack/api/hooks";
 
-function Header() {
+import type { ModelStreak } from "@rizumu/models/streak";
+
+function Header({
+  focusMode: boolean;
+}) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [opened, setOpened] = useState(false);
@@ -61,8 +65,12 @@ function Header() {
         </h1>
       </div>
       {/* Header Right */}
-      <div className="header-right flex items-center justify-center gap-x-sm">
-        <StreakPopover />
+      <div
+        className={`header-right flex items-center justify-center gap-x-sm transition-all duration-500 ${
+          focusMode ? "opacity-0 pointer-events-none" : "opacity-100"
+        }`}
+      >
+        <StreakPopover/>
         <ResponsiveButton
           leftSection={<IconClock size={16} />}
           className="font-semibold md:py-sm"

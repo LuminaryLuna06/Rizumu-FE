@@ -1,4 +1,5 @@
 import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
+import { useAuth } from "@rizumu/context/AuthContext";
 import ResponsiveButton from "@rizumu/components/ResponsiveButton";
 import TextInput from "@rizumu/components/TextInput";
 import { TAG_COLORS } from "@rizumu/constants/tagColors";

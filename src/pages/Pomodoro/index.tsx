@@ -9,6 +9,7 @@ import ResponsiveButton from "@rizumu/components/ResponsiveButton";
 import { useToast } from "@rizumu/utils/toast/toast";
 import type { ModelRoom } from "@rizumu/models/room";
 import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
+import ProfileModal from "@rizumu/components/ProfileModal";
 
 function PomodoroPage() {
   const toast = useToast();
@@ -124,11 +125,22 @@ function PomodoroPage() {
   // Check for rid query parameter when page loads
   useEffect(() => {
     const roomSlug = searchParams.get("rid");
+    const userId = searchParams.get("uid");
+
     if (roomSlug && user && !hasCheckedQuery) {
       setHasCheckedQuery(true);
       handleCheckRoomInvite(roomSlug);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    if (userId) {
+      setSharedUserId(userId);
+      setProfileModalOpened(true);
+
+      setSearchParams((prev) => {
+        prev.delete("uid");
+        return prev;
+      });
+    }
   }, [searchParams, user, hasCheckedQuery]);
 
   useEffect(() => {
@@ -190,11 +202,13 @@ function PomodoroPage() {
         )}
 
         {/* Header */}
-        <Header />
+        <Header 
+          focusMode={isFocusMode}
+          />
         {/* Main Content */}
-        <Timer bgType={background.type} bgName={background.name} />
+        <Timer bgType={background.type} bgName={background.name} focusMode={isFocusMode} setFocusMode={() => setIsFocusMode((prev) => !prev)} />
         {/* Footer */}
-        <Footer onBackgroundChange={handleBackgroundChange} />
+        <Footer onBackgroundChange={handleBackgroundChange} focusMode={isFocusMode}/>
       </div>
 
       {/* Join Room Modal */}
@@ -234,6 +248,16 @@ function PomodoroPage() {
           ) : null}
         </div>
       </Modal>
+
+      <ProfileModal
+        opened={profileModalOpened}
+        onClose={() => {
+          setProfileModalOpened(false);
+          setSharedUserId(null);
+        }}
+        onOpenProfile={() => {}}
+        userId={sharedUserId || undefined}
+      />
     </>
   );
 }
