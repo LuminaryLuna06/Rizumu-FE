@@ -4,7 +4,7 @@ import axios from "axios";
 function testTranh2() {
   const refreshAccessToken = async (): Promise<string> => {
     try {
-      fetch(`${import.meta.env.VITE_API_URL}/auth/refresh`, {
+      fetch(`${import.meta.env.VITE_DEV_API_URL}/auth/refresh`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -41,7 +41,7 @@ function testTranh2() {
   return (
     <div>
       <ResponsiveButton onClick={() => refreshAccessToken()}>
-        Refresh
+        Refresh DEV
       </ResponsiveButton>
       <ResponsiveButton onClick={() => refreshAccessToken2()}>
         Refresh2
