@@ -22,10 +22,10 @@ import { useAuth } from "@rizumu/context/AuthContext";
 import { useToast } from "@rizumu/utils/toast/toast";
 import type { ModelUserProfile } from "@rizumu/models/userProfile";
 import type { ModelProgress } from "@rizumu/models/progress";
-import axiosClient from "@rizumu/api/config/axiosClient";
 import { months } from "../../constants/months";
 import type { ModelStat } from "@rizumu/models/stats";
 import GiftModal from "../GiftModal";
+import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
 
 interface HeatMapResponse {
   durations: number[];

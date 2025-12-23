@@ -1,11 +1,11 @@
 import Modal from "../Modal";
 import { IconLibrary, IconLogin2 } from "@tabler/icons-react";
 import ResponsiveButton from "../ResponsiveButton";
-import axiosClient from "@rizumu/api/config/axiosClient";
 import { useEffect, useState } from "react";
 import { type ModelPublicRoom } from "@rizumu/models/publicRoom";
 import { useToast } from "@rizumu/utils/toast/toast";
 import { useAuth } from "@rizumu/context/AuthContext";
+import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
 
 function FindStudyRoomModal({
   opened,

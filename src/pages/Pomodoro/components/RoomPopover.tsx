@@ -1,4 +1,4 @@
-import axiosClient from "@rizumu/api/config/axiosClient";
+import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
 import Popover from "@rizumu/components/Popover";
 import ProfileModal from "@rizumu/components/ProfileModal";
 import ResponsiveButton from "@rizumu/components/ResponsiveButton";
@@ -15,6 +15,7 @@ import {
   IconX,
   IconUser,
   IconDoorExit,
+  IconKarate,
 } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 
@@ -116,6 +117,8 @@ function RoomPopover() {
   const isLoadingRoom = roomLoading || (!room && !isLoading);
 
   const isOwner = room?.owner_id === user?._id;
+  const isAdmin =
+    isOwner || members.find((m) => m.user_id === user?._id)?.role === "admin";
 
   const handleLeaveRoom = async () => {
     try {
@@ -144,6 +147,22 @@ function RoomPopover() {
   const handleMemberClick = (memberId: string) => {
     setSelectedUserId(memberId);
     setProfileModalOpened(true);
+  };
+
+  const handleMemberKick = async (memberId: string) => {
+    try {
+      await axiosClient.post(`/room/${room?._id}/kick`, {
+        user_id: memberId,
+      });
+      toast.success("Member kicked successfully", "Success");
+      fetchMembers();
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message || "Failed to kick member",
+        "Error"
+      );
+      console.error(error);
+    }
   };
 
   return (
@@ -204,7 +223,7 @@ function RoomPopover() {
                   Share
                 </ResponsiveButton>
               )}
-              {isOwner && (
+              {isAdmin && (
                 <>
                   {showMembers ? (
                     <IconX
@@ -248,26 +267,40 @@ function RoomPopover() {
                     <div
                       key={member._id || index}
                       className="flex items-center gap-x-sm p-sm hover:bg-secondary/5 rounded-lg transition-all cursor-pointer"
-                      onClick={() => handleMemberClick(member.user_id)}
                     >
-                      <div className="w-10 h-10 rounded-full bg-secondary/10 text-primary flex items-center justify-center font-bold">
-                        {member.avatar ? (
-                          <img
-                            src={`${member.avatar}`}
-                            alt="Avatar"
-                            className="w-11 border border-white rounded-full"
-                          />
-                        ) : (
-                          <div className="flex justify-center items-center rounded-full border-1 p-sm border-secondary">
-                            <IconUser className="text-secondary" />
-                          </div>
-                        )}
+                      <div
+                        className="flex flex-1 items-center gap-x-sm"
+                        onClick={() => handleMemberClick(member.user_id)}
+                      >
+                        <div className="w-10 h-10 rounded-full bg-secondary/10 text-primary flex items-center justify-center font-bold">
+                          {member.avatar ? (
+                            <img
+                              src={`${member.avatar}`}
+                              alt="Avatar"
+                              className="w-11 border border-white rounded-full"
+                            />
+                          ) : (
+                            <div className="flex justify-center items-center rounded-full border-1 p-sm border-secondary">
+                              <IconUser className="text-secondary" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-secondary font-medium">
+                            {member.name || "User"}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <p className="text-secondary font-medium">
-                          {member.name || "User"}
-                        </p>
-                      </div>
+                      {isAdmin && member.user_id !== user?._id && (
+                        <div className="justify-end">
+                          <ResponsiveButton className="!bg-transparent">
+                            <IconKarate
+                              className="text-red-500"
+                              onClick={() => handleMemberKick(member.user_id)}
+                            />
+                          </ResponsiveButton>
+                        </div>
+                      )}
                     </div>
                   ))
                 )}
@@ -364,26 +397,41 @@ function RoomPopover() {
                     <div
                       key={member._id || index}
                       className="flex items-center gap-x-sm rounded-lg p-xs transition-all hover:bg-secondary/5 cursor-pointer"
-                      onClick={() => handleMemberClick(member.user_id)}
                     >
-                      <div className="w-10 h-10 rounded-full bg-secondary/10 text-primary flex items-center justify-center font-bold">
-                        {member.avatar ? (
-                          <img
-                            src={`${member.avatar}`}
-                            alt="Avatar"
-                            className="w-11 border border-white rounded-full"
-                          />
-                        ) : (
-                          <div className="flex justify-center items-center rounded-full border-1 p-sm border-secondary">
-                            <IconUser className="text-secondary" />
-                          </div>
-                        )}
+                      <div
+                        className="flex flex-1 items-center gap-x-sm"
+                        onClick={() => handleMemberClick(member.user_id)}
+                      >
+                        <div className="w-10 h-10 rounded-full bg-secondary/10 text-primary flex items-center justify-center font-bold">
+                          {member.avatar ? (
+                            <img
+                              src={`${member.avatar}`}
+                              alt="Avatar"
+                              className="w-11 border border-white rounded-full"
+                            />
+                          ) : (
+                            <div className="flex justify-center items-center rounded-full border-1 p-sm border-secondary">
+                              <IconUser className="text-secondary" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-secondary font-medium">
+                            {member.name || "User"}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <p className="text-secondary font-medium">
-                          {member.name || "User"}
-                        </p>
-                      </div>
+
+                      {isAdmin && member.user_id !== user?._id && (
+                        <div className="justify-end">
+                          <ResponsiveButton className="!bg-transparent">
+                            <IconKarate
+                              className="text-red-500"
+                              onClick={() => handleMemberKick(member.user_id)}
+                            />
+                          </ResponsiveButton>
+                        </div>
+                      )}
                     </div>
                   ))
                 )}

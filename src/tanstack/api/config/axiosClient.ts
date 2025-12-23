@@ -4,6 +4,11 @@ import axios, {
   type AxiosResponse,
   type AxiosError,
 } from "axios";
+import {
+  getAccessToken,
+  updateAccessToken,
+  clearAuthTokens,
+} from "@rizumu/utils/cookieManager";
 
 const axiosClient: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
@@ -11,6 +16,7 @@ const axiosClient: AxiosInstance = axios.create({
     "Content-Type": "application/json",
   },
   timeout: 25000,
+  withCredentials: true,
 });
 
 let isRefreshing = false;
@@ -35,21 +41,11 @@ const processQueue = (
 };
 
 const refreshAccessToken = async (): Promise<string> => {
-  const refreshToken = localStorage.getItem("refresh_token");
-
-  if (!refreshToken) {
-    throw new Error("No refresh token available");
-  }
-
   try {
     const response = await axios.post(
       `${import.meta.env.VITE_API_URL}/auth/refresh`,
-      { refresh_token: refreshToken },
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
+      {},
+      { withCredentials: true }
     );
 
     const { access_token } = response.data;
@@ -58,22 +54,19 @@ const refreshAccessToken = async (): Promise<string> => {
       throw new Error("No access token in response");
     }
 
-    localStorage.setItem("access_token", access_token);
+    updateAccessToken(access_token);
     return access_token;
   } catch (error) {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-
+    clearAuthTokens();
     window.dispatchEvent(new CustomEvent("open-auth-modal"));
-
     throw error;
   }
 };
 
-// --- Interceptor cho Request (Gửi đi) ---
+// Request Interceptor
 axiosClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = localStorage.getItem("access_token");
+    const token = getAccessToken();
 
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -86,7 +79,7 @@ axiosClient.interceptors.request.use(
   }
 );
 
-// --- Interceptor cho Response (Nhận về) ---
+// Response Interceptor
 axiosClient.interceptors.response.use(
   (response: AxiosResponse) => {
     return response;

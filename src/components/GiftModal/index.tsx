@@ -2,9 +2,9 @@ import type { ModelUserProfile } from "@rizumu/models/userProfile";
 import Modal from "../Modal";
 import { useAuth } from "@rizumu/context/AuthContext";
 import { useEffect, useState } from "react";
-import axiosClient from "@rizumu/api/config/axiosClient";
 import { gifts } from "../../constants/gift";
 import { useToast } from "@rizumu/utils/toast/toast";
+import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
 
 interface GiftModalProps {
   opened: boolean;
@@ -67,7 +67,7 @@ function GiftModal({ opened, onClose, profile }: GiftModalProps) {
       <div className="flex flex-col items-center gap-6 p-4">
         <div className="text-center">
           <p className="text-xl font-semibold text-white">
-            Send Gift to {profile?.name}
+            Send Gift to {profile?.name || "User"}
           </p>
           <div className="flex items-center justify-center gap-2 mt-2">
             <span className="text-gray-400">Your coins:</span>

@@ -10,8 +10,8 @@ import {
 } from "@tabler/icons-react";
 import Modal from "../Modal";
 import ProfileModal from "../ProfileModal";
-import axiosClient from "@rizumu/api/config/axiosClient";
 import type { ModelLeaderboard } from "@rizumu/models/leaderboard";
+import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
 
 const LeaderboardModal = ({
   opened,
@@ -299,12 +299,6 @@ const LeaderboardModal = ({
                       {/* Cột 1 */}
                       <td className="py-4 text-center align-middle">
                         <div className="flex items-center justify-center">
-                          {index < 3 && (
-                            <IconTrendingUp
-                              size={14}
-                              className="text-green-500"
-                            />
-                          )}
                           <span className="font-bold text-lg text-white">
                             {index + 1}
                           </span>

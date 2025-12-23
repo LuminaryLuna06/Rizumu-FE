@@ -1,4 +1,4 @@
-import axiosClient from "@rizumu/api/config/axiosClient";
+import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
 import Popover from "@rizumu/components/Popover";
 import ResponsiveButton from "@rizumu/components/ResponsiveButton";
 import TextInput from "@rizumu/components/TextInput";
@@ -168,14 +168,6 @@ function ChatPopover() {
     }
   };
 
-  const formatTime = (time?: string) => {
-    if (!time) return "";
-    return new Date(time).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
   const mapSenderName = Object.fromEntries(
     roomMembers && roomMembers.map((e) => [e.user_id, e.name])
   );
@@ -206,19 +198,11 @@ function ChatPopover() {
             {messages &&
               messages.map((msg: any, idx: number) => {
                 return (
-                  <div
-                    className="flex flex-col h-[40px] mb-sm"
-                    key={msg._id || idx}
-                  >
-                    <div className="flex items-center gap-1">
-                      <h2 className="font-semibold">
-                        {mapSenderName[msg.sender_id] || "Anonymous User"}:
-                      </h2>
-                      <p className="text-secondary/80">{msg.content}</p>
-                    </div>
-                    <p className="text-text-inactive text-xs">
-                      {formatTime(msg.createdAt)}
-                    </p>
+                  <div className="flex gap-1 mb-xl" key={msg._id || idx}>
+                    <h2 className="font-semibold">
+                      {mapSenderName[msg.sender_id] || "Anonymous User"}:
+                    </h2>
+                    <p className="text-secondary/80">{msg.content}</p>
                   </div>
                 );
               })}

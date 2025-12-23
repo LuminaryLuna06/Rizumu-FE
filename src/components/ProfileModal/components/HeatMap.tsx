@@ -52,7 +52,7 @@ function HeatMap({ month, monthNumber, data }: HeatMapProps) {
                   ? duration < 60
                     ? `${duration} minutes`
                     : `${Math.floor(duration / 60)}h ${
-                        duration - Math.floor(duration / 60)
+                        duration - Math.floor(duration / 60) * 60
                       }m`
                   : "No activity"
               }`}

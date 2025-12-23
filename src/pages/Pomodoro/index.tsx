@@ -3,12 +3,13 @@ import Footer from "./components/Footer";
 import Timer from "./components/Timer";
 import { useAuth } from "@rizumu/context/AuthContext";
 import { useEffect, useState, useRef } from "react";
-import axiosClient from "@rizumu/api/config/axiosClient";
 import { useSearchParams } from "react-router-dom";
 import Modal from "@rizumu/components/Modal";
 import ResponsiveButton from "@rizumu/components/ResponsiveButton";
 import { useToast } from "@rizumu/utils/toast/toast";
 import type { ModelRoom } from "@rizumu/models/room";
+import type { ModelStreak } from "@rizumu/models/streak";
+import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
 
 function PomodoroPage() {
   const { user, refreshUser } = useAuth();
@@ -30,6 +31,9 @@ function PomodoroPage() {
   const [isLoadingRoom, setIsLoadingRoom] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
   const [hasCheckedQuery, setHasCheckedQuery] = useState(false);
+
+  const [numberRequest, setNumberRequest] = useState(0);
+  const [streaks, setStreaks] = useState<ModelStreak>();
 
   const fetchTotalTime = async () => {
     if (!user?._id) return;
@@ -62,9 +66,33 @@ function PomodoroPage() {
     }
   };
 
+  const fetchRequests = async () => {
+    try {
+      const response = await axiosClient.get("/friend/requests/received");
+      const length = response.data?.length || 0;
+      setNumberRequest(length);
+    } catch (error: any) {
+      console.error("Error fetching requests:", error);
+      toast.error(
+        error?.response?.data?.message || "Failed to load requests",
+        "Error"
+      );
+    }
+  };
+
+  const getStreak = async () => {
+    try {
+      const response = await axiosClient.get("/progress");
+      setStreaks(response.data);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   useEffect(() => {
     if (shouldFetch) {
       fetchTotalTime();
+      getStreak();
       setShouldFetch(false);
     }
   }, [shouldFetch]);
@@ -180,16 +208,28 @@ function PomodoroPage() {
   }, [searchParams, user, hasCheckedQuery]);
 
   useEffect(() => {
-    if (user?.current_room_id) {
+    if (user) {
       fetchTotalTime();
-      axiosClient
-        .get(`/room/id/${user.current_room_id}`)
-        .then((res) => {
-          if (res.data?.background.name !== "default_bg") {
-            setBackground(res.data.background);
-          }
-        })
-        .catch((err) => console.log(err));
+      fetchRequests();
+      getStreak();
+      if (user.current_room_id) {
+        axiosClient
+          .get(`/room/id/${user.current_room_id}`)
+          .then((res) => {
+            if (res.data?.background.name !== "default_bg") {
+              setBackground(res.data.background);
+            }
+          })
+          .catch((err) => console.log(err));
+      }
+    } else {
+      setTotalTime(0);
+      setNumberRequest(0);
+      setStreaks(undefined);
+      setBackground({
+        name: "/image/aurora-2k.webp",
+        type: "static",
+      });
     }
   }, [user?.current_room_id, user]);
 
@@ -232,7 +272,7 @@ function PomodoroPage() {
         )}
 
         {/* Header */}
-        <Header totalTime={totalTime} />
+        <Header totalTime={totalTime} streaks={streaks} />
         {/* Main Content */}
         <Timer
           bgType={background.type}
@@ -240,7 +280,11 @@ function PomodoroPage() {
           onSessionComplete={() => setShouldFetch(true)}
         />
         {/* Footer */}
-        <Footer onBackgroundChange={handleBackgroundChange} />
+        <Footer
+          onBackgroundChange={handleBackgroundChange}
+          numberRequest={numberRequest}
+          onRefreshRequests={fetchRequests}
+        />
       </div>
 
       {/* Join Room Modal */}

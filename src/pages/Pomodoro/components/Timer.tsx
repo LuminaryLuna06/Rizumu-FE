@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useAuth } from "@rizumu/context/AuthContext";
 import { useToast } from "@rizumu/utils/toast/toast";
-import axiosClient from "@rizumu/api/config/axiosClient";
 import {
   DEFAULT_PRESETS,
   type Preset,
@@ -25,6 +24,7 @@ import {
 } from "@tabler/icons-react";
 import PresetModal from "./PresetModal";
 import TagSelector from "./TagSelector";
+import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
 
 const TIMER_DIRECTION_KEY = "pomodoro_timer_direction";
 const SELECTED_TAG_KEY = "pomodoro_selected_tag";

@@ -1,8 +1,8 @@
 import { useState } from "react";
-import Modal from "@rizumu/components/Modal"; // Kiểm tra lại đường dẫn import này
-import ResponsiveButton from "@rizumu/components/ResponsiveButton"; // Kiểm tra lại đường dẫn import này
-import axiosClient from "@rizumu/api/config/axiosClient";
+import Modal from "../Modal";
+import ResponsiveButton from "../ResponsiveButton";
 import { useAuth } from "@rizumu/context/AuthContext";
+import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
 
 const STATIC_IMAGES = [
   { name: "/image/aurora-2k.webp", alt: "Aurora" },

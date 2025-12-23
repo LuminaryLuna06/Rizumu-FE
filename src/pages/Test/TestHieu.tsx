@@ -1,4 +1,4 @@
-import axiosClient from "@rizumu/api/config/axiosClient";
+import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
 import ActivitiesModal from "@rizumu/components/ActivitiesModal";
 import BackgroundModal from "@rizumu/components/BackgroundModal";
 import Modal from "@rizumu/components/Modal";
