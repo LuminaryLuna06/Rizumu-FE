@@ -32,6 +32,7 @@ function PomodoroPage() {
   const [hasCheckedQuery, setHasCheckedQuery] = useState(false);
   const [sharedUserId, setSharedUserId] = useState<string | null>();
   const [profileModalOpened, setProfileModalOpened] = useState(false);
+
   const roomSlug = searchParams.get("rid");
   const userId = searchParams.get("uid");
   const join = useJoinRoom();

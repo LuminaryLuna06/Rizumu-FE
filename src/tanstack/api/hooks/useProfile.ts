@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
-import { PROFILE_ENDPOINTS } from "@rizumu/tanstack/endpoint";
+import { PROFILE_ENDPOINTS, AUTH_ENDPOINTS } from "@rizumu/tanstack/endpoint";
 import { queryKeys } from "@rizumu/tanstack/api/query/queryKeys";
 import type { ModelUserProfile } from "@rizumu/models/userProfile";
 
@@ -21,6 +21,32 @@ export const useProfileById = (userId: string, enabled = true) => {
 };
 
 /**
+ * Hook to update user profile
+ */
+export const useUpdateProfile = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (profileData: Partial<ModelUserProfile>) => {
+      const response = await axiosClient.patch(
+        AUTH_ENDPOINTS.UPDATE_PROFILE,
+        profileData
+      );
+      return response.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me() });
+      if (data?.user?.id) {
+        console.log(data);
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.profile.byId(data?.user?.id),
+        });
+      }
+    },
+  });
+};
+
+/**
  * Hook to upload/update user avatar
  */
 export const useUploadAvatar = () => {
@@ -31,25 +57,18 @@ export const useUploadAvatar = () => {
       const formData = new FormData();
       formData.append("avatar", avatarFile);
 
-      const response = await axiosClient.post(
-        PROFILE_ENDPOINTS.AVATAR,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      const response = await axiosClient.post(AUTH_ENDPOINTS.AVATAR, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
       return response.data;
     },
     onSuccess: (data) => {
-      // Invalidate current user profile to refetch with new avatar
       queryClient.invalidateQueries({ queryKey: queryKeys.auth.me() });
-
-      // Update specific profile cache if user ID is available
-      if (data.data?.userId) {
+      if (data?.user?.id) {
         queryClient.invalidateQueries({
-          queryKey: queryKeys.profile.byId(data.data.userId),
+          queryKey: queryKeys.profile.byId(data?.user?.id),
         });
       }
     },

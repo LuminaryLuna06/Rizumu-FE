@@ -7,6 +7,8 @@ export const AUTH_ENDPOINTS = {
   LOGOUT: "/auth/logout",
   REFRESH: "/auth/refresh",
   PROFILE: "/auth/profile",
+  UPDATE_PROFILE: "/auth/profile", //PATCH
+  AVATAR: "/auth/avatar",
 } as const;
 
 /**
@@ -14,7 +16,6 @@ export const AUTH_ENDPOINTS = {
  */
 export const PROFILE_ENDPOINTS = {
   PROFILE_BY_ID: (id: string) => `/auth/profile/${id}`,
-  AVATAR: "/auth/avatar",
   SEARCH: (query: string) => `/auth/search?q=${query}`,
 } as const;
 

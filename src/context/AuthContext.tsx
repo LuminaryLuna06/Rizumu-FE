@@ -3,7 +3,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import type { ModelUserProfile } from "@rizumu/models/userProfile";
 import {
-  getAccessToken,
   clearAuthTokens,
   updateAccessToken,
 } from "@rizumu/utils/cookieManager";

@@ -1,4 +1,3 @@
-import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
 import Modal from "@rizumu/components/Modal";
 import ResponsiveButton from "@rizumu/components/ResponsiveButton";
 import SelectInput from "@rizumu/components/SelectInput";
@@ -7,9 +6,10 @@ import TextInput from "@rizumu/components/TextInput";
 import type { ModelUserProfile } from "@rizumu/models/userProfile";
 import { useToast } from "@rizumu/utils/toast/toast";
 import { IconCamera, IconUser, IconX } from "@tabler/icons-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { countries } from "../../../constants/countries";
 import { useAuth } from "@rizumu/context/AuthContext";
+import { useUploadAvatar, useUpdateProfile } from "@rizumu/tanstack/api/hooks";
 
 interface EditProfileModalProps {
   opened: boolean;
@@ -26,10 +26,12 @@ function EditProfileModal({
   const toast = useToast();
   const { refreshUser } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [formData, setFormData] = useState({ name: "", bio: "", country: "" });
+
+  const updateAvatar = useUploadAvatar();
+  const updateProfile = useUpdateProfile();
 
   useEffect(() => {
     if (user) {
@@ -40,6 +42,18 @@ function EditProfileModal({
       });
     }
   }, [user]);
+
+  // Check if form data changed
+  const hasChanges = useMemo(() => {
+    if (!user) return false;
+    if (selectedFile) return true;
+
+    const nameChanged = formData.name !== user.name;
+    const bioChanged = formData.bio !== user.bio;
+    const countryChanged = formData.country !== user.country;
+
+    return nameChanged || bioChanged || countryChanged;
+  }, [user, formData, selectedFile]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -60,25 +74,19 @@ function EditProfileModal({
   const handleSave = async (e: any) => {
     e.preventDefault();
 
-    setIsLoading(true);
     try {
       if (selectedFile) {
-        let form_data = new FormData();
-        form_data.append("avatar", selectedFile);
-        await axiosClient.post("/auth/avatar", form_data, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        });
+        await updateAvatar.mutateAsync(selectedFile);
       }
-      await axiosClient.patch(`/auth/profile`, formData);
+      await updateProfile.mutateAsync(formData);
+
       toast.success("Update profile successful!", "Success");
       refreshUser();
+      onOpenProfile();
+      setPreviewUrl(null);
     } catch (e: any) {
       toast.error("Update profile failed!", "Error");
     }
-
-    setIsLoading(false);
   };
 
   return (
@@ -140,7 +148,7 @@ function EditProfileModal({
           onChange={(e: any) =>
             setFormData({ ...formData, name: e.target.value })
           }
-          disabled={isLoading}
+          disabled={updateAvatar.isPending || updateProfile.isPending}
         />
 
         <TextArea
@@ -152,7 +160,7 @@ function EditProfileModal({
           onChange={(e: any) =>
             setFormData({ ...formData, bio: e.target.value })
           }
-          disabled={isLoading}
+          disabled={updateAvatar.isPending || updateProfile.isPending}
         />
 
         <div className="flex items-center gap-1">
@@ -164,7 +172,7 @@ function EditProfileModal({
             onChange={(value) =>
               setFormData({ ...formData, country: value || "" })
             }
-            disabled={isLoading}
+            disabled={updateAvatar.isPending || updateProfile.isPending}
             searchable
             maxDropdownHeight={180}
             className="w-1/2 sm:w-1/3"
@@ -190,16 +198,20 @@ function EditProfileModal({
               setPreviewUrl(null);
             }}
             className="flex-1 flex justify-center px-6 py-3 border border-white rounded-lg font-semibold"
-            disabled={isLoading}
+            disabled={updateAvatar.isPending || updateProfile.isPending}
           >
             Cancel
           </ResponsiveButton>
           <ResponsiveButton
             onClick={handleSave}
             className="flex-1 flex justify-center px-6 py-3 bg-secondary hover:bg-secondary !text-primary rounded-lg font-semibold"
-            disabled={isLoading}
+            disabled={
+              updateAvatar.isPending || updateProfile.isPending || !hasChanges
+            }
           >
-            {isLoading ? "Saving..." : "Save"}
+            {updateAvatar.isPending || updateProfile.isPending
+              ? "Saving..."
+              : "Save"}
           </ResponsiveButton>
         </div>
       </form>

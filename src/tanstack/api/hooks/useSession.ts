@@ -35,9 +35,7 @@ export const useUpdateSession = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (
-      sessionData: Partial<ModelUserPomodoroSession> & { id: string }
-    ) => {
+    mutationFn: async (sessionData: Partial<ModelUserPomodoroSession>) => {
       const response = await axiosClient.patch(
         SESSION_ENDPOINTS.PATCH_SESSION,
         sessionData
