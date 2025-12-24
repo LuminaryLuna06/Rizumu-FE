@@ -168,6 +168,12 @@ function Timer({ bgType, bgName, focusMode, setFocusMode }: TimerProps) {
   }, [mode]);
 
   useEffect(() => {
+    if (!user) {
+      setSelectedTag(null);
+    }
+  }, [user]);
+
+  useEffect(() => {
     saveTimerDirection(timerDirection);
   }, [timerDirection]);
 

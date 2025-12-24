@@ -47,9 +47,16 @@ function TagSelector({ selectedTag, onTagSelect }: TagSelectorProps) {
 
   useEffect(() => {
     if (tags && selectedTag) {
-      const exists = tags && tags.some((t) => t._id === selectedTag._id);
-      if (!exists) {
+      const currentTag = tags.find((t) => t._id === selectedTag._id);
+      // Don't have => Null
+      if (!currentTag) {
         onTagSelect(null);
+      // Update tag after edit
+      } else if (
+        currentTag.name !== selectedTag.name ||
+        currentTag.color !== selectedTag.color
+      ) {
+        onTagSelect(currentTag);
       }
     }
   }, [tags, selectedTag, onTagSelect]);
