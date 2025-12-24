@@ -185,11 +185,13 @@ function ChatPopover() {
 
               // Regular user message
               return (
-                <div className="flex gap-1 mb-xl" key={msg._id || idx}>
-                  <h2 className="font-semibold">
-                    {mapSenderName[msg.sender_id] || "Anonymous User"}:
-                  </h2>
-                  <p className="text-secondary/80">{msg.content}</p>
+                <div className="gap-1 mb-xl" key={msg._id || idx}>
+                  <p className="text-secondary/80">
+                    <span className="font-semibold text-md text-text-active">
+                      {mapSenderName[msg.sender_id] || "Anonymous User"}:
+                    </span>{" "}
+                    {msg.content}
+                  </p>
                 </div>
               );
             })}
