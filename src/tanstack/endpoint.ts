@@ -59,7 +59,8 @@ export const ROOM_ENDPOINTS = {
  * Message Endpoints
  */
 export const MESSAGE_ENDPOINTS = {
-  MESSAGES: (id: string, before?: string) => `/${id}/messages?before=${before}`,
+  BY_ROOM: (roomId: string, before?: string) =>
+    before ? `/${roomId}/messages?before=${before}` : `/${roomId}/messages`,
 } as const;
 
 /**

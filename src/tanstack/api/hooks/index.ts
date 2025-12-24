@@ -4,3 +4,4 @@ export * from "./useProgress";
 export * from "./useSession";
 export * from "./useFriend";
 export * from "./useRoom";
+export * from "./useMessage";

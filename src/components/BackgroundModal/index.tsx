@@ -2,7 +2,6 @@ import { useState } from "react";
 import Modal from "../Modal";
 import ResponsiveButton from "../ResponsiveButton";
 import { useAuth } from "@rizumu/context/AuthContext";
-import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
 import { useUpdateRoomBackground } from "@rizumu/tanstack/api/hooks";
 import { useToast } from "@rizumu/utils/toast/toast";
 

@@ -86,4 +86,14 @@ export const queryKeys = {
     list: () => [...queryKeys.friends.all, "list"] as const,
     requests: () => [...queryKeys.friends.all, "requests"] as const,
   },
+
+  // Messages keys
+  messages: {
+    all: ["messages"] as const,
+    list: (roomId: string, before?: string) =>
+      before
+        ? ([...queryKeys.messages.all, "list", roomId, before] as const)
+        : ([...queryKeys.messages.all, "list", roomId] as const),
+  },
+
 } as const;

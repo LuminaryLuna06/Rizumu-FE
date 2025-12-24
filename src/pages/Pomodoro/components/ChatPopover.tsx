@@ -1,4 +1,3 @@
-import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
 import Popover from "@rizumu/components/Popover";
 import ResponsiveButton from "@rizumu/components/ResponsiveButton";
 import TextInput from "@rizumu/components/TextInput";
@@ -6,6 +5,8 @@ import { useAuth } from "@rizumu/context/AuthContext";
 import { IconMessage, IconSend2, IconUsers } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
 import { io, type Socket } from "socket.io-client";
+import { useRoomMembers } from "@rizumu/tanstack/api/hooks";
+import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
 
 function ChatPopover() {
   const { user } = useAuth();
@@ -13,7 +14,10 @@ function ChatPopover() {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [messages, setMessages] = useState<any>([]);
   const [input, setInput] = useState("");
-  const [roomMembers, setRoomMembers] = useState<any[]>([]);
+  const { data: roomMembers = [] } = useRoomMembers(
+    user?.current_room_id || "",
+    !!user?.current_room_id
+  );
 
   const [hasMoreMessage, setHasMoreMessage] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -28,7 +32,6 @@ function ChatPopover() {
 
     // Reset tất cả state khi đổi room
     setMessages([]);
-    setRoomMembers([]);
     setHasMoreMessage(true);
     isInitialLoadRef.current = true;
 
@@ -62,8 +65,6 @@ function ChatPopover() {
     });
 
     setSocket(newSocket);
-
-    fetchRoomMembers();
 
     return () => {
       console.log("Disconnecting socket from room:", user.current_room_id);
@@ -152,19 +153,6 @@ function ChatPopover() {
     if (messagesRef.current.scrollTop === 0 && !isLoading) {
       const earliest = messages[0];
       loadMessages(earliest?.createdAt || null);
-    }
-  };
-
-  const fetchRoomMembers = async () => {
-    if (!user?.current_room_id) return;
-
-    try {
-      const response = await axiosClient.get(
-        `/room/${user.current_room_id}/members`
-      );
-      setRoomMembers(response.data || []);
-    } catch (err) {
-      console.error("Lỗi load members:", err);
     }
   };
 

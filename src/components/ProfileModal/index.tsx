@@ -15,7 +15,7 @@ import {
 import Modal from "../Modal";
 import ResponsiveButton from "../ResponsiveButton";
 import BoxStatistic from "./components/BoxStatistic";
-import { useEffect, useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import EditProfileModal from "./components/EditProfileModal";
 import HeatMap from "./components/HeatMap";
 import { useAuth } from "@rizumu/context/AuthContext";
@@ -23,13 +23,16 @@ import { useToast } from "@rizumu/utils/toast/toast";
 import type { ModelUserProfile } from "@rizumu/models/userProfile";
 import { months } from "../../constants/months";
 import GiftModal from "../GiftModal";
-import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
+
 import {
   useGiftById,
   useHeatmapData,
   useProfileById,
   useProgressById,
   useStats,
+  useFriends,
+  useSendFriendRequest,
+  useDeleteFriend,
 } from "@rizumu/tanstack/api/hooks";
 
 interface ProfileModalProps {
@@ -78,71 +81,55 @@ function ProfileModal({
   const { user: currentUser } = useAuth();
   const [editOpened, setEditOpened] = useState(false);
   const [sendGift, setSendGift] = useState(false);
-  const [isFriend, setIsFriend] = useState(false);
-  const [friendshipId, setFriendshipId] = useState<string | null>(null);
-  const [friendshipLoading, setFriendshipLoading] = useState(false);
 
   const targetUserId = userId || currentUser?._id;
   const isOwnProfile = targetUserId === currentUser?._id;
 
   const { data, isLoading } = useProfileById(targetUserId || "");
+  const { data: friends, isLoading: friendsLoading } = useFriends(
+    opened && !isOwnProfile
+  );
+  const sendFriendRequest = useSendFriendRequest();
+  const deleteFriend = useDeleteFriend();
 
-  const checkFriendship = async (userId: string) => {
-    try {
-      const response = await axiosClient.get("/friend/list");
-      const friends = response.data || [];
-      const friend = friends.find((friend: any) => friend._id === userId);
-      if (friend) {
-        setIsFriend(true);
-        setFriendshipId(friend.friendshipId);
-      } else {
-        setIsFriend(false);
-        setFriendshipId(null);
-      }
-    } catch (error) {
-      console.error("Error checking friendship:", error);
-      setIsFriend(false);
-      setFriendshipId(null);
-    }
-  };
+  // Check if user is friend
+  const friend = friends?.find((f) => f._id === targetUserId);
+  const isFriend = !!friend;
+  const friendshipId = friend?.friendshipId || null;
 
-  const handleAddFriend = async () => {
+  const handleAddFriend = () => {
     if (!targetUserId) return;
-    try {
-      setFriendshipLoading(true);
-      await axiosClient.post("/friend/request", { recipientId: targetUserId });
-      toast.success("Friend request sent!", "Success");
-    } catch (error: any) {
-      console.error("Error sending friend request:", error);
-      toast.error(
-        error?.response?.data?.message || "Failed to send request",
-        "Error"
-      );
-    } finally {
-      setFriendshipLoading(false);
-    }
+    sendFriendRequest.mutate(targetUserId, {
+      onSuccess: () => {
+        toast.success("Friend request sent!", "Success");
+      },
+      onError: (error: any) => {
+        console.error("Error sending friend request:", error);
+        toast.error(
+          error?.response?.data?.message || "Failed to send request",
+          "Error"
+        );
+      },
+    });
   };
 
-  const handleUnfriend = async () => {
+  const handleUnfriend = () => {
     if (!friendshipId) {
       toast.error("Friendship ID not found", "Error");
       return;
     }
-    try {
-      setFriendshipLoading(true);
-      await axiosClient.delete(`/friend/${friendshipId}`);
-      toast.success("Unfriended successfully!", "Success");
-      setIsFriend(false);
-      setFriendshipId(null);
-    } catch (error: any) {
-      console.error("Error unfriending:", error);
-      toast.error(
-        error?.response?.data?.message || "Failed to unfriend",
-        "Error"
-      );
-    } finally {
-      setFriendshipLoading(false);
-    }
+    deleteFriend.mutate(friendshipId, {
+      onSuccess: () => {
+        toast.success("Unfriended successfully!", "Success");
+      },
+      onError: (error: any) => {
+        console.error("Error unfriending:", error);
+        toast.error(
+          error?.response?.data?.message || "Failed to unfriend",
+          "Error"
+        );
+      },
+    });
   };
 
   const handleShareProfile = () => {
@@ -195,16 +182,6 @@ function ProfileModal({
 
     return heatmapDataObj;
   }, [heatmap, startTime]);
-
-  useEffect(() => {
-    if (opened && targetUserId) {
-      setIsFriend(false);
-      setFriendshipId(null);
-      if (!isOwnProfile) {
-        checkFriendship(targetUserId);
-      }
-    }
-  }, [opened, targetUserId]);
 
   return (
     <>
@@ -260,14 +237,18 @@ function ProfileModal({
             {!isOwnProfile && !isLoading && (
               <button
                 onClick={isFriend ? handleUnfriend : handleAddFriend}
-                disabled={friendshipLoading}
+                disabled={sendFriendRequest.isPending || deleteFriend.isPending}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
                   isFriend
                     ? "bg-red-500/20 hover:bg-red-500/30 text-red-400"
                     : "bg-blue-500/20 hover:bg-blue-500/30 text-blue-400"
-                } ${friendshipLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+                } ${
+                  sendFriendRequest.isPending || deleteFriend.isPending
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                }`}
               >
-                {friendshipLoading ? (
+                {sendFriendRequest.isPending || deleteFriend.isPending ? (
                   <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                 ) : isFriend ? (
                   <IconUserMinus size={18} />
