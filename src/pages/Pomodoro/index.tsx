@@ -339,7 +339,7 @@ function PomodoroPage() {
         )}
 
         {/* Online Users Display */}
-        {!isFocusMode && <OnlineUsers members={members} />}
+        {<OnlineUsers members={members} />}
 
         {/* Header */}
         <Header
