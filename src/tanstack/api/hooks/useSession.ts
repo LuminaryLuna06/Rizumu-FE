@@ -21,7 +21,6 @@ export const useCreateSession = () => {
       return response.data;
     },
     onSuccess: () => {
-      // Invalidate session queries to refetch updated data
       queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.progress.all });
     },
@@ -76,6 +75,32 @@ export const useUpdateSessionNote = () => {
 };
 
 /**
+ * Hook to update session tag
+ */
+export const useUpdateSessionTag = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      sessionId,
+      tagId,
+    }: {
+      sessionId: string;
+      tagId: string;
+    }) => {
+      const response = await axiosClient.patch(
+        SESSION_ENDPOINTS.PATCH_TAG(sessionId),
+        { tag_id: tagId }
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all });
+    },
+  });
+};
+
+/**
  * Hook to fetch hourly session data
  */
 export const useHourlyData = (
@@ -92,6 +117,7 @@ export const useHourlyData = (
       );
       return response.data;
     },
+    staleTime: Infinity,
     enabled: !!startTime && !!endTime && !!userId && enabled,
   });
 };
@@ -113,6 +139,7 @@ export const useDailyData = (
       );
       return response.data;
     },
+    staleTime: Infinity,
     enabled: !!startTime && !!endTime && !!userId && enabled,
   });
 };
@@ -132,7 +159,6 @@ export const useHeatmapData = (
       const response = await axiosClient.get(
         SESSION_ENDPOINTS.HEATMAP(startTime, endTime, userId)
       );
-      // Return default value if data is undefined
       return response.data;
     },
     enabled: !!startTime && !!endTime && !!userId && enabled,

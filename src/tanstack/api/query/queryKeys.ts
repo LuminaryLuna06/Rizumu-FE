@@ -38,9 +38,6 @@ export const queryKeys = {
   // Session keys
   sessions: {
     all: ["sessions"] as const,
-    lists: () => [...queryKeys.sessions.all, "list"] as const,
-    list: (filters: Record<string, unknown>) =>
-      [...queryKeys.sessions.lists(), { filters }] as const,
     hourly: (startTime: string, endTime: string, userId: string) =>
       [
         ...queryKeys.sessions.all,
