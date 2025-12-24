@@ -42,7 +42,7 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
     }
 
     // Create new socket connection
-    const newSocket = io(import.meta.env.VITE_SOCKET_URL, {
+    const newSocket = io(import.meta.env.VITE_SOCKET_URL_RIZUMU, {
       auth: {
         userId: user._id,
       },
