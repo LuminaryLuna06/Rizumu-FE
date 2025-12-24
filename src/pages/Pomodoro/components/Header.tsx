@@ -9,8 +9,18 @@ import StreakPopover from "@rizumu/components/StreakPopover";
 import { useAuth } from "@rizumu/context/AuthContext";
 import { useState, useMemo } from "react";
 import { useHourlyData } from "@rizumu/tanstack/api/hooks";
+import TagSelector from "./TagSelector";
+import type { ModelTag } from "@rizumu/models/tag";
 
-function Header({ focusMode }: { focusMode: boolean }) {
+function Header({
+  focusMode,
+  selectedTag,
+  onTagSelect,
+}: {
+  focusMode: boolean;
+  selectedTag: ModelTag | null;
+  onTagSelect: (tag: ModelTag | null) => void;
+}) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [opened, setOpened] = useState(false);
@@ -66,7 +76,12 @@ function Header({ focusMode }: { focusMode: boolean }) {
           focusMode ? "opacity-0 pointer-events-none" : "opacity-100"
         }`}
       >
+        {/* Tag Selector - Only visible on md+ screens */}
+        <div className="hidden md:block lg:hidden">
+          <TagSelector selectedTag={selectedTag} onTagSelect={onTagSelect} />
+        </div>
         <StreakPopover />
+
         <ResponsiveButton
           leftSection={<IconClock size={16} />}
           className="font-semibold md:py-sm"

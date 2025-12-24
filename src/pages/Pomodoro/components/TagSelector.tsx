@@ -178,7 +178,7 @@ function TagSelector({ selectedTag, onTagSelect }: TagSelectorProps) {
   };
 
   return (
-    <>
+    <div>
       <div className="tag-dropdown-container">
         <button
           ref={buttonRef}
@@ -327,7 +327,7 @@ function TagSelector({ selectedTag, onTagSelect }: TagSelectorProps) {
           </div>,
           document.body
         )}
-    </>
+    </div>
   );
 }
 

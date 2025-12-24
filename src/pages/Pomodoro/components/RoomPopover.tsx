@@ -152,7 +152,7 @@ function RoomPopover() {
         opened={roomOpened && !!room}
         onClose={() => setRoomOpened(!roomOpened)}
         position="top-right"
-        className="w-90"
+        className="w-90 max-h-[80vh] overflow-y-auto"
       >
         <div className="p-lg space-y-md">
           <div className="flex justify-between text-secondary items-center overflow-hidden">
@@ -217,7 +217,7 @@ function RoomPopover() {
 
           {showMembers ? (
             <>
-              <div className="space-y-sm max-h-[400px] overflow-y-auto">
+              <div className="space-y-sm max-h-[400px] overflow-y-auto scrollbar-hidden">
                 {membersLoading ? (
                   Array.from({ length: 3 }).map((_, idx) => (
                     <div
@@ -354,7 +354,7 @@ function RoomPopover() {
             </form>
           ) : (
             <div className="space-y-sm">
-              <div className="space-y-sm max-h-[400px] overflow-y-auto">
+              <div className="space-y-sm max-h-[400px] overflow-y-auto scrollbar-hidden">
                 {membersLoading ? (
                   Array.from({ length: 3 }).map((_, idx) => (
                     <div

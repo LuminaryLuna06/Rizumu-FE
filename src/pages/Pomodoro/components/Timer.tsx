@@ -62,10 +62,19 @@ interface TimerProps {
   bgType: string;
   bgName: string;
   focusMode: boolean;
+  selectedTag: ModelTag | null;
+  onTagSelect: (tag: ModelTag | null) => void;
   setFocusMode: (mode?: boolean | ((prev: boolean) => boolean)) => void;
 }
 
-function Timer({ bgType, bgName, focusMode, setFocusMode }: TimerProps) {
+function Timer({
+  bgType,
+  bgName,
+  focusMode,
+  selectedTag,
+  onTagSelect,
+  setFocusMode,
+}: TimerProps) {
   const { user } = useAuth();
   const toast = useToast();
   const create = useCreateSession();
@@ -96,8 +105,6 @@ function Timer({ bgType, bgName, focusMode, setFocusMode }: TimerProps) {
   const [timerDirection, setTimerDirection] = useState<TimerDirection>(() =>
     getTimerDirection()
   );
-
-  const [selectedTag, setSelectedTag] = useState<ModelTag | null>(null);
 
   const [targetDuration, setTargetDuration] = useState(() => {
     const storedPresets = localStorage.getItem("pomodoro_presets");
@@ -162,40 +169,24 @@ function Timer({ bgType, bgName, focusMode, setFocusMode }: TimerProps) {
   // Load/clear tag based on user
   useEffect(() => {
     if (!user) {
-      setSelectedTag(null);
+      onTagSelect(null);
     } else {
       // Load tag from localStorage for this specific user
       try {
         const key = `${SELECTED_TAG_KEY}_${user._id}`;
         const stored = localStorage.getItem(key);
         if (stored) {
-          setSelectedTag(JSON.parse(stored));
+          onTagSelect(JSON.parse(stored));
         }
       } catch (error) {
         console.error("Failed to restore selected tag:", error);
       }
     }
-  }, [user]);
+  }, [user, onTagSelect]);
 
   useEffect(() => {
     saveTimerDirection(timerDirection);
   }, [timerDirection]);
-
-  // Save tag to localStorage (user-specific)
-  useEffect(() => {
-    if (!user) return;
-
-    const key = `${SELECTED_TAG_KEY}_${user._id}`;
-    try {
-      if (selectedTag) {
-        localStorage.setItem(key, JSON.stringify(selectedTag));
-      } else {
-        localStorage.removeItem(key);
-      }
-    } catch (error) {
-      console.error("Failed to save selected tag:", error);
-    }
-  }, [selectedTag, user]);
 
   useEffect(() => {
     if (!running) {
@@ -844,22 +835,7 @@ function Timer({ bgType, bgName, focusMode, setFocusMode }: TimerProps) {
               focusMode ? "opacity-0 pointer-events-none" : "opacity-100"
             }`}
           >
-            <TagSelector
-              selectedTag={selectedTag}
-              onTagSelect={setSelectedTag}
-            />
-          </div>
-
-          {/* Tag Selection - Landscape Mode Only (Fixed Position) */}
-          <div
-            className={`hidden md:block lg:hidden fixed top-20 left-4 transition-all duration-500 ${
-              focusMode ? "opacity-0 pointer-events-none" : "opacity-100"
-            }`}
-          >
-            <TagSelector
-              selectedTag={selectedTag}
-              onTagSelect={setSelectedTag}
-            />
+            <TagSelector selectedTag={selectedTag} onTagSelect={onTagSelect} />
           </div>
 
           <div

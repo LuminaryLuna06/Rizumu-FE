@@ -154,7 +154,7 @@ function ChatPopover() {
       position="bottom-right"
       className="w-80 md:w-90"
     >
-      <div className="flex items-center justify-center bg-primary/70 backdrop-blur-xl text-secondary rounded-3xl shadow-2xl p-md border border-primary font-poppins overflow-y-hidden overflow-x-hidden">
+      <div className="flex items-center justify-center  bg-primary/70 backdrop-blur-xl text-secondary rounded-3xl shadow-2xl p-md border border-primary font-poppins overflow-y-hidden overflow-x-hidden">
         <div className="flex flex-col w-full">
           <div className="flex justify-between mb-2 w-full">
             <h2 className="text-lg font-semibold">Chat</h2>
@@ -166,7 +166,7 @@ function ChatPopover() {
           <div
             ref={messagesRef}
             onScroll={handleScroll}
-            className="flex flex-col items-start max-h-[350px] min-h-[250px] overflow-y-auto overflow-x-hidden custom-scrollbar scrollbar-hidden"
+            className="flex flex-col items-start max-h-[50vh] overflow-y-auto overflow-x-hidden custom-scrollbar scrollbar-hidden"
           >
             {messages.map((msg, idx) => {
               // System message styling

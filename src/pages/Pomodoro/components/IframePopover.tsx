@@ -311,7 +311,7 @@ function IframePopover() {
         </ResponsiveButton>
       }
       position="bottom-left"
-      className="w-100 md:w-120"
+      className="w-100 md:w-120 max-h-[70vh]"
     >
       <div className="flex items-center justify-between px-lg py-md">
         <h3 className="text-secondary capitalize">
@@ -364,9 +364,9 @@ function IframePopover() {
         )}
       </div>
 
-      <div className="p-lg">
+      <div className="p-lg max-h-[calc(70vh-30px)] overflow-y-auto scrollbar-hidden">
         {showRecent ? (
-          <div className="space-y-sm max-h-96 overflow-y-auto">
+          <div className="space-y-sm">
             {linkHistory.length > 0 ? (
               linkHistory.map((link, index) => (
                 <div key={index} className="relative group">

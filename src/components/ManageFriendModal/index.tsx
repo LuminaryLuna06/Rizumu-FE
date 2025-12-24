@@ -136,7 +136,7 @@ function ManageFriendModal({ opened, onClose }: ManageFriendModalProps) {
         }
       >
         {/* Container*/}
-        <div className="flex flex-col h-full overflow-hidden">
+        <div className="flex flex-col h-[calc(90vh-90px)] max-h-[600px] overflow-hidden">
           <div className="block md:hidden mb-4 shrink-0 w-full">
             <TextInput
               placeholder="Search by email"
@@ -152,7 +152,7 @@ function ManageFriendModal({ opened, onClose }: ManageFriendModalProps) {
 
           {/* Search Results */}
           {searchQuery && (
-            <div className="mb-4 shrink-0 max-h-48 overflow-y-auto">
+            <div className="mb-4 shrink-0 max-h-48 overflow-y-auto scroll-smooth scrollbar-hidden">
               {searchLoading ? (
                 <div className="text-center py-4 text-secondary">
                   Searching...
@@ -222,7 +222,7 @@ function ManageFriendModal({ opened, onClose }: ManageFriendModalProps) {
           </div>
 
           {/* Main Content */}
-          <div className="flex flex-col justify-start text-center min-h-0 flex-1 overflow-y-auto custom-scrollbar pr-1">
+          <div className="flex flex-col justify-start text-center min-h-0 flex-1 overflow-y-auto scroll-smooth scrollbar-hidden pr-1">
             {activeTab === "activity" ? (
               <>
                 {friendsLoading ? (

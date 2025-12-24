@@ -11,6 +11,7 @@ import { useToast } from "@rizumu/utils/toast/toast";
 import { useSocket } from "@rizumu/context/SocketContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@rizumu/tanstack/api/query/queryKeys";
+import type { ModelTag } from "@rizumu/models/tag";
 
 import ProfileModal from "@rizumu/components/ProfileModal";
 import {
@@ -47,6 +48,22 @@ function PomodoroPage() {
     !!user?.current_room_id
   );
   const [members, setMembers] = useState<any[]>([]);
+  const [selectedTag, setSelectedTag] = useState<ModelTag | null>(null);
+
+  // Save tag to localStorage
+  useEffect(() => {
+    if (!user) return;
+    const key = `pomodoro_selected_tag_${user._id}`;
+    try {
+      if (selectedTag) {
+        localStorage.setItem(key, JSON.stringify(selectedTag));
+      } else {
+        localStorage.removeItem(key);
+      }
+    } catch (error) {
+      console.error("Failed to save selected tag:", error);
+    }
+  }, [selectedTag, user]);
 
   useEffect(() => {
     const img = new Image();
@@ -325,12 +342,18 @@ function PomodoroPage() {
         {!isFocusMode && <OnlineUsers members={members} />}
 
         {/* Header */}
-        <Header focusMode={isFocusMode} />
+        <Header
+          focusMode={isFocusMode}
+          selectedTag={selectedTag}
+          onTagSelect={setSelectedTag}
+        />
         {/* Main Content */}
         <Timer
           bgType={background.type}
           bgName={background.name}
           focusMode={isFocusMode}
+          selectedTag={selectedTag}
+          onTagSelect={setSelectedTag}
           setFocusMode={(mode?: boolean | ((prev: boolean) => boolean)) =>
             setIsFocusMode(
               typeof mode === "boolean"
