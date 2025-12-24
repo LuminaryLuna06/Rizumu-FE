@@ -9,6 +9,8 @@ import Modal from "@rizumu/components/Modal";
 import ResponsiveButton from "@rizumu/components/ResponsiveButton";
 import { useToast } from "@rizumu/utils/toast/toast";
 import { useSocket } from "@rizumu/context/SocketContext";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@rizumu/tanstack/api/query/queryKeys";
 
 import ProfileModal from "@rizumu/components/ProfileModal";
 import {
@@ -20,6 +22,7 @@ import {
 function PomodoroPage() {
   const toast = useToast();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const [isFocusMode, setIsFocusMode] = useState<boolean>(false);
   const [background, setBackground] = useState({
@@ -176,13 +179,11 @@ function PomodoroPage() {
   useEffect(() => {
     if (!socket) return;
 
-    // Listen for initial online users list (sent when user connects)
     const handleRoomOnlineUsers = (data: any[]) => {
       console.log("Received room online users:", data);
       setMembers(data);
     };
 
-    // Listen for user coming online
     const handleUserOnline = (data: {
       user_id?: string;
       name?: string;
@@ -194,6 +195,12 @@ function PomodoroPage() {
       if (!data.user_id) {
         console.warn("user_online event missing user_id");
         return;
+      }
+
+      if (user?.current_room_id) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.rooms.members(user.current_room_id),
+        });
       }
 
       setMembers((prev) => {
@@ -211,7 +218,6 @@ function PomodoroPage() {
               : member
           );
         } else {
-          // Add new member (user_id guaranteed to exist due to early return)
           return [
             ...prev,
             {
@@ -238,7 +244,12 @@ function PomodoroPage() {
         return;
       }
 
-      // Remove offline user from list (since we only show online users)
+      if (user?.current_room_id) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.rooms.members(user.current_room_id),
+        });
+      }
+
       setMembers((prev) =>
         prev.filter((member) => member.user_id !== data.user_id)
       );
