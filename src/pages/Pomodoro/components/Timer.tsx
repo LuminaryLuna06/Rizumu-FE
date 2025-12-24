@@ -59,7 +59,7 @@ interface TimerProps {
   bgName: string;
   focusMode: boolean;
   onSessionComplete?: () => void;
-  setFocusMode?: () => void;
+  setFocusMode?: (mode?: boolean) => void;
 }
 
 function Timer({
@@ -508,6 +508,7 @@ function Timer({
 
     setMode(nextMode);
     resetTimer(nextMode);
+    setFocusMode?.(false);
   };
 
   // Picture-in-Picture handlers

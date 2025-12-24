@@ -11,7 +11,6 @@ import { useToast } from "@rizumu/utils/toast/toast";
 import ProfileModal from "@rizumu/components/ProfileModal";
 import {
   useJoinRoom,
-  useProfileById,
   useRoomBySlug,
   useRoomById,
 } from "@rizumu/tanstack/api/hooks";
@@ -204,7 +203,9 @@ function PomodoroPage() {
           bgType={background.type}
           bgName={background.name}
           focusMode={isFocusMode}
-          setFocusMode={() => setIsFocusMode((prev) => !prev)}
+          setFocusMode={(mode?: boolean) =>
+            setIsFocusMode(typeof mode === "boolean" ? mode : (prev) => !prev)
+          }
         />
         {/* Footer */}
         <Footer
