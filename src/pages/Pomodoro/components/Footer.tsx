@@ -32,7 +32,7 @@ function Footer({ onBackgroundChange, focusMode }: FooterProps) {
   };
 
   return (
-    <div className="footer flex justify-between h-[10vh] items-center">
+    <div className="footer flex justify-between h-[10vh] items-center px-md pb-lg lg:pb-0">
       {/* Footer Left */}
       <div className="flex gap-x-lg">
         <IframePopover />

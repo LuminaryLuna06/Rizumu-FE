@@ -53,7 +53,7 @@ function TagSelector({ selectedTag, onTagSelect }: TagSelectorProps) {
       // Don't have => Null
       if (!currentTag) {
         onTagSelect(null);
-      // Update tag after edit
+        // Update tag after edit
       } else if (
         currentTag.name !== selectedTag.name ||
         currentTag.color !== selectedTag.color
@@ -183,7 +183,7 @@ function TagSelector({ selectedTag, onTagSelect }: TagSelectorProps) {
         <button
           ref={buttonRef}
           onClick={() => setShowDropdown(!showDropdown)}
-          className="flex items-center bg-primary-hover rounded-lg px-lg py-md cursor-pointer text-secondary/90 hover:bg-primary-hover/80 transition-all min-w-[150px] justify-between"
+          className="flex items-center bg-primary-hover rounded-lg px-sm py-sm lg:px-md lg:py-sm cursor-pointer text-secondary/90 hover:bg-primary-hover/80 transition-all min-w-[120px] md:min-w-[150px] justify-between text-sm md:text-base"
         >
           <div className="flex items-center gap-2 mr-2">
             {selectedTag && (

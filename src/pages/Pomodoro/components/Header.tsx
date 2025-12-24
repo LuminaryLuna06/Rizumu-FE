@@ -49,7 +49,7 @@ function Header({ focusMode }: { focusMode: boolean }) {
   };
 
   return (
-    <div className="header flex justify-between h-[8vh]">
+    <div className="header flex justify-between h-[8vh] px-md pt-xl lg:pt-0">
       {/* Header Left */}
       <div className="header-left flex items-center justify-center gap-x-sm">
         <IconMusicCode size={30} className="hidden md:block" />

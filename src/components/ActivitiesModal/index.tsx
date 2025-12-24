@@ -410,8 +410,8 @@ function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
             ))}
           </div>
         ) : dailySession && dailySession.length > 0 ? (
-          dailySession.map((session) => (
-            <div key={session.id} className="relative">
+          dailySession.map((session, index) => (
+            <div key={session.id || `session-${index}`} className="relative">
               <div className="absolute left-14 sm:left-24 top-0 bottom-0 border-1 border-white/20 border-dashed"></div>
               <BoxReview data={session} tags={tags || []} />
             </div>

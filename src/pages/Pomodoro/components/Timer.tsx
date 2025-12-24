@@ -838,9 +838,21 @@ function Timer({ bgType, bgName, focusMode, setFocusMode }: TimerProps) {
       ) : (
         // Show full timer when PiP is not active
         <>
-          {/* Tag Selection */}
+          {/* Tag Selection - Portrait Mode & Desktop */}
           <div
-            className={`transition-all duration-500 ${
+            className={`block md:hidden lg:block transition-all duration-500 ${
+              focusMode ? "opacity-0 pointer-events-none" : "opacity-100"
+            }`}
+          >
+            <TagSelector
+              selectedTag={selectedTag}
+              onTagSelect={setSelectedTag}
+            />
+          </div>
+
+          {/* Tag Selection - Landscape Mode Only (Fixed Position) */}
+          <div
+            className={`hidden md:block lg:hidden fixed top-20 left-4 transition-all duration-500 ${
               focusMode ? "opacity-0 pointer-events-none" : "opacity-100"
             }`}
           >
@@ -851,7 +863,7 @@ function Timer({ bgType, bgName, focusMode, setFocusMode }: TimerProps) {
           </div>
 
           <div
-            className={`flex gap-x-xl items-center mt-10 transition-all duration-500 ${
+            className={`flex gap-x-xl items-center mt-4 md:mt-6 transition-all duration-500 ${
               focusMode ? "opacity-0 pointer-events-none" : "opacity-100"
             }`}
           >
@@ -902,7 +914,7 @@ function Timer({ bgType, bgName, focusMode, setFocusMode }: TimerProps) {
           </div>
 
           <p
-            className="leading-tight md:text-[10em] text-[6em] font-extrabold tracking-[0.07em] transition-all duration-slower ease-in-out"
+            className="leading-tight text-[4.5em] sm:text-[5.5em] md:text-[7em] lg:text-[10em] font-extrabold tracking-[0.07em] transition-all duration-slower ease-in-out"
             style={{
               textShadow:
                 "0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), 0 10px 20px rgba(0, 0, 0, 0.15)",

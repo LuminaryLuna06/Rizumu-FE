@@ -289,7 +289,7 @@ function PomodoroPage() {
 
   return (
     <>
-      <div className="flex flex-col min-h-screen w-full overflow-hidden px-md md:px-xl text-secondary font-light text-sm z-base">
+      <div className="flex flex-col min-h-screen w-full overflow-hidden text-secondary font-light text-sm z-base">
         {background.type === "static" ? (
           <div
             className={`fixed top-0 left-0 w-screen h-screen bg-cover bg-center -z-10 transition-opacity duration-700 ${
