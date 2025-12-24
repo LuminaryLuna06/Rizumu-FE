@@ -156,7 +156,7 @@ function ProfileModal({
       const shareUrl = `${currentUrl}?uid=${targetUserId}`;
 
       navigator.clipboard.writeText(shareUrl);
-      toast.success("Profile link copied to clipboard!", "Success");
+      toast.info("Use this link to show your profile", "Copied to clipboard");
     } catch (error) {
       console.error("Error copying link:", error);
       toast.error("Failed to copy link", "Error");

@@ -122,7 +122,10 @@ function RoomPopover() {
     try {
       const link = `${window.location.origin}/pomodoro?rid=${room?.slug}`;
       await navigator.clipboard.writeText(link);
-      toast.success("Room link copied to clipboard!", "Success");
+      toast.info(
+        "Use this link to invite people into your room",
+        "Copied to clipboard"
+      );
     } catch (e: any) {
       toast.error("Failed to copy link", "Error");
     }

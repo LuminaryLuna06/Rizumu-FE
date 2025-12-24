@@ -36,7 +36,7 @@ function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
     "Analytics"
   );
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const { data: tags } = useTags();
+  const { data: tags } = useTags(!!user);
 
   const { startTime, endTime } = useMemo(() => {
     const year = selectedDate.getFullYear();
@@ -216,14 +216,14 @@ function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
                   if (index == monthNumber) {
                     if (date < 10) {
                       return (
-                        <div className="flex justify-between">
+                        <div key={index} className="flex justify-between">
                           <p>{month.name + " "}</p>
                           <p className="ml-[2px]">{"0" + date}</p>
                         </div>
                       );
                     }
                     return (
-                      <div className="flex justify-between">
+                      <div key={index} className="flex justify-between">
                         <p>{month.name + " "}</p>
                         <p className="ml-[2px]">{date}</p>
                       </div>
@@ -259,6 +259,7 @@ function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
             <div className="flex items-end justify-around h-[230px] gap-1 px-4">
               {[...Array(24)].map((_, i) => (
                 <div
+                  key={i}
                   className="bg-zinc-800 rounded-t w-full"
                   style={{
                     height: `${Math.random() * 60 + 20}%`,
@@ -363,9 +364,9 @@ function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
               const date = selectedDate.getDate();
               if (index == monthNumber) {
                 if (date < 10) {
-                  return <p>{month.name + " 0" + date}</p>;
+                  return <p key={index}>{month.name + " 0" + date}</p>;
                 }
-                return <p>{month.name + " " + date}</p>;
+                return <p key={index}>{month.name + " " + date}</p>;
               }
             })}
           </div>
@@ -410,7 +411,7 @@ function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
           </div>
         ) : dailySession && dailySession.length > 0 ? (
           dailySession.map((session) => (
-            <div className="relative">
+            <div key={session.id} className="relative">
               <div className="absolute left-14 sm:left-24 top-0 bottom-0 border-1 border-white/20 border-dashed"></div>
               <BoxReview data={session} tags={tags || []} />
             </div>

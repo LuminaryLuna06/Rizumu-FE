@@ -17,10 +17,10 @@ import {
 import { getTimerSettings } from "@rizumu/utils/timerSettings";
 import { playSound, createAudioContext } from "@rizumu/utils/audioPresets";
 import {
-  IconFlag,
   IconClockHour11Filled,
   IconPlayerSkipForwardFilled,
   IconPictureInPicture,
+  IconFlagFilled,
 } from "@tabler/icons-react";
 import PresetModal from "./PresetModal";
 import TagSelector from "./TagSelector";
@@ -97,14 +97,7 @@ function Timer({ bgType, bgName, focusMode, setFocusMode }: TimerProps) {
     getTimerDirection()
   );
 
-  const [selectedTag, setSelectedTag] = useState<ModelTag | null>(() => {
-    try {
-      const stored = localStorage.getItem(SELECTED_TAG_KEY);
-      return stored ? JSON.parse(stored) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [selectedTag, setSelectedTag] = useState<ModelTag | null>(null);
 
   const [targetDuration, setTargetDuration] = useState(() => {
     const storedPresets = localStorage.getItem("pomodoro_presets");
@@ -166,9 +159,21 @@ function Timer({ bgType, bgName, focusMode, setFocusMode }: TimerProps) {
     modeRef.current = mode;
   }, [mode]);
 
+  // Load/clear tag based on user
   useEffect(() => {
     if (!user) {
       setSelectedTag(null);
+    } else {
+      // Load tag from localStorage for this specific user
+      try {
+        const key = `${SELECTED_TAG_KEY}_${user._id}`;
+        const stored = localStorage.getItem(key);
+        if (stored) {
+          setSelectedTag(JSON.parse(stored));
+        }
+      } catch (error) {
+        console.error("Failed to restore selected tag:", error);
+      }
     }
   }, [user]);
 
@@ -176,18 +181,21 @@ function Timer({ bgType, bgName, focusMode, setFocusMode }: TimerProps) {
     saveTimerDirection(timerDirection);
   }, [timerDirection]);
 
-  // LocalStorage Tag
+  // Save tag to localStorage (user-specific)
   useEffect(() => {
+    if (!user) return;
+
+    const key = `${SELECTED_TAG_KEY}_${user._id}`;
     try {
       if (selectedTag) {
-        localStorage.setItem(SELECTED_TAG_KEY, JSON.stringify(selectedTag));
+        localStorage.setItem(key, JSON.stringify(selectedTag));
       } else {
-        localStorage.removeItem(SELECTED_TAG_KEY);
+        localStorage.removeItem(key);
       }
     } catch (error) {
       console.error("Failed to save selected tag:", error);
     }
-  }, [selectedTag]);
+  }, [selectedTag, user]);
 
   useEffect(() => {
     if (!running) {
@@ -902,9 +910,9 @@ function Timer({ bgType, bgName, focusMode, setFocusMode }: TimerProps) {
           >
             {formatTime(timeLeft)}
           </p>
-          <button className="flex justify-center items-center gap-x-xs text-normal">
-            <IconFlag size={20} />
-            <p>Website</p>
+          <button className="flex justify-center items-center gap-x-xs font-semibold">
+            <IconFlagFilled size={20} />
+            <p>Task (under_dev)</p>
           </button>
 
           <div className="grid grid-cols-3 items-center w-full max-w-[35rem] gap-x-4">

@@ -10,8 +10,6 @@ import type { ModelHeatmap } from "@rizumu/models/heatmap";
  * Hook to create a new session
  */
 export const useCreateSession = () => {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: async (sessionData: Partial<ModelUserPomodoroSession>) => {
       const response = await axiosClient.post(
@@ -19,10 +17,6 @@ export const useCreateSession = () => {
         sessionData
       );
       return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.progress.all });
     },
   });
 };

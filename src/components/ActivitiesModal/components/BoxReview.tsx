@@ -102,12 +102,12 @@ function BoxReview({ data, tags }: BoxReviewProps) {
     );
   };
 
-  const handleTagChange = async (newTagId: string | null) => {
+  const handleTagChange = async (newTagId: string | "") => {
     if (newTagId === data.tag_id) {
       setIsEditingTag(false);
       return;
     }
-
+    // console.log(newTagId, data._id);
     updateTag.mutate(
       { sessionId: data._id, tagId: newTagId || "" },
       {
@@ -209,7 +209,7 @@ function BoxReview({ data, tags }: BoxReviewProps) {
                 <div className="max-h-[200px] overflow-y-auto custom-scrollbar scrollbar-hidden">
                   {/* Option to clear tag */}
                   <button
-                    onClick={() => handleTagChange(null)}
+                    onClick={() => handleTagChange("")}
                     className="w-full px-3 py-2 flex items-center gap-2 hover:bg-white/10 text-sm text-text-inactive transition-colors border-b border-white/5"
                   >
                     <div className="w-2.5 h-2.5 rounded-full border border-dashed border-white/30" />

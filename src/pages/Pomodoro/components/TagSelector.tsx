@@ -19,6 +19,7 @@ import {
   useUpdateTag,
 } from "@rizumu/tanstack/api/hooks/useTag";
 import { useToast } from "@rizumu/utils/toast/toast";
+import { useAuth } from "@rizumu/context/AuthContext";
 
 interface TagSelectorProps {
   selectedTag: ModelTag | null;
@@ -27,6 +28,7 @@ interface TagSelectorProps {
 
 function TagSelector({ selectedTag, onTagSelect }: TagSelectorProps) {
   const toast = useToast();
+  const { user } = useAuth();
   const [showDropdown, setShowDropdown] = useState(false);
   const [showCreateTag, setShowCreateTag] = useState(false);
   const [newTagName, setNewTagName] = useState("");
@@ -40,7 +42,7 @@ function TagSelector({ selectedTag, onTagSelect }: TagSelectorProps) {
   });
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  const { data: tags } = useTags();
+  const { data: tags } = useTags(!!user);
   const update = useUpdateTag();
   const deleteTag = useDeleteTag();
   const create = useCreateTag();
