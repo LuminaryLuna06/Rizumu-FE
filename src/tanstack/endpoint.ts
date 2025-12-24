@@ -33,7 +33,7 @@ export const SESSION_ENDPOINTS = {
   DAILY: (startTime: string, endTime: string, userId: string) =>
     `/session/daily?startTime=${startTime}&endTime=${endTime}&userId=${userId}`,
   HEATMAP: (startTime: string, endTime: string, userId: string) =>
-    `/session/heatmap?startTime=${startTime}&endTime=${endTime}&userId=${userId}`,
+    `/session/heatmap?startTime=${startTime}&endTime=${endTime}&user_id=${userId}`,
   LEADERBOARD: (startTime: string, endTime: string) =>
     `/session/leaderboard?startTime=${startTime}&endTime=${endTime}`,
   LEADERBOARD_FRIEND: (startTime: string, endTime: string) =>

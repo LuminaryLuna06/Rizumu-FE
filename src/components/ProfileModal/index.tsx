@@ -29,7 +29,6 @@ import {
   useHeatmapData,
   useProfileById,
   useProgressById,
-  useStats,
   useFriends,
   useSendFriendRequest,
   useDeleteFriend,
@@ -163,7 +162,7 @@ function ProfileModal({
     startTime,
     endTime,
     targetUserId || "",
-    opened
+    opened && !!targetUserId
   );
   const { data: gifts, isLoading: giftLoading } = useGiftById(
     targetUserId || "",
@@ -185,7 +184,7 @@ function ProfileModal({
     });
 
     return heatmapDataObj;
-  }, [heatmap, startTime]);
+  }, [heatmap, startTime, targetUserId]);
 
   return (
     <>
