@@ -33,6 +33,7 @@ import {
   useFriends,
   useSendFriendRequest,
   useDeleteFriend,
+  useStatsById,
 } from "@rizumu/tanstack/api/hooks";
 
 interface ProfileModalProps {
@@ -150,7 +151,10 @@ function ProfileModal({
     }
   };
 
-  const { data: stats, isLoading: statsLoading } = useStats(opened);
+  const { data: stats, isLoading: statsLoading } = useStatsById(
+    targetUserId || "",
+    opened
+  );
   const { data: progress, isLoading: progressLoading } = useProgressById(
     targetUserId || "",
     opened
