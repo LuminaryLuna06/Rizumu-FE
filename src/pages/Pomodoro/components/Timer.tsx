@@ -359,7 +359,7 @@ function Timer({
                     onSuccess: () => {
                       toast.info(
                         `You gained ${xp} xp${
-                          coin > 0 ? `and ${coin} coins` : ""
+                          coin > 0 ? ` and ${coin} coins` : ""
                         }.`,
                         "Let's fucking gooooo!"
                       );
@@ -490,7 +490,7 @@ function Timer({
             {
               onSuccess: () => {
                 toast.info(
-                  `You gained ${xp} xp${coin > 0 ? `and ${coin} coins` : ""}.`,
+                  `You gained ${xp} xp${coin > 0 ? ` and ${coin} coins` : ""}.`,
                   "Let's fucking gooooo!"
                 );
               },
