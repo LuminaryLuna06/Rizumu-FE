@@ -3,18 +3,20 @@ import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
 import { TAG_ENDPOINTS } from "@rizumu/tanstack/endpoint";
 import { queryKeys } from "@rizumu/tanstack/api/query/queryKeys";
 import type { ModelTag } from "@rizumu/models/tag";
+import { useAuth } from "@rizumu/context/AuthContext";
 
 /**
  * Hook to fetch all tags
  */
 export const useTags = (enabled = true) => {
+  const { user } = useAuth();
   return useQuery<ModelTag[]>({
-    queryKey: queryKeys.tags.all,
+    queryKey: [...queryKeys.tags.all, user?._id],
     queryFn: async () => {
       const response = await axiosClient.get(TAG_ENDPOINTS.TAGS);
       return response.data;
     },
-    enabled,
+    enabled: enabled && !!user,
   });
 };
 

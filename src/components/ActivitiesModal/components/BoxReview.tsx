@@ -8,7 +8,11 @@ import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import ResponsiveButton from "../../ResponsiveButton";
 import TextInput from "../../TextInput";
-import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
+import {
+  useUpdateSessionNote,
+  useUpdateSessionTag,
+} from "@rizumu/tanstack/api/hooks";
+import { useToast } from "@rizumu/utils/toast/toast";
 
 interface BoxReviewProps {
   data: any;
@@ -16,19 +20,23 @@ interface BoxReviewProps {
 }
 
 function BoxReview({ data, tags }: BoxReviewProps) {
+  const toast = useToast();
   const [isEditingNote, setIsEditingNote] = useState(false);
   const [isEditingTag, setIsEditingTag] = useState(false);
   const [note, setNote] = useState(data.notes || "");
   const [tempNote, setTempNote] = useState(data.notes || "");
-  const [isLoading, setIsLoading] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({
     top: 0,
     left: 0,
     width: 0,
   });
-  const tagButtonRef = useRef<HTMLDivElement>(null);
+  const [currentTagId, setCurrentTagId] = useState(data.tag_id);
 
-  const selectedTag = tags.find((t) => t._id === data.tag_id);
+  const tagButtonRef = useRef<HTMLDivElement>(null);
+  const updateNote = useUpdateSessionNote();
+  const updateTag = useUpdateSessionTag();
+
+  const selectedTag = tags.find((t) => t._id === currentTagId);
 
   const d = new Date(data.started_at);
 
@@ -46,7 +54,11 @@ function BoxReview({ data, tags }: BoxReviewProps) {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-      if (isEditingTag && !target.closest(".tag-dropdown-portal")) {
+      if (
+        isEditingTag &&
+        !target.closest(".tag-dropdown-portal") &&
+        !tagButtonRef.current?.contains(target)
+      ) {
         setIsEditingTag(false);
       }
     };
@@ -55,6 +67,12 @@ function BoxReview({ data, tags }: BoxReviewProps) {
     }
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isEditingTag]);
+
+  useEffect(() => {
+    setNote(data.notes || "");
+    setTempNote(data.notes || "");
+    setCurrentTagId(data.tag_id);
+  }, [data.notes, data.tag_id]);
 
   const handleEditNoteClick = () => {
     setTempNote(note);
@@ -66,19 +84,22 @@ function BoxReview({ data, tags }: BoxReviewProps) {
       setIsEditingNote(false);
       return;
     }
-    setIsLoading(true);
-    try {
-      await axiosClient.patch(`/session/${data._id}/note`, {
-        notes: tempNote,
-      });
-      setNote(tempNote);
-      data.notes = tempNote;
-      setIsEditingNote(false);
-    } catch (error) {
-      console.error("Error updating note:", error);
-    } finally {
-      setIsLoading(false);
-    }
+    updateNote.mutate(
+      { sessionId: data._id, notes: tempNote },
+      {
+        onSuccess: () => {
+          toast.success("Update session note", "Success");
+          setNote(tempNote);
+          setIsEditingNote(false);
+        },
+        onError: (error: any) => {
+          toast.error(
+            error?.response?.data?.message || "Failed to update",
+            "Error"
+          );
+        },
+      }
+    );
   };
 
   const handleTagChange = async (newTagId: string | null) => {
@@ -87,19 +108,22 @@ function BoxReview({ data, tags }: BoxReviewProps) {
       return;
     }
 
-    setIsLoading(true);
-    try {
-      const tagToSave = newTagId || " ";
-      await axiosClient.patch(`/session/${data._id}/tag`, {
-        tag_id: tagToSave,
-      });
-      data.tag_id = tagToSave;
-      setIsEditingTag(false);
-    } catch (error) {
-      console.error("Error updating tag:", error);
-    } finally {
-      setIsLoading(false);
-    }
+    updateTag.mutate(
+      { sessionId: data._id, tagId: newTagId || "" },
+      {
+        onSuccess: () => {
+          toast.success("Update session tag", "Success");
+          setCurrentTagId(newTagId);
+          setIsEditingTag(false);
+        },
+        onError: (error: any) => {
+          toast.error(
+            error?.response?.data?.message || "Failed to update",
+            "Error"
+          );
+        },
+      }
+    );
   };
 
   const getDuration = (duration: number) => {
@@ -145,7 +169,11 @@ function BoxReview({ data, tags }: BoxReviewProps) {
           <IconTag size={20} className="text-text-inactive" />
           <div
             ref={tagButtonRef}
-            onClick={() => !isLoading && setIsEditingTag(!isEditingTag)}
+            onClick={() => {
+              if (!updateTag.isPending && !updateNote.isPending) {
+                setIsEditingTag(!isEditingTag);
+              }
+            }}
             className="flex items-center gap-2 px-2 py-0.5 rounded-md border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer transition-colors group"
           >
             {selectedTag ? (
@@ -238,7 +266,7 @@ function BoxReview({ data, tags }: BoxReviewProps) {
                 size="sm"
                 variant="default"
                 autoFocus
-                disabled={isLoading}
+                disabled={updateTag.isPending || updateNote.isPending}
               />
               <div className="flex justify-end gap-2">
                 <ResponsiveButton
@@ -249,10 +277,12 @@ function BoxReview({ data, tags }: BoxReviewProps) {
                 </ResponsiveButton>
                 <ResponsiveButton
                   onClick={handleSaveNote}
-                  disabled={isLoading}
+                  disabled={updateTag.isPending || updateNote.isPending}
                   className="bg-secondary hover:bg-secondary !text-primary h-[30px]"
                 >
-                  {isLoading ? "Saving..." : "Save"}
+                  {updateTag.isPending || updateNote.isPending
+                    ? "Saving..."
+                    : "Save"}
                 </ResponsiveButton>
               </div>
             </div>

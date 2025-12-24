@@ -3,6 +3,7 @@ export type ModelUserPomodoroSession = {
   user_id: string;
   // room_id: string;
   tag_id: string;
+  notes: string;
   completed: boolean;
   invalid: boolean;
   is_auto_started: boolean;
