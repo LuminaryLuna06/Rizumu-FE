@@ -1,8 +1,8 @@
 export type ModelRoomMessage = {
-  id: string;
-  room_id: string;
-  user_id: string;
-  type: string;
-  message: string;
-  created_at: string;
+  _id: string;
+  type: "text" | "system";
+  sender_id: string;
+  content: string;
+  createdAt: string;
+  room_id?: string;
 };

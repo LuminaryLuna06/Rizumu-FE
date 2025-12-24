@@ -2,17 +2,18 @@ import Popover from "@rizumu/components/Popover";
 import ResponsiveButton from "@rizumu/components/ResponsiveButton";
 import TextInput from "@rizumu/components/TextInput";
 import { useAuth } from "@rizumu/context/AuthContext";
+import { useSocket } from "@rizumu/context/SocketContext";
 import { IconMessage, IconSend2, IconUsers } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
-import { io, type Socket } from "socket.io-client";
 import { useRoomMembers } from "@rizumu/tanstack/api/hooks";
 import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
+import type { ModelRoomMessage } from "@rizumu/models/roomMessage";
 
 function ChatPopover() {
   const { user } = useAuth();
   const [chatOpened, setChatOpened] = useState(false);
-  const [socket, setSocket] = useState<Socket | null>(null);
-  const [messages, setMessages] = useState<any>([]);
+  const { socket } = useSocket();
+  const [messages, setMessages] = useState<ModelRoomMessage[]>([]);
   const [input, setInput] = useState("");
   const { data: roomMembers = [] } = useRoomMembers(
     user?.current_room_id || "",
@@ -26,7 +27,7 @@ function ChatPopover() {
   const isInitialLoadRef = useRef<boolean>(true);
 
   useEffect(() => {
-    if (!user?._id || !user?.current_room_id) {
+    if (!user?._id || !user?.current_room_id || !socket) {
       return;
     }
 
@@ -35,42 +36,25 @@ function ChatPopover() {
     setHasMoreMessage(true);
     isInitialLoadRef.current = true;
 
-    // Tạo socket connection mới
-    const newSocket = io("https://backend-school-pj-1.onrender.com", {
-      auth: {
-        userId: user._id,
-      },
-      query: {
-        roomId: user.current_room_id,
-      },
-      transports: ["websocket"],
-    });
-
-    // Xử lý khi socket kết nối thành công
-    newSocket.on("connect", () => {
-      console.log("Socket connected to room:", user.current_room_id);
-
-      loadMessages();
-    });
+    loadMessages();
 
     // Xử lý khi nhận tin nhắn mới
-    newSocket.on("new_message", (msg) => {
-      setMessages((prev: any) => [...prev, msg]);
+    const handleNewMessage = (msg: ModelRoomMessage) => {
+      setMessages((prev) => [...prev, msg]);
 
       setTimeout(() => {
         if (isNearBottom()) {
           scrollToBottom();
         }
       }, 100);
-    });
+    };
 
-    setSocket(newSocket);
+    socket.on("new_message", handleNewMessage);
 
     return () => {
-      console.log("Disconnecting socket from room:", user.current_room_id);
-      newSocket.disconnect();
+      socket.off("new_message", handleNewMessage);
     };
-  }, [user?._id, user?.current_room_id]);
+  }, [user?._id, user?.current_room_id, socket]);
 
   // Cuộn xuống dưới chỉ khi lần đầu load messages
   useEffect(() => {
@@ -184,17 +168,31 @@ function ChatPopover() {
             onScroll={handleScroll}
             className="flex flex-col items-start max-h-[350px] min-h-[250px] overflow-y-auto overflow-x-hidden custom-scrollbar scrollbar-hidden"
           >
-            {messages &&
-              messages.map((msg: any, idx: number) => {
+            {messages.map((msg, idx) => {
+              // System message styling
+              if (msg.type === "system") {
                 return (
-                  <div className="flex gap-1 mb-xl" key={msg._id || idx}>
-                    <h2 className="font-semibold">
-                      {mapSenderName[msg.sender_id] || "Anonymous User"}:
-                    </h2>
-                    <p className="text-secondary/80">{msg.content}</p>
+                  <div
+                    key={msg._id || idx}
+                    className="w-full flex justify-center my-2"
+                  >
+                    <p className="text-xs italic text-text-inactive bg-secondary/10 px-3 py-1 rounded-full">
+                      {msg.content}
+                    </p>
                   </div>
                 );
-              })}
+              }
+
+              // Regular user message
+              return (
+                <div className="flex gap-1 mb-xl" key={msg._id || idx}>
+                  <h2 className="font-semibold">
+                    {mapSenderName[msg.sender_id] || "Anonymous User"}:
+                  </h2>
+                  <p className="text-secondary/80">{msg.content}</p>
+                </div>
+              );
+            })}
           </div>
 
           <div className="flex items-center">

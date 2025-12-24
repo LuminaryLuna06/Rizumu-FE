@@ -1,10 +1,14 @@
 import type { ModelUserProfile } from "@rizumu/models/userProfile";
 import Modal from "../Modal";
 import { useAuth } from "@rizumu/context/AuthContext";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { gifts } from "../../constants/gift";
 import { useToast } from "@rizumu/utils/toast/toast";
-import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
+import {
+  useStatsById,
+  useSendGift,
+  useUpdateStats,
+} from "@rizumu/tanstack/api/hooks";
 
 interface GiftModalProps {
   opened: boolean;
@@ -14,53 +18,58 @@ interface GiftModalProps {
 
 function GiftModal({ opened, onClose, profile }: GiftModalProps) {
   const { user } = useAuth();
-  const [coins, setCoins] = useState(0);
   const [selectedGift, setSelectedGift] = useState<number | null>(null);
   const selectedGiftData = gifts.find((g) => g.id === selectedGift);
   const currentPrice = selectedGiftData?.price || 0;
-  const [isLoading, setIsLoading] = useState(false);
   const toast = useToast();
 
-  const getStat = async () => {
-    try {
-      const response = await axiosClient.get(`/progress/stats/${user?._id}`);
-      setCoins(response.data.data.coins); // User earlier conversation mentioned "coin" property
-    } catch (error) {
-      console.error("Error fetching stats:", error);
-    }
-  };
+  // React Query hooks
+  const { data: stats } = useStatsById(user?._id || "", opened && !!user?._id);
+  const sendGiftMutation = useSendGift();
+  const updateStats = useUpdateStats();
 
-  const sendGift = async () => {
-    if (!selectedGiftData || !profile?._id) return;
-    setIsLoading(true);
-    try {
-      await axiosClient.post(`/progress/gift`, {
-        receiverId: profile?._id,
+  const coins = stats?.coins || 0;
+  const isLoading = sendGiftMutation.isPending || updateStats.isPending;
+
+  const handleSendGift = () => {
+    if (!selectedGiftData || !profile?._id || !profile?.name) return;
+
+    sendGiftMutation.mutate(
+      {
+        receiverId: profile._id,
         icon: selectedGiftData.image,
-      });
-      await axiosClient.patch("/progress/stats", {
-        coins: -1 * selectedGiftData.price,
-      });
-      toast.success(`Gift sent to ${profile.name}!`);
-      onClose();
-      getStat(); // Refresh coins after sending
-      setIsLoading(false);
-    } catch (error: any) {
-      console.error("Error sending gift:", error);
-      toast.error(error?.response?.data?.message || "Failed to send gift");
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (opened) {
-      if (user?._id) {
-        getStat();
+      },
+      {
+        onSuccess: () => {
+          // Update coins after sending gift
+          updateStats.mutate(
+            { coins: -1 * selectedGiftData.price },
+            {
+              onSuccess: () => {
+                toast.success(`Gift sent to ${profile.name}!`, "Success");
+                onClose();
+                setSelectedGift(null);
+              },
+              onError: (error: any) => {
+                console.error("Error updating coins:", error);
+                toast.error(
+                  error?.response?.data?.message || "Failed to update coins",
+                  "Error"
+                );
+              },
+            }
+          );
+        },
+        onError: (error: any) => {
+          console.error("Error sending gift:", error);
+          toast.error(
+            error?.response?.data?.message || "Failed to send gift",
+            "Error"
+          );
+        },
       }
-    } else {
-      setSelectedGift(null);
-    }
-  }, [opened, user?._id]);
+    );
+  };
 
   return (
     <Modal opened={opened} onClose={onClose} title="">
@@ -114,7 +123,7 @@ function GiftModal({ opened, onClose, profile }: GiftModalProps) {
           }`}
           onClick={() => {
             if (selectedGift && coins >= currentPrice) {
-              sendGift();
+              handleSendGift();
             }
           }}
         >

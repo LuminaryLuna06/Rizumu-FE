@@ -1,6 +1,7 @@
 import { BrowserRouter } from "react-router-dom";
 import AppRoutes from "./routes/AppRoutes";
 import { AuthProvider } from "./context/AuthContext";
+import { SocketProvider } from "./context/SocketContext";
 import AuthPrompt from "./components/Auth/AuthPrompt";
 import { useServerKeepAlive } from "./hooks/useServerKeepAlive";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
@@ -18,10 +19,12 @@ function App() {
       />
       <Analytics />
       <AuthProvider>
-        <BrowserRouter>
-          <AuthPrompt />
-          <AppRoutes />
-        </BrowserRouter>
+        <SocketProvider>
+          <BrowserRouter>
+            <AuthPrompt />
+            <AppRoutes />
+          </BrowserRouter>
+        </SocketProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

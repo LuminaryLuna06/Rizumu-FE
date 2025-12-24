@@ -1,12 +1,14 @@
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Timer from "./components/Timer";
+import OnlineUsers from "./components/OnlineUsers";
 import { useAuth } from "@rizumu/context/AuthContext";
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import Modal from "@rizumu/components/Modal";
 import ResponsiveButton from "@rizumu/components/ResponsiveButton";
 import { useToast } from "@rizumu/utils/toast/toast";
+import { useSocket } from "@rizumu/context/SocketContext";
 
 import ProfileModal from "@rizumu/components/ProfileModal";
 import {
@@ -41,6 +43,7 @@ function PomodoroPage() {
     user?.current_room_id || "",
     !!user?.current_room_id
   );
+  const [members, setMembers] = useState<any[]>([]);
 
   useEffect(() => {
     const img = new Image();
@@ -142,6 +145,116 @@ function PomodoroPage() {
     }
   }, [userId]);
 
+  // Socket.IO: Listen for background changes
+  const { socket } = useSocket();
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleBackgroundChanged = (data: any) => {
+      if (data.background) {
+        setBackground({
+          name: data.background.name,
+          type: data.background.type,
+        });
+
+        // Show toast notification
+        if (data.changed_by?.id !== user?._id) {
+          toast.info(`Admin changed the background`, "Background Update");
+        }
+      }
+    };
+
+    socket.on("background_changed", handleBackgroundChanged);
+
+    return () => {
+      socket.off("background_changed", handleBackgroundChanged);
+    };
+  }, [socket, user?._id]);
+
+  // Socket.IO: Listen for online users and status changes
+  useEffect(() => {
+    if (!socket) return;
+
+    // Listen for initial online users list (sent when user connects)
+    const handleRoomOnlineUsers = (data: any[]) => {
+      console.log("Received room online users:", data);
+      setMembers(data);
+    };
+
+    // Listen for user coming online
+    const handleUserOnline = (data: {
+      user_id?: string;
+      name?: string;
+      avatar?: string;
+      status: "online";
+    }) => {
+      console.log("User online:", data);
+
+      if (!data.user_id) {
+        console.warn("user_online event missing user_id");
+        return;
+      }
+
+      setMembers((prev) => {
+        const existingIndex = prev.findIndex((m) => m.user_id === data.user_id);
+
+        if (existingIndex >= 0) {
+          // Update existing member
+          return prev.map((member) =>
+            member.user_id === data.user_id
+              ? {
+                  ...member,
+                  status: "online",
+                  avatar: data.avatar || member.avatar,
+                }
+              : member
+          );
+        } else {
+          // Add new member (user_id guaranteed to exist due to early return)
+          return [
+            ...prev,
+            {
+              user_id: data.user_id!,
+              name: data.name || "Unknown",
+              avatar: data.avatar || "",
+              status: "online",
+            },
+          ];
+        }
+      });
+    };
+
+    // Listen for user going offline
+    const handleUserOffline = (data: {
+      user_id?: string;
+      name?: string;
+      status: "offline";
+    }) => {
+      console.log("User offline:", data);
+
+      if (!data.user_id) {
+        console.warn("user_offline event missing user_id");
+        return;
+      }
+
+      // Remove offline user from list (since we only show online users)
+      setMembers((prev) =>
+        prev.filter((member) => member.user_id !== data.user_id)
+      );
+    };
+
+    socket.on("room_online_users", handleRoomOnlineUsers);
+    socket.on("user_online", handleUserOnline);
+    socket.on("user_offline", handleUserOffline);
+
+    return () => {
+      socket.off("room_online_users", handleRoomOnlineUsers);
+      socket.off("user_online", handleUserOnline);
+      socket.off("user_offline", handleUserOffline);
+    };
+  }, [socket]);
+
   // Update background when user joins a room
   useEffect(() => {
     if (
@@ -196,6 +309,9 @@ function PomodoroPage() {
             }}
           />
         )}
+
+        {/* Online Users Display */}
+        {!isFocusMode && <OnlineUsers members={members} />}
 
         {/* Header */}
         <Header focusMode={isFocusMode} />

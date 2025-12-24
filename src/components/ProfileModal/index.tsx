@@ -162,7 +162,7 @@ function ProfileModal({
     startTime,
     endTime,
     targetUserId || "",
-    opened && !!targetUserId
+    opened
   );
   const { data: gifts, isLoading: giftLoading } = useGiftById(
     targetUserId || "",
