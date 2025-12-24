@@ -74,7 +74,6 @@ export const useJoinRoom = () => {
       return response.data;
     },
     onSuccess: (_, roomId) => {
-      // Invalidate room queries
       queryClient.invalidateQueries({ queryKey: queryKeys.rooms.byId(roomId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.rooms.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.auth.me() });
@@ -94,7 +93,6 @@ export const useLeaveRoom = () => {
       return response.data;
     },
     onSuccess: (_, roomId) => {
-      // Invalidate room queries
       queryClient.invalidateQueries({ queryKey: queryKeys.rooms.byId(roomId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.rooms.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.auth.me() });
@@ -123,7 +121,6 @@ export const useUpdateRoom = () => {
       return response.data;
     },
     onSuccess: (_, { roomId }) => {
-      // Invalidate room queries
       queryClient.invalidateQueries({ queryKey: queryKeys.rooms.byId(roomId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.rooms.all });
     },
@@ -151,7 +148,6 @@ export const useUpdateRoomBackground = () => {
       return response.data;
     },
     onSuccess: (_, { roomId }) => {
-      // Invalidate room queries
       queryClient.invalidateQueries({ queryKey: queryKeys.rooms.byId(roomId) });
     },
   });
@@ -178,8 +174,6 @@ export const useKickFromRoom = () => {
       return response.data;
     },
     onSuccess: (_, { roomId }) => {
-      // Invalidate room queries
-      // queryClient.invalidateQueries({ queryKey: queryKeys.rooms.byId(roomId) });
       queryClient.invalidateQueries({
         queryKey: queryKeys.rooms.members(roomId),
       });

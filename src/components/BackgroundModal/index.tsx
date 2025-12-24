@@ -3,6 +3,8 @@ import Modal from "../Modal";
 import ResponsiveButton from "../ResponsiveButton";
 import { useAuth } from "@rizumu/context/AuthContext";
 import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
+import { useUpdateRoomBackground } from "@rizumu/tanstack/api/hooks";
+import { useToast } from "@rizumu/utils/toast/toast";
 
 const STATIC_IMAGES = [
   { name: "/image/aurora-2k.webp", alt: "Aurora" },
@@ -36,7 +38,9 @@ interface BackgroundModalProps {
 
 function BackgroundModal({ opened, onClose, onChange }: BackgroundModalProps) {
   const { user } = useAuth();
+  const toast = useToast();
   const [activeTab, setActiveTab] = useState<"Motion" | "Still">("Motion");
+  const updateBackground = useUpdateRoomBackground();
 
   const changeBackGround = async ({
     name,
@@ -50,16 +54,23 @@ function BackgroundModal({ opened, onClose, onChange }: BackgroundModalProps) {
       type: type,
     };
     onChange(formData);
-    try {
-      if (user?.current_room_id) {
-        await axiosClient.patch(
-          `/room/${user.current_room_id}/background`,
-          formData
-        );
+    updateBackground.mutate(
+      {
+        roomId: user?.current_room_id || "",
+        background: formData,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Changed room background", "Success");
+        },
+        onError: (error: any) => {
+          toast.error(
+            error?.response?.data?.message || "Failed to change background",
+            "Error"
+          );
+        },
       }
-    } catch (error) {
-      console.error(error);
-    }
+    );
   };
 
   return (

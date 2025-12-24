@@ -25,6 +25,11 @@ import {
 import PresetModal from "./PresetModal";
 import TagSelector from "./TagSelector";
 import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
+import {
+  useCreateSession,
+  useUpdateSession,
+  useUpdateStats,
+} from "@rizumu/tanstack/api/hooks";
 
 const TIMER_DIRECTION_KEY = "pomodoro_timer_direction";
 const SELECTED_TAG_KEY = "pomodoro_selected_tag";
@@ -58,19 +63,15 @@ interface TimerProps {
   bgType: string;
   bgName: string;
   focusMode: boolean;
-  onSessionComplete?: () => void;
   setFocusMode?: () => void;
 }
 
-function Timer({
-  bgType,
-  bgName,
-  focusMode,
-  onSessionComplete,
-  setFocusMode,
-}: TimerProps) {
+function Timer({ bgType, bgName, focusMode, setFocusMode }: TimerProps) {
   const { user } = useAuth();
   const toast = useToast();
+  const create = useCreateSession();
+  const update = useUpdateSession();
+  const updateStats = useUpdateStats();
 
   const [mode, setMode] = useState<TimerMode>("pomodoro");
   const [openedPreset, setOpenedPreset] = useState(false);
@@ -206,7 +207,7 @@ function Timer({
 
   // Update document title
   useEffect(() => {
-    document.title = `Rizumu - ${formatTime(timeLeft)}`;
+    document.title = `${formatTime(timeLeft)} - Rizumu`;
     return () => {
       document.title = "Rizumu";
     };
@@ -293,15 +294,33 @@ function Timer({
         dataRef.current.tag_id = selectedTag?._id || " ";
         console.log("Started: ", dataRef.current);
         if (dataRef.current.session_type === "pomodoro") {
-          console.log("Started Pomodoro: ", dataRef.current);
-          axiosClient.post("/session", {
-            completed: false,
-            duration: 0,
-            session_type: dataRef.current.session_type,
-            started_at: dataRef.current.started_at,
-            timer_type: dataRef.current.timer_type,
-            tag_id: dataRef.current.tag_id,
-          });
+          create.mutate(
+            {
+              completed: false,
+              duration: 0,
+              session_type: dataRef.current.session_type,
+              started_at: dataRef.current.started_at,
+              timer_type: dataRef.current.timer_type,
+              tag_id: dataRef.current.tag_id,
+            },
+            {
+              onError: (error: any) => {
+                toast.error(
+                  error?.response?.data?.message || "Failed to start a session",
+                  "Error"
+                );
+              },
+            }
+          );
+          // console.log("Started Pomodoro: ", dataRef.current);
+          // axiosClient.post("/session", {
+          //   completed: false,
+          //   duration: 0,
+          //   session_type: dataRef.current.session_type,
+          //   started_at: dataRef.current.started_at,
+          //   timer_type: dataRef.current.timer_type,
+          //   tag_id: dataRef.current.tag_id,
+          // });
         }
       }
       intervalRef.current = setInterval(() => {
@@ -332,36 +351,73 @@ function Timer({
             const completedSession = { ...dataRef.current };
             console.log("Ended: ", completedSession);
             if (completedSession.session_type === "pomodoro") {
-              console.log("Ended Pomodoro: ", completedSession);
-
-              axiosClient
-                .patch("/session", {
+              // console.log("Ended Pomodoro: ", completedSession);
+              update.mutate(
+                {
                   completed: true,
                   duration: dataRef.current.duration,
                   ended_at: dataRef.current.ended_at,
-                })
-                .then(() => {
-                  if (onSessionComplete) {
-                    onSessionComplete();
-                  }
-                });
-              const duration = durationRef.current;
-              const xp = Math.floor(duration / 60);
-              const coin = Math.floor(duration / 600);
-              if (xp > 0 || coin > 0) {
-                axiosClient
-                  .patch("/progress/stats", {
-                    current_xp: xp,
-                    coins: coin,
-                  })
-                  .catch((err) =>
-                    console.error("Failed to update stats:", err)
-                  );
-                toast.info(
-                  `You gained ${xp} xp${coin > 0 ? `, ${coin} coins` : ""}.`,
-                  "Let's fucking gooooo!"
-                );
-              }
+                },
+                {
+                  onSuccess: () => {
+                    const duration = durationRef.current;
+                    const xp = Math.floor(duration / 60);
+                    const coin = Math.floor(duration / 600);
+                    if (xp > 0 || coin > 0) {
+                      updateStats.mutate(
+                        { current_xp: xp, coins: coin },
+                        {
+                          onSuccess: () => {
+                            toast.info(
+                              `You gained ${xp} xp${
+                                coin > 0 ? `and ${coin} coins` : ""
+                              }.`,
+                              "Let's fucking gooooo!"
+                            );
+                          },
+                          onError: (error: any) => {
+                            toast.error(
+                              error?.response?.data?.message ||
+                                "Failed to update stats",
+                              "Error"
+                            );
+                          },
+                        }
+                      );
+                    }
+                  },
+                  onError: (error: any) => {
+                    toast.error(
+                      error?.response?.data?.message || "Failed to end session",
+                      "Error"
+                    );
+                  },
+                  onSettled: () => null,
+                }
+              );
+
+              // axiosClient.patch("/session", {
+              //   completed: true,
+              //   duration: dataRef.current.duration,
+              //   ended_at: dataRef.current.ended_at,
+              // });
+              // const duration = durationRef.current;
+              // const xp = Math.floor(duration / 60);
+              // const coin = Math.floor(duration / 600);
+              // if (xp > 0 || coin > 0) {
+              //   axiosClient
+              //     .patch("/progress/stats", {
+              //       current_xp: xp,
+              //       coins: coin,
+              //     })
+              //     .catch((err) =>
+              //       console.error("Failed to update stats:", err)
+              //     );
+              //   toast.info(
+              //     `You gained ${xp} xp${coin > 0 ? `, ${coin} coins` : ""}.`,
+              //     "Let's fucking gooooo!"
+              //   );
+              // }
             }
 
             queueMicrotask(() => {
@@ -450,40 +506,51 @@ function Timer({
 
       // Send API call if it's a pomodoro session
       if (dataRef.current.session_type === "pomodoro") {
-        console.log("Skipped Pomodoro: ", dataRef.current);
+        // console.log("Skipped Pomodoro: ", dataRef.current);
 
-        const updateSession = async () => {
-          await axiosClient.patch("/session", {
+        update.mutate(
+          {
             completed: true,
             duration: dataRef.current.duration,
             ended_at: dataRef.current.ended_at,
-          });
-          if (onSessionComplete) onSessionComplete();
-        };
-        const updateXpAndCoin = async () => {
-          const duration = durationRef.current;
-          const xp = Math.floor(duration / 60);
-          const coin = Math.floor(duration / 600);
-
-          try {
-            if (xp > 0 || coin > 0) {
-              axiosClient
-                .patch("/progress/stats", {
-                  current_xp: xp,
-                  coins: coin,
-                })
-                .catch((err) => console.error("Failed to update stats:", err));
-              toast.info(
-                `You gained ${xp} xp${coin > 0 ? `, ${coin} coins` : ""}.`,
-                "Let's fucking gooooo!"
+          },
+          {
+            onSuccess: () => {
+              const duration = durationRef.current;
+              const xp = Math.floor(duration / 60);
+              const coin = Math.floor(duration / 600);
+              if (xp > 0 || coin > 0) {
+                updateStats.mutate(
+                  { current_xp: xp, coins: coin },
+                  {
+                    onSuccess: () => {
+                      toast.info(
+                        `You gained ${xp} xp${
+                          coin > 0 ? `and ${coin} coins` : ""
+                        }.`,
+                        "Let's fucking gooooo!"
+                      );
+                    },
+                    onError: (error: any) => {
+                      toast.error(
+                        error?.response?.data?.message ||
+                          "Failed to update stats",
+                        "Error"
+                      );
+                    },
+                  }
+                );
+              }
+            },
+            onError: (error: any) => {
+              toast.error(
+                error?.response?.data?.message || "Failed to end session",
+                "Error"
               );
-            }
-          } catch (error) {
-            console.error(error);
+            },
+            onSettled: () => null,
           }
-        };
-        updateSession();
-        updateXpAndCoin();
+        );
       }
     }
 

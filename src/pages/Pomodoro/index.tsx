@@ -11,7 +11,6 @@ import { useToast } from "@rizumu/utils/toast/toast";
 import ProfileModal from "@rizumu/components/ProfileModal";
 import {
   useJoinRoom,
-  useProfileById,
   useRoomBySlug,
   useRoomById,
 } from "@rizumu/tanstack/api/hooks";
@@ -33,6 +32,7 @@ function PomodoroPage() {
   const [hasCheckedQuery, setHasCheckedQuery] = useState(false);
   const [sharedUserId, setSharedUserId] = useState<string | null>();
   const [profileModalOpened, setProfileModalOpened] = useState(false);
+
   const roomSlug = searchParams.get("rid");
   const userId = searchParams.get("uid");
   const join = useJoinRoom();
