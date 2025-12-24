@@ -345,10 +345,35 @@ function Timer({
             playDing();
 
             const completedSession = { ...dataRef.current };
-            console.log("Ended: ", completedSession);
+            // console.log("Ended: ", completedSession);
             setFocusMode(false);
             if (completedSession.session_type === "pomodoro") {
               // console.log("Ended Pomodoro: ", completedSession);
+              const duration = durationRef.current;
+              const xp = Math.floor(duration / 60);
+              const coin = Math.floor(duration / 600);
+              if (xp > 0 || coin > 0) {
+                updateStats.mutate(
+                  { current_xp: xp, coins: coin },
+                  {
+                    onSuccess: () => {
+                      toast.info(
+                        `You gained ${xp} xp${
+                          coin > 0 ? `and ${coin} coins` : ""
+                        }.`,
+                        "Let's fucking gooooo!"
+                      );
+                    },
+                    onError: (error: any) => {
+                      toast.error(
+                        error?.response?.data?.message ||
+                          "Failed to update stats",
+                        "Error"
+                      );
+                    },
+                  }
+                );
+              }
               update.mutate(
                 {
                   completed: true,
@@ -356,33 +381,6 @@ function Timer({
                   ended_at: dataRef.current.ended_at,
                 },
                 {
-                  onSuccess: () => {
-                    const duration = durationRef.current;
-                    const xp = Math.floor(duration / 60);
-                    const coin = Math.floor(duration / 600);
-                    if (xp > 0 || coin > 0) {
-                      updateStats.mutate(
-                        { current_xp: xp, coins: coin },
-                        {
-                          onSuccess: () => {
-                            toast.info(
-                              `You gained ${xp} xp${
-                                coin > 0 ? `and ${coin} coins` : ""
-                              }.`,
-                              "Let's fucking gooooo!"
-                            );
-                          },
-                          onError: (error: any) => {
-                            toast.error(
-                              error?.response?.data?.message ||
-                                "Failed to update stats",
-                              "Error"
-                            );
-                          },
-                        }
-                      );
-                    }
-                  },
                   onError: (error: any) => {
                     toast.error(
                       error?.response?.data?.message || "Failed to end session",
@@ -483,7 +481,28 @@ function Timer({
       // Send API call if it's a pomodoro session
       if (dataRef.current.session_type === "pomodoro") {
         // console.log("Skipped Pomodoro: ", dataRef.current);
-
+        const duration = durationRef.current;
+        const xp = Math.floor(duration / 60);
+        const coin = Math.floor(duration / 600);
+        if (xp > 0 || coin > 0) {
+          updateStats.mutate(
+            { current_xp: xp, coins: coin },
+            {
+              onSuccess: () => {
+                toast.info(
+                  `You gained ${xp} xp${coin > 0 ? `and ${coin} coins` : ""}.`,
+                  "Let's fucking gooooo!"
+                );
+              },
+              onError: (error: any) => {
+                toast.error(
+                  error?.response?.data?.message || "Failed to update stats",
+                  "Error"
+                );
+              },
+            }
+          );
+        }
         update.mutate(
           {
             completed: true,
@@ -491,33 +510,6 @@ function Timer({
             ended_at: dataRef.current.ended_at,
           },
           {
-            onSuccess: () => {
-              const duration = durationRef.current;
-              const xp = Math.floor(duration / 60);
-              const coin = Math.floor(duration / 600);
-              if (xp > 0 || coin > 0) {
-                updateStats.mutate(
-                  { current_xp: xp, coins: coin },
-                  {
-                    onSuccess: () => {
-                      toast.info(
-                        `You gained ${xp} xp${
-                          coin > 0 ? `and ${coin} coins` : ""
-                        }.`,
-                        "Let's fucking gooooo!"
-                      );
-                    },
-                    onError: (error: any) => {
-                      toast.error(
-                        error?.response?.data?.message ||
-                          "Failed to update stats",
-                        "Error"
-                      );
-                    },
-                  }
-                );
-              }
-            },
             onError: (error: any) => {
               toast.error(
                 error?.response?.data?.message || "Failed to end session",
