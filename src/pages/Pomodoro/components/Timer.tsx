@@ -240,14 +240,16 @@ function Timer({
 
       if (mode === "pomodoro" && settings.autoStartPomodoro) {
         setRunning(true);
+        setFocusMode(true);
       } else if (
         (mode === "short_break" || mode === "long_break") &&
         settings.autoStartBreak
       ) {
         setRunning(true);
+        setFocusMode(true);
       }
     }
-  }, [mode]);
+  }, [mode, setFocusMode]);
 
   const handleToggleTimerDirection = () => {
     setTimerDirection((prev) =>
@@ -314,9 +316,9 @@ function Timer({
                   "Error"
                 );
               },
-              onSettled: () => setFocusMode(true),
             }
           );
+          setFocusMode(true);
         }
       }
       intervalRef.current = setInterval(() => {
@@ -387,9 +389,9 @@ function Timer({
                       "Error"
                     );
                   },
-                  onSettled: () => setFocusMode(false),
                 }
               );
+              // setFocusMode(false);
             }
 
             queueMicrotask(() => {
@@ -468,6 +470,7 @@ function Timer({
   const handleSkipSession = () => {
     clearTimer();
     setRunning(false);
+    setFocusMode(false);
 
     // Mark session as completed if it was started
     if (dataRef.current.started_at) {
@@ -516,9 +519,9 @@ function Timer({
                 "Error"
               );
             },
-            onSettled: () => setFocusMode(false),
           }
         );
+        // setFocusMode(false);
       }
     }
 
@@ -543,7 +546,6 @@ function Timer({
 
     setMode(nextMode);
     resetTimer(nextMode);
-    setFocusMode?.(false);
   };
 
   // Picture-in-Picture handlers
@@ -831,9 +833,7 @@ function Timer({
           </div>
 
           <div
-            className={`flex gap-x-xl items-center mt-4 md:mt-6 transition-all duration-500 ${
-              focusMode ? "opacity-0 pointer-events-none" : "opacity-100"
-            }`}
+            className={`flex gap-x-xl items-center mt-4 md:mt-6 transition-all duration-500`}
           >
             <button
               onClick={() => handleModeChange("pomodoro")}
