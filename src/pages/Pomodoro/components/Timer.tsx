@@ -63,7 +63,7 @@ interface TimerProps {
   bgType: string;
   bgName: string;
   focusMode: boolean;
-  setFocusMode?: () => void;
+  setFocusMode?: (mode?: boolean) => void;
 }
 
 function Timer({ bgType, bgName, focusMode, setFocusMode }: TimerProps) {
@@ -575,6 +575,7 @@ function Timer({ bgType, bgName, focusMode, setFocusMode }: TimerProps) {
 
     setMode(nextMode);
     resetTimer(nextMode);
+    setFocusMode?.(false);
   };
 
   // Picture-in-Picture handlers
