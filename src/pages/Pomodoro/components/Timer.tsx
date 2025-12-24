@@ -24,7 +24,6 @@ import {
 } from "@tabler/icons-react";
 import PresetModal from "./PresetModal";
 import TagSelector from "./TagSelector";
-import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
 import {
   useCreateSession,
   useUpdateSession,
@@ -63,7 +62,7 @@ interface TimerProps {
   bgType: string;
   bgName: string;
   focusMode: boolean;
-  setFocusMode?: (mode?: boolean) => void;
+  setFocusMode: (mode?: boolean | ((prev: boolean) => boolean)) => void;
 }
 
 function Timer({ bgType, bgName, focusMode, setFocusMode }: TimerProps) {
@@ -310,17 +309,9 @@ function Timer({ bgType, bgName, focusMode, setFocusMode }: TimerProps) {
                   "Error"
                 );
               },
+              onSettled: () => setFocusMode(true),
             }
           );
-          // console.log("Started Pomodoro: ", dataRef.current);
-          // axiosClient.post("/session", {
-          //   completed: false,
-          //   duration: 0,
-          //   session_type: dataRef.current.session_type,
-          //   started_at: dataRef.current.started_at,
-          //   timer_type: dataRef.current.timer_type,
-          //   tag_id: dataRef.current.tag_id,
-          // });
         }
       }
       intervalRef.current = setInterval(() => {
@@ -350,6 +341,7 @@ function Timer({ bgType, bgName, focusMode, setFocusMode }: TimerProps) {
 
             const completedSession = { ...dataRef.current };
             console.log("Ended: ", completedSession);
+            setFocusMode(false);
             if (completedSession.session_type === "pomodoro") {
               // console.log("Ended Pomodoro: ", completedSession);
               update.mutate(
@@ -392,32 +384,9 @@ function Timer({ bgType, bgName, focusMode, setFocusMode }: TimerProps) {
                       "Error"
                     );
                   },
-                  onSettled: () => null,
+                  onSettled: () => setFocusMode(false),
                 }
               );
-
-              // axiosClient.patch("/session", {
-              //   completed: true,
-              //   duration: dataRef.current.duration,
-              //   ended_at: dataRef.current.ended_at,
-              // });
-              // const duration = durationRef.current;
-              // const xp = Math.floor(duration / 60);
-              // const coin = Math.floor(duration / 600);
-              // if (xp > 0 || coin > 0) {
-              //   axiosClient
-              //     .patch("/progress/stats", {
-              //       current_xp: xp,
-              //       coins: coin,
-              //     })
-              //     .catch((err) =>
-              //       console.error("Failed to update stats:", err)
-              //     );
-              //   toast.info(
-              //     `You gained ${xp} xp${coin > 0 ? `, ${coin} coins` : ""}.`,
-              //     "Let's fucking gooooo!"
-              //   );
-              // }
             }
 
             queueMicrotask(() => {
@@ -470,6 +439,7 @@ function Timer({ bgType, bgName, focusMode, setFocusMode }: TimerProps) {
   const handleModeChange = (newMode: TimerMode) => {
     if (running) {
       setRunning(false);
+      setFocusMode(false);
     }
     setMode(newMode);
     resetTimer(newMode);
@@ -478,6 +448,7 @@ function Timer({ bgType, bgName, focusMode, setFocusMode }: TimerProps) {
   const handlePresetChange = (presetId: number) => {
     if (running) {
       setRunning(false);
+      setFocusMode(false);
     }
 
     setCurrentPresetId(presetId);
@@ -548,7 +519,7 @@ function Timer({ bgType, bgName, focusMode, setFocusMode }: TimerProps) {
                 "Error"
               );
             },
-            onSettled: () => null,
+            onSettled: () => setFocusMode(false),
           }
         );
       }
@@ -695,7 +666,7 @@ function Timer({ bgType, bgName, focusMode, setFocusMode }: TimerProps) {
         setRunning((prev) => !prev);
         initAudio();
         playClickSound();
-        setFocusMode?.();
+        setFocusMode();
       };
       const toggleMouseEnterListener = () => {
         toggleBtn!.style.transform = "scale(1.05)";
@@ -950,10 +921,10 @@ function Timer({ bgType, bgName, focusMode, setFocusMode }: TimerProps) {
             <div className="flex justify-center">
               <button
                 onClick={() => {
-                  setRunning(!running);
+                  setRunning((prev) => !prev);
                   initAudio();
                   playClickSound();
-                  setFocusMode?.();
+                  setFocusMode();
                 }}
                 className="px-lg py-lg w-[140px] md:w-[200px] my-lg text-primary rounded-full bg-secondary text-lg font-bold hover:bg-secondary-hover cursor-pointer transition-all duration-300 hover:scale-[1.02]"
                 style={{

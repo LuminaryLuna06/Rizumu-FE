@@ -26,6 +26,7 @@ export const SESSION_ENDPOINTS = {
   CREATE_SESSION: "/session",
   PATCH_SESSION: "/session",
   PATCH_NOTE: (id: string) => `/session/${id}/note`,
+  PATCH_TAG: (id: string) => `/session/${id}/tag`,
 
   HOURLY: (startTime: string, endTime: string, userId: string) =>
     `/session/hourly?startTime=${startTime}&endTime=${endTime}&userId=${userId}`,

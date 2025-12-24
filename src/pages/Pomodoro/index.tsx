@@ -204,8 +204,14 @@ function PomodoroPage() {
           bgType={background.type}
           bgName={background.name}
           focusMode={isFocusMode}
-          setFocusMode={(mode?: boolean) =>
-            setIsFocusMode(typeof mode === "boolean" ? mode : (prev) => !prev)
+          setFocusMode={(mode?: boolean | ((prev: boolean) => boolean)) =>
+            setIsFocusMode(
+              typeof mode === "boolean"
+                ? mode
+                : typeof mode === "function"
+                ? mode
+                : (prev) => !prev
+            )
           }
         />
         {/* Footer */}
