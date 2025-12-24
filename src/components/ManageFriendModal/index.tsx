@@ -242,7 +242,7 @@ function ManageFriendModal({ opened, onClose }: ManageFriendModalProps) {
                   </div>
                 ) : friends && friends.length > 0 ? (
                   <div className="flex flex-col gap-2 pb-4">
-                    <div className="text-left text-xs text-secondary/40 font-medium mb-3 uppercase tracking-wider sticky top-0 py-2 z-10 w-full">
+                    <div className="text-left text-xs text-secondary/40 font-medium mb-3 uppercase tracking-wider py-2 w-full">
                       Friends activities ({friends.length})
                     </div>
                     {friends.map((friend) => (
@@ -311,7 +311,7 @@ function ManageFriendModal({ opened, onClose }: ManageFriendModalProps) {
                   </div>
                 ) : requests && requests.length > 0 ? (
                   <div className="flex flex-col gap-2 pb-4">
-                    <div className="text-left text-xs text-secondary/40 font-medium mb-3 uppercase tracking-wider sticky top-0 py-2 z-10 w-full">
+                    <div className="text-left text-xs text-secondary/40 font-medium mb-3 uppercase tracking-wider py-2 w-full">
                       Friend requests ({requests.length})
                     </div>
                     {requests.map((request) => {

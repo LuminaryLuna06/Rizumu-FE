@@ -160,7 +160,7 @@ const LeaderboardModal = ({
         opened={opened}
         onClose={() => setOpened(false)}
         title=""
-        className="overflow-y-hidden overflow-x-hidden"
+        className="overflow-y-hidden"
       >
         <div className="bg-modal-layout">
           <div className="flex flex-col sm:flex-row  justify-between items-center">
@@ -224,7 +224,7 @@ const LeaderboardModal = ({
             </div>
           </div>
 
-          <div className="flex justify-center items-center mb-8 mt-8">
+          <div className="flex justify-center items-center m-8 md:m-5 lg:m-8">
             <button
               onClick={handlePrevDate}
               className="p-2 text-gray-400 hover:text-white transition cursor-pointer"
@@ -243,7 +243,7 @@ const LeaderboardModal = ({
           </div>
 
           {/* Table */}
-          <div className="max-h-[600px] overflow-y-auto overflow-x-hidden custom-scrollbar scrollbar-hidden px-2">
+          <div className="max-h-[calc(90vh-170px)] overflow-y-auto overflow-x-hidden scrollbar-hidden px-2">
             <table className="w-full relative mb-md">
               <thead>
                 <tr>
