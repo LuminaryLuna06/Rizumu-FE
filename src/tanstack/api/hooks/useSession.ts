@@ -57,14 +57,14 @@ export const useUpdateSessionNote = () => {
   return useMutation({
     mutationFn: async ({
       sessionId,
-      note,
+      notes,
     }: {
       sessionId: string;
-      note: string;
+      notes: string;
     }) => {
       const response = await axiosClient.patch(
         SESSION_ENDPOINTS.PATCH_NOTE(sessionId),
-        { note }
+        { notes }
       );
       return response.data;
     },

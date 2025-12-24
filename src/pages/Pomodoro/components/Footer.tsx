@@ -25,19 +25,27 @@ function Footer({ onBackgroundChange, focusMode }: FooterProps) {
   const numberRequest = useMemo(() => {
     return friendRequests?.length || 0;
   }, [friendRequests]);
+
+  const checkAdmin = () => {
+    if (!room?.owner_id || !user?._id) return false;
+    return room.owner_id === user._id;
+  };
+
   return (
     <div className="footer flex justify-between h-[10vh] items-center">
       {/* Footer Left */}
       <div className="flex gap-x-lg">
         <IframePopover />
-        <ResponsiveButton
-          onClick={() => setBackgroundModalOpened(true)}
-          className={`transition-all duration-500 ${
-            focusMode ? "opacity-0 pointer-events-none" : "opacity-100"
-          }`}
-        >
-          <IconPhoto size={20} />
-        </ResponsiveButton>
+        {checkAdmin() && (
+          <ResponsiveButton
+            onClick={() => setBackgroundModalOpened(true)}
+            className={`transition-all duration-500 ${
+              focusMode ? "opacity-0 pointer-events-none" : "opacity-100"
+            }`}
+          >
+            <IconPhoto size={20} />
+          </ResponsiveButton>
+        )}
         {/* <ResponsiveButton>
           <IconSticker2 size={20} />
         </ResponsiveButton> */}
