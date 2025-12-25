@@ -192,7 +192,6 @@ function PomodoroPage() {
     if (!socket) return;
 
     const handleRoomOnlineUsers = (data: any[]) => {
-      console.log("Received room online users:", data);
       setMembers(data);
     };
 
@@ -202,8 +201,6 @@ function PomodoroPage() {
       avatar?: string;
       status: "online";
     }) => {
-      console.log("User online:", data);
-
       if (!data.user_id) {
         console.warn("user_online event missing user_id");
         return;
@@ -249,8 +246,6 @@ function PomodoroPage() {
       name?: string;
       status: "offline";
     }) => {
-      console.log("User offline:", data);
-
       if (!data.user_id) {
         console.warn("user_offline event missing user_id");
         return;
