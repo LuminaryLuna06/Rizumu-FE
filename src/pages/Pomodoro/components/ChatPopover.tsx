@@ -22,6 +22,7 @@ function ChatPopover() {
 
   const [hasMoreMessage, setHasMoreMessage] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasNewMessage, setHasNewMessage] = useState(false);
 
   const messagesRef = useRef<HTMLDivElement | null>(null);
   const isInitialLoadRef = useRef<boolean>(true);
@@ -41,6 +42,11 @@ function ChatPopover() {
     // Xử lý khi nhận tin nhắn mới
     const handleNewMessage = (msg: ModelRoomMessage) => {
       setMessages((prev) => [...prev, msg]);
+
+      // If chat is closed and message is not from current user, show notification
+      if (!chatOpened && msg.sender_id !== user?._id) {
+        setHasNewMessage(true);
+      }
 
       setTimeout(() => {
         if (isNearBottom()) {
@@ -63,6 +69,13 @@ function ChatPopover() {
       isInitialLoadRef.current = false;
     }
   }, [messages]);
+
+  // Clear notification when chat is opened
+  useEffect(() => {
+    if (chatOpened) {
+      setHasNewMessage(false);
+    }
+  }, [chatOpened]);
 
   const loadMessages = async (before: string | null = null) => {
     if (isLoading) return;
@@ -147,7 +160,18 @@ function ChatPopover() {
   return (
     <Popover
       trigger={
-        <ResponsiveButton leftSection={<IconMessage />}></ResponsiveButton>
+        <ResponsiveButton>
+          <div className="grid grid-cols-1 grid-rows-1">
+            <div className="col-start-1 row-start-1">
+              <IconMessage size={20} />
+            </div>
+            {hasNewMessage && (
+              <div className="col-start-1 row-start-1 self-start justify-self-end -mt-1 -mr-1">
+                <span className="flex h-2.5 w-2.5 rounded-full bg-white shadow-sm"></span>
+              </div>
+            )}
+          </div>
+        </ResponsiveButton>
       }
       opened={chatOpened}
       onClose={() => setChatOpened(!chatOpened)}
