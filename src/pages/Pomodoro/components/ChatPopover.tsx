@@ -166,7 +166,7 @@ function ChatPopover() {
           <div
             ref={messagesRef}
             onScroll={handleScroll}
-            className="flex flex-col items-start max-h-[50vh] overflow-y-auto overflow-x-hidden custom-scrollbar scrollbar-hidden"
+            className="flex flex-col items-start min-h-[30vh] max-h-[50vh] overflow-y-auto overflow-x-hidden custom-scrollbar scrollbar-hidden"
           >
             {messages.map((msg, idx) => {
               // System message styling

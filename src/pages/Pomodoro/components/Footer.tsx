@@ -39,7 +39,7 @@ function Footer({ onBackgroundChange, focusMode }: FooterProps) {
         {checkAdmin() && (
           <ResponsiveButton
             onClick={() => setBackgroundModalOpened(true)}
-            className={`transition-all duration-500 ${
+            className={`${
               focusMode ? "opacity-0 pointer-events-none" : "opacity-100"
             }`}
           >
@@ -54,7 +54,7 @@ function Footer({ onBackgroundChange, focusMode }: FooterProps) {
       {/* Footer Right */}
       <div className={`flex gap-x-lg justify-center`}>
         <div
-          className={`transition-all duration-500 ${
+          className={`${
             focusMode ? "opacity-0 pointer-events-none" : "opacity-100"
           }`}
         >
@@ -74,7 +74,7 @@ function Footer({ onBackgroundChange, focusMode }: FooterProps) {
           </ResponsiveButton>
         </div>
         <div
-          className={`transition-all duration-500 ${
+          className={`${
             focusMode && !room?.chat_during_pomodoro
               ? "opacity-0 pointer-events-none"
               : "opacity-100"

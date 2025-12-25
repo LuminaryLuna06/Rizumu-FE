@@ -1,13 +1,19 @@
 import ResponsiveButton from "@rizumu/components/ResponsiveButton";
 import UserMenu from "@rizumu/components/UserMenu";
-import { IconChartColumn, IconClock, IconMusicCode } from "@tabler/icons-react";
+import {
+  IconChartColumn,
+  IconClock,
+  IconMusicCode,
+  IconMaximize,
+  IconMinimize,
+} from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
 import RoomPopover from "./RoomPopover";
 import LeaderboardModal from "@rizumu/components/RankingBoard";
 import ActivitiesModal from "@rizumu/components/ActivitiesModal";
 import StreakPopover from "@rizumu/components/StreakPopover";
 import { useAuth } from "@rizumu/context/AuthContext";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useHourlyData } from "@rizumu/tanstack/api/hooks";
 import TagSelector from "./TagSelector";
 import type { ModelTag } from "@rizumu/models/tag";
@@ -58,6 +64,27 @@ function Header({
     return `${minutes}m`;
   };
 
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    };
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+    } else {
+      document.exitFullscreen();
+    }
+  };
+
   return (
     <div className="header flex justify-between h-[8vh] px-md pt-xl lg:pt-0">
       {/* Header Left */}
@@ -71,33 +98,56 @@ function Header({
         </h1>
       </div>
       {/* Header Right */}
-      <div
-        className={`header-right flex items-center justify-center gap-x-sm transition-all duration-500 ${
-          focusMode ? "opacity-0 pointer-events-none" : "opacity-100"
-        }`}
-      >
-        {/* Tag Selector - Only visible on md+ screens */}
-        <div className="hidden md:block lg:hidden">
-          <TagSelector selectedTag={selectedTag} onTagSelect={onTagSelect} />
+      <div className="header-right flex items-center justify-center gap-x-sm">
+        {/* Normal Header Buttons */}
+        <div
+          className={`flex items-center justify-center gap-x-sm transition-all duration-500 ${
+            focusMode ? "opacity-0 pointer-events-none" : "opacity-100"
+          }`}
+        >
+          {/* Tag Selector - Only visible on md+ screens */}
+          <div className="hidden md:block lg:hidden">
+            <TagSelector selectedTag={selectedTag} onTagSelect={onTagSelect} />
+          </div>
+          <StreakPopover />
+
+          <ResponsiveButton
+            leftSection={<IconClock size={16} />}
+            className="font-semibold md:py-sm"
+            onClick={() => setActivitiesModalOpened(!activitiesModalOpened)}
+          >
+            {formatTime(totalTime)}
+          </ResponsiveButton>
+
+          <ResponsiveButton
+            className="md:py-sm"
+            onClick={() => setOpened(!opened)}
+          >
+            <IconChartColumn size={22} />
+          </ResponsiveButton>
+          {!user ? null : <RoomPopover />}
+          <UserMenu />
         </div>
-        <StreakPopover />
 
-        <ResponsiveButton
-          leftSection={<IconClock size={16} />}
-          className="font-semibold md:py-sm"
-          onClick={() => setActivitiesModalOpened(!activitiesModalOpened)}
+        {/* Fullscreen Button - Only visible in focus mode */}
+        <div
+          className={`absolute right-4 transition-all duration-500 ${
+            focusMode ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
+          title={
+            isFullscreen
+              ? "Thoát chế độ toàn màn hình"
+              : "Mở chế độ toàn màn hình"
+          }
         >
-          {formatTime(totalTime)}
-        </ResponsiveButton>
-
-        <ResponsiveButton
-          className="md:py-sm"
-          onClick={() => setOpened(!opened)}
-        >
-          <IconChartColumn size={22} />
-        </ResponsiveButton>
-        {!user ? null : <RoomPopover />}
-        <UserMenu />
+          <ResponsiveButton className="md:py-sm" onClick={toggleFullscreen}>
+            {isFullscreen ? (
+              <IconMinimize size={22} />
+            ) : (
+              <IconMaximize size={22} />
+            )}
+          </ResponsiveButton>
+        </div>
       </div>
       <LeaderboardModal opened={opened} setOpened={setOpened} />
       <ActivitiesModal

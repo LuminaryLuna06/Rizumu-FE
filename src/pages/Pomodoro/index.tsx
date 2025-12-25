@@ -22,7 +22,7 @@ import {
 
 function PomodoroPage() {
   const toast = useToast();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const [isFocusMode, setIsFocusMode] = useState<boolean>(false);
@@ -42,7 +42,10 @@ function PomodoroPage() {
   const roomSlug = searchParams.get("rid");
   const userId = searchParams.get("uid");
   const join = useJoinRoom();
-  const { data: room, isLoading } = useRoomBySlug(roomSlug || "", !!roomSlug);
+  const { data: room, isLoading } = useRoomBySlug(
+    roomSlug || "",
+    !!roomSlug && isAuthenticated
+  );
   const { data: currentRoom } = useRoomById(
     user?.current_room_id || "",
     !!user?.current_room_id
@@ -144,17 +147,9 @@ function PomodoroPage() {
     }
   }, [roomSlug, user, hasCheckedQuery, room, isLoading]);
 
-  // Handle room fetch error
-  useEffect(() => {
-    if (roomSlug && !isLoading && !room) {
-      toast.error("Room not found", "Error");
-      setSearchParams({});
-    }
-  }, [roomSlug, isLoading, room]);
-
   // Check for uid query parameter when page loads
   useEffect(() => {
-    if (userId) {
+    if (userId && !!user) {
       setSharedUserId(userId);
       setProfileModalOpened(true);
 
@@ -163,7 +158,7 @@ function PomodoroPage() {
         return prev;
       });
     }
-  }, [userId]);
+  }, [userId, user]);
 
   // Socket.IO: Listen for background changes
   const { socket } = useSocket();
@@ -339,7 +334,7 @@ function PomodoroPage() {
         )}
 
         {/* Online Users Display */}
-        {<OnlineUsers members={members} />}
+        {!!user && <OnlineUsers members={members} />}
 
         {/* Header */}
         <Header
