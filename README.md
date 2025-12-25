@@ -1,4 +1,4 @@
-# 🎯 Rizumu - Focus Together, Grow Together - Rhymth
+# 🎯 Rizumu - Rhymth
 
 Rizumu là một ứng dụng Pomodoro Timer thế hệ mới, kết hợp giữa quản lý thời gian hiệu quả và tính năng social, giúp bạn tập trung làm việc/học tập cùng bạn bè một cách thú vị và đầy động lực.
 
