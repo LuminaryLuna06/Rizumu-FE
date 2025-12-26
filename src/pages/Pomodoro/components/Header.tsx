@@ -99,13 +99,11 @@ function Header({
       </div>
       {/* Header Right */}
       <div className="header-right flex items-center justify-center gap-x-sm">
-        {/* Normal Header Buttons */}
         <div
           className={`flex items-center justify-center gap-x-sm transition-all duration-500 ${
             focusMode ? "opacity-0 pointer-events-none" : "opacity-100"
           }`}
         >
-          {/* Tag Selector - Only visible on md+ screens */}
           <div className="hidden md:block lg:hidden">
             <TagSelector selectedTag={selectedTag} onTagSelect={onTagSelect} />
           </div>
@@ -115,6 +113,8 @@ function Header({
             leftSection={<IconClock size={16} />}
             className="font-semibold md:py-sm"
             onClick={() => setActivitiesModalOpened(!activitiesModalOpened)}
+            ariaLabel="Open activities analytic"
+            title="Open activities analytic"
           >
             {formatTime(totalTime)}
           </ResponsiveButton>
@@ -122,6 +122,8 @@ function Header({
           <ResponsiveButton
             className="md:py-sm"
             onClick={() => setOpened(!opened)}
+            ariaLabel="Open leaderboard"
+            title="Open leaderboard"
           >
             <IconChartColumn size={22} />
           </ResponsiveButton>
@@ -129,7 +131,6 @@ function Header({
           <UserMenu />
         </div>
 
-        {/* Fullscreen Button - Only visible in focus mode */}
         <div
           className={`absolute right-4 transition-all duration-500 ${
             focusMode ? "opacity-100" : "opacity-0 pointer-events-none"
@@ -140,7 +141,12 @@ function Header({
               : "Mở chế độ toàn màn hình"
           }
         >
-          <ResponsiveButton className="md:py-sm" onClick={toggleFullscreen}>
+          <ResponsiveButton
+            className="md:py-sm"
+            onClick={toggleFullscreen}
+            ariaLabel={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+            title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+          >
             {isFullscreen ? (
               <IconMinimize size={22} />
             ) : (

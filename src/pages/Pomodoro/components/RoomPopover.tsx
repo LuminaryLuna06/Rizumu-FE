@@ -143,6 +143,8 @@ function RoomPopover() {
           <ResponsiveButton
             className="md:py-sm md:max-w-[150px] max-w-[120px]"
             disabled={isLoadingRoom || !room}
+            ariaLabel="Open room information"
+            title="Open room information"
           >
             <p className="truncate">
               {isLoadingRoom ? "Loading..." : room?.name || "Room"}

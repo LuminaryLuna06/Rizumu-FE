@@ -19,6 +19,8 @@ function StreakPopover() {
           <ResponsiveButton
             leftSection={<IconFlame size={16} />}
             className="font-semibold md:py-sm"
+            title="Open streak"
+            ariaLabel="Open streak"
           >
             {streaksLoading ? 0 : streaks && streaks.currentStreak}
           </ResponsiveButton>

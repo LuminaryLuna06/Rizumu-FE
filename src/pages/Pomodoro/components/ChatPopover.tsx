@@ -160,7 +160,7 @@ function ChatPopover() {
   return (
     <Popover
       trigger={
-        <ResponsiveButton>
+        <ResponsiveButton ariaLabel="Open chat" title="Open chat">
           <div className="grid grid-cols-1 grid-rows-1">
             <div className="col-start-1 row-start-1">
               <IconMessage size={20} />
@@ -237,6 +237,8 @@ function ChatPopover() {
               leftSection={<IconSend2 size={25} />}
               disabled={input.trim().length === 0}
               onClick={sendMessage}
+              ariaLabel="Send message"
+              title="Gửi tin nhắn"
             ></ResponsiveButton>
           </div>
         </div>

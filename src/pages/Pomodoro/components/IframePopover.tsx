@@ -306,7 +306,7 @@ function IframePopover() {
       opened={isPopoverOpen}
       onClose={() => setIsPopoverOpen(!isPopoverOpen)}
       trigger={
-        <ResponsiveButton>
+        <ResponsiveButton title="Add music" ariaLabel="Add music">
           <IconMusic size={20} />
         </ResponsiveButton>
       }
@@ -436,6 +436,9 @@ function IframePopover() {
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
               className="w-full"
+              title={`${
+                previewData.type === "youtube" ? "YouTube" : "Spotify"
+              } player`}
             />
           </div>
         ) : (
