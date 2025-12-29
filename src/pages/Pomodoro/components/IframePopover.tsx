@@ -135,7 +135,7 @@ function IframePopover() {
       const encodedUrl = encodeURIComponent(inputUrl);
       setTempPreviewData({
         type: "soundCloud",
-        embedUrl: `https://w.soundcloud.com/player/?url=${encodedUrl}&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true`,
+        embedUrl: `https://w.soundcloud.com/player/?url=${encodedUrl}&color=%232a2d2c&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true`,
       });
     } else {
       setTempPreviewData({ type: null, embedUrl: "" });
