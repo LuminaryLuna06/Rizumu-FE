@@ -42,6 +42,8 @@ function Footer({ onBackgroundChange, focusMode }: FooterProps) {
             className={`${
               focusMode ? "opacity-0 pointer-events-none" : "opacity-100"
             }`}
+            ariaLabel="Change background"
+            title="Change background"
           >
             <IconPhoto size={20} />
           </ResponsiveButton>
@@ -58,7 +60,11 @@ function Footer({ onBackgroundChange, focusMode }: FooterProps) {
             focusMode ? "opacity-0 pointer-events-none" : "opacity-100"
           }`}
         >
-          <ResponsiveButton onClick={() => setFriendOpened(true)}>
+          <ResponsiveButton
+            onClick={() => setFriendOpened(true)}
+            ariaLabel="Manage friends"
+            title="Manage friends"
+          >
             <div className="grid grid-cols-1 grid-rows-1">
               <div className="col-start-1 row-start-1">
                 <IconUsers size={20} />

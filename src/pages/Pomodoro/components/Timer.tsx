@@ -134,7 +134,7 @@ function Timer({
     return direction === "countup" ? 0 : duration;
   });
 
-  // Picture-in-Picture state
+  // Picture-in-Picture
   const [pipWindow, setPipWindow] = useState<Window | null>(null);
   const [isPipSupported] = useState(() => "documentPictureInPicture" in window);
   const modeRef = useRef<TimerMode>("pomodoro");
@@ -166,12 +166,10 @@ function Timer({
     modeRef.current = mode;
   }, [mode]);
 
-  // Load/clear tag based on user
   useEffect(() => {
     if (!user) {
       onTagSelect(null);
     } else {
-      // Load tag from localStorage for this specific user
       try {
         const key = `${SELECTED_TAG_KEY}_${user._id}`;
         const stored = localStorage.getItem(key);
@@ -195,7 +193,6 @@ function Timer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timerDirection]);
 
-  // Prevent accidental page close when timer is running
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (running) {
@@ -209,7 +206,6 @@ function Timer({
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [running]);
 
-  // Update document title
   useEffect(() => {
     document.title = `${formatTime(timeLeft)} - Rizumu`;
     return () => {
@@ -217,7 +213,6 @@ function Timer({
     };
   }, [timeLeft]);
 
-  // Auto PiP when tab becomes hidden
   useEffect(() => {
     const handleVisibilityChange = () => {
       const settings = getTimerSettings();
@@ -232,7 +227,7 @@ function Timer({
     };
   }, [running, pipWindow]);
 
-  // Auto-start timer based on settings when mode changes
+  // Auto-start
   useEffect(() => {
     if (shouldAutoStartRef.current) {
       shouldAutoStartRef.current = false;
@@ -323,17 +318,14 @@ function Timer({
       }
       intervalRef.current = setInterval(() => {
         durationRef.current += 1;
-        // setDuration(durationRef.current);
         setTimeLeft((prev) => {
           let newTimeLeft: number;
           let isCompleted: boolean;
 
           if (timerDirection === "countup") {
-            // Count up from 0 to targetDuration
             newTimeLeft = prev + 1;
             isCompleted = newTimeLeft >= targetDuration;
           } else {
-            // Count down from targetDuration to 0
             newTimeLeft = prev - 1;
             isCompleted = newTimeLeft <= 0;
           }
@@ -347,10 +339,8 @@ function Timer({
             playDing();
 
             const completedSession = { ...dataRef.current };
-            // console.log("Ended: ", completedSession);
             setFocusMode(false);
             if (completedSession.session_type === "pomodoro") {
-              // console.log("Ended Pomodoro: ", completedSession);
               const duration = durationRef.current;
               const xp = Math.floor(duration / 60);
               const coin = Math.floor(duration / 600);
@@ -391,11 +381,10 @@ function Timer({
                   },
                 }
               );
-              // setFocusMode(false);
             }
 
+            // Auto-switch mode
             queueMicrotask(() => {
-              // Auto-switch to next mode
               let nextMode: TimerMode;
               const settings = getTimerSettings();
 
@@ -416,7 +405,6 @@ function Timer({
               setMode(nextMode);
               resetTimer(nextMode);
 
-              // Mark that we should auto-start after mode change
               if (
                 (nextMode === "pomodoro" && settings.autoStartPomodoro) ||
                 ((nextMode === "short_break" || nextMode === "long_break") &&
@@ -472,7 +460,6 @@ function Timer({
     setRunning(false);
     setFocusMode(false);
 
-    // Mark session as completed if it was started
     if (dataRef.current.started_at) {
       dataRef.current.ended_at = new Date().toISOString();
       dataRef.current.duration = durationRef.current;
@@ -481,9 +468,7 @@ function Timer({
       initAudio();
       playDing();
 
-      // Send API call if it's a pomodoro session
       if (dataRef.current.session_type === "pomodoro") {
-        // console.log("Skipped Pomodoro: ", dataRef.current);
         const duration = durationRef.current;
         const xp = Math.floor(duration / 60);
         const coin = Math.floor(duration / 600);
@@ -521,11 +506,10 @@ function Timer({
             },
           }
         );
-        // setFocusMode(false);
       }
     }
 
-    // Auto-switch to next mode – dùng modeRef để luôn lấy mode mới nhất (kể cả trong PiP)
+    // Switch mode
     const currentMode = modeRef.current;
     let nextMode: TimerMode;
     const settings = getTimerSettings();
@@ -548,7 +532,7 @@ function Timer({
     resetTimer(nextMode);
   };
 
-  // Picture-in-Picture handlers
+  // Picture-in-Picture
   const openPictureInPicture = async () => {
     if (!window.documentPictureInPicture || pipWindow) return;
 
@@ -560,7 +544,6 @@ function Timer({
 
       setPipWindow(pip);
 
-      // Copy stylesheets to PiP window
       [...document.styleSheets].forEach((styleSheet) => {
         try {
           const cssRules = [...styleSheet.cssRules]
@@ -570,7 +553,6 @@ function Timer({
           style.textContent = cssRules;
           pip.document.head.appendChild(style);
         } catch (e) {
-          // External stylesheets may fail due to CORS
           const link = pip.document.createElement("link");
           link.rel = "stylesheet";
           link.href = (styleSheet as CSSStyleSheet).href || "";
@@ -578,7 +560,6 @@ function Timer({
         }
       });
 
-      // Create PiP UI structure
       const bgStyle =
         bgType === "static"
           ? `background-image: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), url(${bgName});
@@ -601,7 +582,6 @@ function Timer({
           </video>`
           : "";
 
-      // Create PiP UI structure
       pip.document.body.innerHTML = `
         <div id="pip-container" style="
           display: flex;
@@ -656,11 +636,9 @@ function Timer({
         </div>
       `;
 
-      // Setup button event listeners
       const toggleBtn = pip.document.getElementById("pip-toggle");
       const skipBtn = pip.document.getElementById("pip-skip");
 
-      // Store listener functions for cleanup
       const toggleClickListener = () => {
         setRunning((prev) => !prev);
         initAudio();
@@ -696,9 +674,7 @@ function Timer({
         skipBtn.addEventListener("mouseleave", skipMouseLeaveListener);
       }
 
-      // Handle PiP window close with proper cleanup
       const pagehideListener = () => {
-        // Remove all event listeners
         if (toggleBtn) {
           toggleBtn.removeEventListener("click", toggleClickListener);
           toggleBtn.removeEventListener("mouseenter", toggleMouseEnterListener);
@@ -727,7 +703,6 @@ function Timer({
     }
   };
 
-  // Update PiP content when timer state changes
   useEffect(() => {
     if (pipWindow) {
       const timerEl = pipWindow.document.getElementById("pip-timer");
@@ -757,24 +732,23 @@ function Timer({
       closePictureInPicture();
     }
   };
-  // End session sound
+
+  // Ding dong
   const initAudio = () => {
     if (!audioCtxRef.current) {
       audioCtxRef.current = createAudioContext();
     }
   };
-
   const playDing = () => {
     const ctx = audioCtxRef.current;
     if (!ctx) return;
 
     const settings = getTimerSettings();
-    // Only play sound if alarm is enabled
     if (settings.alarmEnabled) {
       playSound(settings.alarmSound, ctx, 1, settings.alarmVolume);
     }
   };
-  // Click sound
+  // Click click
   const playClickSound = () => {
     const ctx = audioCtxRef.current;
     if (!ctx) return;
@@ -807,7 +781,6 @@ function Timer({
   return (
     <div className="main-content flex flex-col justify-center items-center gap-y-xs h-[82vh]">
       {pipWindow ? (
-        // Show minimized message when PiP is active
         <div className="flex flex-col items-center gap-y-lg text-secondary/70">
           <IconPictureInPicture size={64} className="opacity-50" />
           <p className="text-xl font-medium">
@@ -821,9 +794,7 @@ function Timer({
           </button>
         </div>
       ) : (
-        // Show full timer when PiP is not active
         <>
-          {/* Tag Selection - Portrait Mode & Desktop */}
           <div
             className={`block md:hidden lg:block transition-all duration-500 ${
               focusMode ? "opacity-0 pointer-events-none" : "opacity-100"
@@ -908,7 +879,11 @@ function Timer({
                   boxShadow: "0 1px 2px rgba(0, 0, 0, 0.2)",
                 }}
               >
-                <IconClockHour11Filled size={26} />
+                <IconClockHour11Filled
+                  size={26}
+                  title="Open presets"
+                  aria-label="Open presets"
+                />
               </div>
             </div>
 
@@ -923,8 +898,10 @@ function Timer({
                 className="px-lg py-lg w-[140px] md:w-[200px] my-lg text-primary rounded-full bg-secondary text-lg font-bold hover:bg-secondary-hover cursor-pointer transition-all duration-300 hover:scale-[1.02]"
                 style={{
                   boxShadow:
-                    "0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06)",
+                    "0 4px 6px rgba(105, 99, 99, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06)",
                 }}
+                title={running ? "Pause session" : "Start session"}
+                aria-label={running ? "Pause session" : "Start session"}
               >
                 {running ? "Pause" : "Start"}
               </button>
@@ -947,7 +924,11 @@ function Timer({
                   boxShadow: "0 1px 2px rgba(0, 0, 0, 0.2)",
                 }}
               >
-                <IconPictureInPicture size={26} />
+                <IconPictureInPicture
+                  size={26}
+                  aria-label="Open Picture-In-Picture"
+                  title="Open Picture-In-Picture"
+                />
               </div>
               <div
                 className="rounded-full hover:scale-110 transition-all cursor-pointer"
@@ -956,7 +937,11 @@ function Timer({
                   boxShadow: "0 1px 2px rgba(0, 0, 0, 0.2)",
                 }}
               >
-                <IconPlayerSkipForwardFilled size={26} />
+                <IconPlayerSkipForwardFilled
+                  size={26}
+                  title="Skip session"
+                  aria-label="Skip session"
+                />
               </div>
             </div>
           </div>

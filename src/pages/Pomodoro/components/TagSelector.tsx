@@ -178,7 +178,7 @@ function TagSelector({ selectedTag, onTagSelect }: TagSelectorProps) {
   };
 
   return (
-    <div>
+    <div aria-label="Tag selector" title="Tag selector">
       <div className="tag-dropdown-container">
         <button
           ref={buttonRef}

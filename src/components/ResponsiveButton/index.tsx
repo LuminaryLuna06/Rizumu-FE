@@ -7,6 +7,8 @@ function ResponsiveButton({
   leftSection,
   rightSection,
   disabled,
+  ariaLabel,
+  title,
 }: {
   children?: React.ReactNode;
   className?: string;
@@ -14,11 +16,15 @@ function ResponsiveButton({
   leftSection?: React.ReactNode;
   rightSection?: React.ReactNode;
   disabled?: boolean;
+  ariaLabel?: string;
+  title?: string;
 }) {
   return (
     <button
       onClick={onClick}
       disabled={disabled}
+      aria-label={ariaLabel}
+      title={title}
       className={`${
         className ?? ""
       } flex items-center p-sm md:p-md bg-primary-light text-secondary hover:bg-primary-hover rounded-lg gap-x-xs transition-all duration-base ${
