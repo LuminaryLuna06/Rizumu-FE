@@ -1,7 +1,7 @@
 import Modal from "@rizumu/components/Modal";
 import SelectInput from "@rizumu/components/SelectInput";
 import Switch from "@rizumu/components/Switch";
-import type { Preset } from "@rizumu/constants/timer";
+import type { Preset, TimerMode } from "@rizumu/constants/timer";
 import { IconStopwatch } from "@tabler/icons-react";
 import { useState } from "react";
 
@@ -13,6 +13,8 @@ interface PresetModalProps {
   onPresetChange: (presetId: number) => void;
   timerDirection: "countdown" | "countup";
   onToggleTimerDirection: () => void;
+  currentMode: TimerMode;
+  onModeChange: (newMode: TimerMode) => void;
 }
 
 function PresetModal({
@@ -23,9 +25,11 @@ function PresetModal({
   onPresetChange,
   timerDirection,
   onToggleTimerDirection,
+  currentMode,
+  onModeChange,
 }: PresetModalProps) {
   const [activeTab, setActiveTab] = useState<"pomodoro" | "stopwatch">(
-    "pomodoro"
+    currentMode === "stopwatch" ? "stopwatch" : "pomodoro"
   );
   const tabs = [
     {
@@ -49,16 +53,24 @@ function PresetModal({
     >
       {/* Tab */}
       <div className="flex gap-1 bg-secondary/5 p-1 rounded-md mb-4 md:mb-8 text-white">
-        {tabs.map((mode: any) => (
+        {tabs.map((tab: any) => (
           <button
-            onClick={() => setActiveTab(mode.mode)}
+            key={tab.id}
+            onClick={() => {
+              setActiveTab(tab.mode);
+              if (tab.mode === "stopwatch") {
+                onModeChange("stopwatch");
+              } else {
+                onModeChange("pomodoro");
+              }
+            }}
             className={`flex-1 py-2 text-sm font-medium rounded-md transition-all duration-slow cursor-pointer ${
-              activeTab === mode.mode
+              activeTab === tab.mode
                 ? "bg-secondary/10"
                 : "text-secondary/50 hover:text-secondary/80 hover:bg-secondary/5"
             }`}
           >
-            {mode.name}
+            {tab.name}
           </button>
         ))}
       </div>
@@ -80,14 +92,20 @@ function PresetModal({
           />
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center space-y-md text-center">
+        <div className="flex flex-col items-center justify-center space-y-md text-center py-lg">
           <div className="w-20 h-20 rounded-full bg-secondary/10 flex items-center justify-center">
             <IconStopwatch size={40} className="text-secondary" />
           </div>
           <div className="space-y-xs text-secondary/60 text-sm">
-            <h3 className="">Track your time without limits.</h3>
-            <p className="max-w-[300px]">
-              Perfect for open-ended study sessions.
+            <h3 className="text-lg font-semibold text-secondary">
+              Track time without limits
+            </h3>
+            <p className="max-w-[300px] text-secondary/70">
+              Perfect for open-ended study sessions. Timer will count up
+              indefinitely.
+            </p>
+            <p className="max-w-[300px] text-secondary/70 italic pt-2">
+              Press Skip to reset to 0:00
             </p>
           </div>
         </div>
