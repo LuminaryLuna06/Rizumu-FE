@@ -169,24 +169,22 @@ function ProfileModal({
     opened
   );
 
-  const heatmapData = useMemo(() => {
+   const heatmapData = useMemo(() => {
     if (!heatmap || !heatmap.durations) return {};
 
     const heatmapDataObj: { [key: string]: number } = {};
+    const startDate = new Date(startTime);
 
     heatmap.durations.forEach((duration, index) => {
-      const currentDate = new Date(year, 0, 1 + index);
+      const currentDate = new Date(startDate);
+      currentDate.setDate(startDate.getDate() + index);
 
-      const y = currentDate.getFullYear();
-      const m = String(currentDate.getMonth() + 1).padStart(2, "0");
-      const d = String(currentDate.getDate()).padStart(2, "0");
-      const dateKey = `${y}-${m}-${d}`;
-
+      const dateKey = currentDate.toISOString().split("T")[0];
       heatmapDataObj[dateKey] = duration;
     });
 
     return heatmapDataObj;
-  }, [heatmap, year]);
+  }, [heatmap, startTime, targetUserId]);
 
   return (
     <>
