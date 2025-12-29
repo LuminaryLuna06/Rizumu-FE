@@ -231,7 +231,7 @@ const LeaderboardModal = ({
             >
               <IconArrowLeft size={20} />
             </button>
-            <div className="mx-4 border border-gray-700 bg-[#1a1a1a] px-6 py-2 rounded-full text-sm font-medium">
+            <div className="flex items-center mx-4 border border-gray-700 bg-[#1a1a1a] px-6 py-2 rounded-full text-sm font-medium">
               {formatDisplayDate(timeFilter, currentDate)}
             </div>
             <button
@@ -243,7 +243,7 @@ const LeaderboardModal = ({
           </div>
 
           {/* Table */}
-          <div className="max-h-[calc(90vh-170px)] overflow-y-auto overflow-x-hidden scrollbar-hidden px-2">
+          <div className="max-h-[calc(60vh)] md:max-h-[calc(87vh-170px)] overflow-y-auto overflow-x-hidden scrollbar-hidden px-2">
             <table className="w-full relative mb-md">
               <thead>
                 <tr>

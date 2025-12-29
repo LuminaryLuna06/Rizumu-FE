@@ -69,7 +69,7 @@ function TagSelector({ selectedTag, onTagSelect }: TagSelectorProps) {
       setDropdownPosition({
         top: rect.bottom + 8,
         left: rect.left,
-        width: 250,
+        width: window.innerWidth < 768 ? 200 : 250,
       });
     }
   }, [showDropdown]);
