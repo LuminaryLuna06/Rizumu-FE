@@ -5,6 +5,8 @@ import {
   IconX,
   IconBrandYoutube,
   IconBrandSpotify,
+  IconBrandApple,
+  IconBrandSoundcloud,
   IconTrash,
 } from "@tabler/icons-react";
 import { useState, useEffect } from "react";
@@ -18,7 +20,7 @@ const MAX_HISTORY_ITEMS = 10;
 
 interface LinkData {
   url: string;
-  type: "youtube" | "spotify";
+  type: "youtube" | "spotify" | "appleMusic" | "soundCloud";
   embedUrl: string;
   timestamp: number;
   title?: string;
@@ -32,11 +34,11 @@ function IframePopover() {
   const [showRecent, setShowRecent] = useState(false);
   const [linkHistory, setLinkHistory] = useState<LinkData[]>([]);
   const [previewData, setPreviewData] = useState<{
-    type: "youtube" | "spotify" | null;
+    type: "youtube" | "spotify" | "appleMusic" | "soundCloud" | null;
     embedUrl: string;
   }>({ type: null, embedUrl: "" });
   const [tempPreviewData, setTempPreviewData] = useState<{
-    type: "youtube" | "spotify" | null;
+    type: "youtube" | "spotify" | "appleMusic" | "soundCloud" | null;
     embedUrl: string;
   }>({ type: null, embedUrl: "" });
 
@@ -74,6 +76,11 @@ function IframePopover() {
 
     if (inputUrl.includes("youtube.com") || inputUrl.includes("youtu.be")) {
       let videoId = "";
+      let playlistId = "";
+
+      if (inputUrl.includes("list=")) {
+        playlistId = inputUrl.split("list=")[1]?.split("&")[0];
+      }
 
       if (inputUrl.includes("youtube.com/watch?v=")) {
         videoId = inputUrl.split("v=")[1]?.split("&")[0];
@@ -83,7 +90,14 @@ function IframePopover() {
         videoId = inputUrl.split("embed/")[1]?.split("?")[0];
       }
 
-      if (videoId) {
+      if (playlistId) {
+        setTempPreviewData({
+          type: "youtube",
+          embedUrl: `https://www.youtube.com/embed/${
+            videoId ? videoId : ""
+          }videoseries?list=${playlistId}`,
+        });
+      } else if (videoId) {
         setTempPreviewData({
           type: "youtube",
           embedUrl: `https://www.youtube.com/embed/${videoId}`,
@@ -106,6 +120,23 @@ function IframePopover() {
         type: "spotify",
         embedUrl: embedUrl,
       });
+    } else if (inputUrl.includes("music.apple.com")) {
+      let embedUrl = inputUrl;
+
+      if (!inputUrl.includes("embed")) {
+        embedUrl = inputUrl.replace("music.apple.com", "embed.music.apple.com");
+      }
+
+      setTempPreviewData({
+        type: "appleMusic",
+        embedUrl: embedUrl,
+      });
+    } else if (inputUrl.includes("soundcloud.com")) {
+      const encodedUrl = encodeURIComponent(inputUrl);
+      setTempPreviewData({
+        type: "soundCloud",
+        embedUrl: `https://w.soundcloud.com/player/?url=${encodedUrl}&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true`,
+      });
     } else {
       setTempPreviewData({ type: null, embedUrl: "" });
     }
@@ -113,7 +144,7 @@ function IframePopover() {
 
   const fetchLinkMetadata = async (
     url: string,
-    type: "youtube" | "spotify"
+    type: "youtube" | "spotify" | "appleMusic" | "soundCloud"
   ): Promise<{ title: string; thumbnail?: string }> => {
     if (type === "youtube") {
       try {
@@ -133,7 +164,7 @@ function IframePopover() {
         console.error("Failed to fetch YouTube metadata:", error);
       }
       return { title: "YouTube Video" };
-    } else {
+    } else if (type === "spotify") {
       // For Spotify, use official Web API SDK
       try {
         // Initialize Spotify API with Client Credentials from environment
@@ -200,12 +231,46 @@ function IframePopover() {
         }
       }
       return { title: "Spotify Content" };
+    } else if (type === "appleMusic") {
+      try {
+        const parts = url.split("/");
+        const namePart = parts[parts.length - 1]?.split("?")[0];
+        if (namePart) {
+          const title = namePart
+            .split("-")
+            .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+            .join(" ");
+          return { title: title || "Apple Music" };
+        }
+      } catch (error) {
+        console.error("Failed to parse Apple Music title:", error);
+      }
+      return { title: "Apple Music Content" };
+    } else if (type === "soundCloud") {
+      try {
+        const response = await fetch(
+          `https://soundcloud.com/oembed?url=${encodeURIComponent(
+            url
+          )}&format=json`
+        );
+        if (response.ok) {
+          const data = await response.json();
+          return {
+            title: data.title || "SoundCloud Track",
+            thumbnail: data.thumbnail_url,
+          };
+        }
+      } catch (error) {
+        console.error("Failed to fetch SoundCloud metadata:", error);
+      }
+      return { title: "SoundCloud Content" };
     }
+    return { title: "Music Content" };
   };
 
   const saveToHistory = (
     url: string,
-    type: "youtube" | "spotify",
+    type: "youtube" | "spotify" | "appleMusic" | "soundCloud",
     embedUrl: string,
     title?: string,
     thumbnail?: string
@@ -288,6 +353,13 @@ function IframePopover() {
       embedUrl: link.embedUrl,
     });
     saveCurrentLink(link);
+    saveToHistory(
+      link.url,
+      link.type,
+      link.embedUrl,
+      link.title,
+      link.thumbnail
+    );
     setShowRecent(false);
   };
 
@@ -311,11 +383,15 @@ function IframePopover() {
         </ResponsiveButton>
       }
       position="bottom-left"
-      className="w-100 md:w-120 max-h-[70vh]"
+      className="w-80 md:w-120 max-h-[70vh]"
     >
       <div className="flex items-center justify-between px-lg py-md">
         <h3 className="text-secondary capitalize">
-          {previewData.type || "YouTube, Spotify"}
+          {previewData.type === "appleMusic"
+            ? "Apple Music"
+            : previewData.type === "soundCloud"
+            ? "SoundCloud"
+            : previewData.type || "Music Player"}
         </h3>
 
         {isEditing ? (
@@ -324,7 +400,7 @@ function IframePopover() {
               type="text"
               value={inputUrl}
               onChange={(e) => setInputUrl(e.target.value)}
-              placeholder="URL from YT, Spotify"
+              placeholder="URL from YT, Spotify, Apple, SC"
               className="flex-1 px-md py-xs rounded-md bg-secondary text-primary outline-none transition-all duration-base text-xs"
               autoFocus
             />
@@ -401,11 +477,20 @@ function IframePopover() {
                             size={20}
                             className="text-red-500"
                           />
-                        ) : (
+                        ) : link.type === "spotify" ? (
                           <IconBrandSpotify
                             size={20}
                             className="text-green-500"
                           />
+                        ) : link.type === "appleMusic" ? (
+                          <IconBrandApple size={20} className="text-white" />
+                        ) : link.type === "soundCloud" ? (
+                          <IconBrandSoundcloud
+                            size={20}
+                            className="text-orange-500"
+                          />
+                        ) : (
+                          <IconMusic size={20} className="text-secondary" />
                         )}
                       </div>
                     </div>
@@ -432,7 +517,15 @@ function IframePopover() {
             <iframe
               src={previewData.embedUrl}
               width="100%"
-              height={previewData.type === "youtube" ? "252" : "360"}
+              height={
+                previewData.type === "youtube"
+                  ? "252"
+                  : previewData.type === "appleMusic"
+                  ? "200"
+                  : previewData.type === "soundCloud"
+                  ? "166"
+                  : "360"
+              }
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
               className="w-full"
@@ -443,7 +536,7 @@ function IframePopover() {
           </div>
         ) : (
           <div className="text-center text-secondary opacity-50 py-xl">
-            Click "Change" to add YouTube or Spotify
+            Click "Change" to add YouTube, Spotify, Apple or SoundCloud
           </div>
         )}
       </div>

@@ -169,7 +169,7 @@ function ProfileModal({
     opened
   );
 
-  const heatmapData = useMemo(() => {
+   const heatmapData = useMemo(() => {
     if (!heatmap || !heatmap.durations) return {};
 
     const heatmapDataObj: { [key: string]: number } = {};
