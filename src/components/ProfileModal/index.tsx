@@ -169,7 +169,7 @@ function ProfileModal({
     opened
   );
 
-   const heatmapData = useMemo(() => {
+  const heatmapData = useMemo(() => {
     if (!heatmap || !heatmap.durations) return {};
 
     const heatmapDataObj: { [key: string]: number } = {};
@@ -263,7 +263,7 @@ function ProfileModal({
             )}
           </div>
           <div className="flex-5 flex-col w-full">
-            <div className="flex flex-col-reverse md:flex-row items-center gap-sm w-full h-25 md:h-10 mb-xs">
+            <div className="flex flex-col-reverse md:flex-row items-center gap-0 w-full h-25 md:h-10 mb-xs">
               <div className="flex items-center gap-2">
                 {isLoading ? (
                   <div className="h-8 bg-secondary/20 rounded animate-pulse w-48" />
@@ -486,7 +486,7 @@ function ProfileModal({
         </div>
 
         {giftLoading ? (
-          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 mb-xl px-2">
+          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-6 mb-xl">
             {Array.from({ length: 5 }).map((_, index) => (
               <div
                 key={index}
@@ -495,23 +495,21 @@ function ProfileModal({
             ))}
           </div>
         ) : gifts && gifts.length > 0 ? (
-          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 mb-xl px-2">
+          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-6 mb-xl">
             {gifts.map((gift: any, index: number) => (
               <div
                 key={index}
                 className="relative flex flex-col items-center p-2 rounded-2xl transition-all duration-300 border-2 border-transparent bg-secondary/10 hover:border-white/10"
               >
-                <div className="w-24 h-24 md:w-32 md:h-32 flex flex-col items-center justify-center drop-shadow-xl mt-2">
+                <div className="w-20 h-20 md:w-32 md:h-32 flex flex-col items-center justify-center p-2 drop-shadow-xl mt-2">
                   <img
                     src={gift.icon}
                     alt="Gift icon"
                     className="w-full h-full object-contain transform hover:scale-110 transition-transform duration-300"
                   />
-                  <p className="mb-md text-xs italic ">
-                    from{" "}
-                    <span className="text-base font-semibold not-italic">
-                      {gift.senderName}
-                    </span>
+                  <p className="text-xs italic">from </p>
+                  <p className="text-xs md:text-base font-semibold not-italic mb-sm">
+                    {gift.senderName}
                   </p>
                 </div>
               </div>
