@@ -463,7 +463,7 @@ function ProfileModal({
             <IconMap />
             <h1>Heatmap</h1>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 w-full overflow-visible relative [&_text]:fill-white/80">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 w-full overflow-visible relative [&_text]:fill-white/80">
             {months.map((month, index) => (
               <HeatMap
                 key={index}

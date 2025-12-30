@@ -42,28 +42,56 @@ const getTimeRange = (date: Date, filter: "daily" | "weekly" | "monthly") => {
 };
 const formatDisplayDate = (timeFilter: string, currentDate: Date) => {
   if (timeFilter === "daily") {
-    return currentDate.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
+    return (
+      <p>
+        {currentDate.toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        })}
+      </p>
+    );
   } else if (timeFilter === "weekly") {
     const { startTime, endTime } = getTimeRange(currentDate, "weekly");
     const start = new Date(startTime);
     const end = new Date(endTime);
-    return `${start.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-    })} - ${end.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    })}`;
-  } else {
-    return currentDate.toLocaleDateString("en-GB", {
-      month: "long",
+    const yearStart = start.toLocaleDateString("en-GB", {
       year: "numeric",
     });
+    const yearEnd = end.toLocaleDateString("en-GB", {
+      year: "numeric",
+    });
+    return (
+      <>
+        <p>
+          {start.toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "short",
+          }) +
+            " - " +
+            end.toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "short",
+            })}
+        </p>
+        <p>{yearStart === yearEnd ? yearStart : yearStart + " -> " + yearEnd}</p>
+      </>
+    );
+  } else {
+    return (
+      <>
+        <p>
+          {currentDate.toLocaleDateString("en-GB", {
+            month: "long",
+          })}
+        </p>
+        <p className="sm:ml-2">
+          {currentDate.toLocaleDateString("en-GB", {
+            year: "numeric",
+          })}
+        </p>
+      </>
+    );
   }
 };
 
@@ -224,14 +252,14 @@ const LeaderboardModal = ({
             </div>
           </div>
 
-          <div className="flex justify-center items-center m-8 md:m-5 lg:m-8">
+          <div className="flex justify-center items-center gap-5 sm:gap-0 my-8 md:m-5 lg:m-8">
             <button
               onClick={handlePrevDate}
               className="p-2 text-gray-400 hover:text-white transition cursor-pointer"
             >
               <IconArrowLeft size={20} />
             </button>
-            <div className="flex items-center mx-4 border border-gray-700 bg-[#1a1a1a] px-6 py-2 rounded-full text-sm font-medium">
+            <div className="flex flex-col sm:flex-row items-center mx-4 border border-gray-700 bg-[#1a1a1a] px-5 sm:px-6 py-2 rounded-xl sm:rounded-full text-sm font-medium">
               {formatDisplayDate(timeFilter, currentDate)}
             </div>
             <button
