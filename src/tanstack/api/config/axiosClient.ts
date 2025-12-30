@@ -11,7 +11,7 @@ import {
 } from "@rizumu/utils/cookieManager";
 
 const axiosClient: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL_RIZUMU,
+  baseURL: import.meta.env.VITE_API_URL,
   headers: {
     "Content-Type": "application/json",
   },
@@ -43,7 +43,7 @@ const processQueue = (
 const refreshAccessToken = async (): Promise<string> => {
   try {
     const response = await axios.post(
-      `${import.meta.env.VITE_API_URL_RIZUMU}/auth/refresh`,
+      `${import.meta.env.VITE_API_URL}/auth/refresh`,
       {},
       { withCredentials: true }
     );
