@@ -74,7 +74,7 @@ const formatDisplayDate = (timeFilter: string, currentDate: Date) => {
               month: "short",
             })}
         </p>
-        <p>{yearStart === yearEnd ? yearStart : yearStart + " -> " + yearEnd}</p>
+        <p className="sm:hidden">{yearStart === yearEnd ? yearStart : yearStart + " -> " + yearEnd}</p>
       </>
     );
   } else {

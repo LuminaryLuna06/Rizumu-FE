@@ -279,7 +279,7 @@ function TagSelector({ selectedTag, onTagSelect }: TagSelectorProps) {
             ) : (
               /* Tag List */
               <>
-                <div className="max-h-[300px] overflow-y-auto custom-scrollbar scrollbar-hidden font-light">
+                <div className="max-h-[15vh] overflow-y-auto custom-scrollbar scrollbar-hidden font-light">
                   {tags && tags.length > 0 ? (
                     tags.map((tag) => (
                       <button
