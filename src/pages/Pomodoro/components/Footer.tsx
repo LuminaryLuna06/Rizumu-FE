@@ -1,5 +1,5 @@
 import ResponsiveButton from "@rizumu/components/ResponsiveButton";
-import { IconPhoto, IconUsers } from "@tabler/icons-react";
+import { IconPhoto, IconUsers, IconHelp } from "@tabler/icons-react";
 import { useState } from "react";
 import IframePopover from "./IframePopover";
 import ManageFriendModal from "@rizumu/components/ManageFriendModal";
@@ -8,6 +8,7 @@ import BackgroundModal from "@rizumu/components/BackgroundModal";
 import { useMemo } from "react";
 import { useAuth } from "@rizumu/context/AuthContext";
 import { useFriendRequests, useRoomById } from "@rizumu/tanstack/api/hooks";
+import { useDriverTour } from "@rizumu/hooks/useDriverTour";
 
 interface FooterProps {
   onBackgroundChange: (bg: { name: string; type: string }) => void;
@@ -18,6 +19,7 @@ function Footer({ onBackgroundChange, focusMode }: FooterProps) {
   const { user } = useAuth();
   const [friendOpened, setFriendOpened] = useState(false);
   const [backgroundModalOpened, setBackgroundModalOpened] = useState(false);
+  const { startTimerTour } = useDriverTour();
 
   const { data: friendRequests } = useFriendRequests(!!user?._id);
   const { data: room } = useRoomById(user?.current_room_id || "");
@@ -35,27 +37,41 @@ function Footer({ onBackgroundChange, focusMode }: FooterProps) {
     <div className="footer flex justify-between h-[10vh] items-center px-md pb-lg lg:pb-0">
       {/* Footer Left */}
       <div className="flex gap-x-lg">
-        <IframePopover />
+        <div id="footer-iframe">
+          <IframePopover />
+        </div>
         {checkAdmin() && (
+          <div id="footer-background">
+            <ResponsiveButton
+              onClick={() => setBackgroundModalOpened(true)}
+              className={`${
+                focusMode ? "opacity-0 pointer-events-none" : "opacity-100"
+              }`}
+              ariaLabel="Change background"
+              title="Change background"
+            >
+              <IconPhoto size={20} />
+            </ResponsiveButton>
+          </div>
+        )}
+        <div id="footer-tutorial">
           <ResponsiveButton
-            onClick={() => setBackgroundModalOpened(true)}
+            onClick={startTimerTour}
             className={`${
               focusMode ? "opacity-0 pointer-events-none" : "opacity-100"
             }`}
-            ariaLabel="Change background"
-            title="Change background"
+            ariaLabel="Start tutorial"
+            title="Start tutorial"
           >
-            <IconPhoto size={20} />
+            <IconHelp size={20} />
           </ResponsiveButton>
-        )}
-        {/* <ResponsiveButton>
-          <IconSticker2 size={20} />
-        </ResponsiveButton> */}
+        </div>
       </div>
 
       {/* Footer Right */}
       <div className={`flex gap-x-lg justify-center`}>
         <div
+          id="footer-friends"
           className={`${
             focusMode ? "opacity-0 pointer-events-none" : "opacity-100"
           }`}
@@ -80,6 +96,7 @@ function Footer({ onBackgroundChange, focusMode }: FooterProps) {
           </ResponsiveButton>
         </div>
         <div
+          id="footer-chat"
           className={`${
             focusMode && !room?.chat_during_pomodoro
               ? "opacity-0 pointer-events-none"

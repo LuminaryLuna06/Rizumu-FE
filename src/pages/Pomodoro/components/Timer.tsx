@@ -832,8 +832,12 @@ function Timer({
           </button>
         </div>
       ) : (
-        <>
+        <div
+          className="flex flex-col justify-center items-center"
+          id="timer-container"
+        >
           <div
+            id="timer-tag-selector"
             className={`block md:hidden lg:block transition-all duration-500 ${
               focusMode ? "opacity-0 pointer-events-none" : "opacity-100"
             }`}
@@ -843,6 +847,7 @@ function Timer({
 
           {mode !== "stopwatch" && (
             <div
+              id="timer-mode-buttons"
               className={`flex gap-x-xl items-center mt-4 md:mt-6 transition-all duration-500`}
             >
               <button
@@ -893,6 +898,7 @@ function Timer({
           )}
 
           <p
+            id="timer-display"
             className="leading-tight text-[4.5em] sm:text-[5.5em] md:text-[7em] lg:text-[10em] font-extrabold tracking-[0.07em] transition-all duration-slower ease-in-out"
             style={{
               textShadow:
@@ -913,6 +919,7 @@ function Timer({
               }`}
             >
               <div
+                id="timer-preset-button"
                 className="rounded-full hover:scale-110 transition-all cursor-pointer"
                 onClick={() => setOpenedPreset(true)}
                 style={{
@@ -929,6 +936,7 @@ function Timer({
 
             <div className="flex justify-center">
               <button
+                id="timer-start-button"
                 onClick={() => {
                   setRunning((prev) => !prev);
                   initAudio();
@@ -949,6 +957,7 @@ function Timer({
 
             <div className="flex justify-start gap-x-lg">
               <div
+                id="timer-pip-button"
                 className={`hidden md:block rounded-full hover:scale-110 transition-all cursor-pointer ${
                   !isPipSupported ? "opacity-30 cursor-not-allowed" : ""
                 } ${pipWindow ? "text-accent" : ""}`}
@@ -971,6 +980,7 @@ function Timer({
                 />
               </div>
               <div
+                id="timer-skip-button"
                 className="rounded-full hover:scale-110 transition-all cursor-pointer"
                 onClick={handleSkipSessionWrapper}
                 style={{
@@ -985,7 +995,7 @@ function Timer({
               </div>
             </div>
           </div>
-        </>
+        </div>
       )}
       <PresetModal
         opened={openedPreset}

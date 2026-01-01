@@ -10,6 +10,7 @@ import {
 } from "@tabler/icons-react";
 import { useState } from "react";
 import { string, object } from "@rizumu/utils/validate";
+import { useDriverTour } from "@rizumu/hooks/useDriverTour";
 
 interface AuthModalProps {
   opened: boolean;
@@ -24,6 +25,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
 }) => {
   const toast = useToast();
   const { login, register } = useAuth();
+  const { startTimerTour } = useDriverTour();
   const [mode, setMode] = useState<"login" | "register">(defaultMode);
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
@@ -107,6 +109,9 @@ const AuthModal: React.FC<AuthModalProps> = ({
       } else {
         await register(username, password);
         toast.success("Registration successful!", "Success");
+        setTimeout(() => {
+          startTimerTour();
+        }, 1000);
       }
       onClose();
       handleReset();

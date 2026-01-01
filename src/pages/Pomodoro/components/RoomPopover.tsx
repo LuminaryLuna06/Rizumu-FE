@@ -140,23 +140,25 @@ function RoomPopover() {
     <>
       <Popover
         trigger={
-          <ResponsiveButton
-            className="md:py-sm md:max-w-[150px] max-w-[120px]"
-            disabled={isLoadingRoom || !room}
-            ariaLabel="Open room information"
-            title="Open room information"
-          >
-            <p className="truncate">
-              {isLoadingRoom ? "Loading..." : room?.name || "Room"}
-            </p>
-          </ResponsiveButton>
+          <div id="room-trigger">
+            <ResponsiveButton
+              className="md:py-sm md:max-w-[150px] max-w-[120px]"
+              disabled={isLoadingRoom || !room}
+              ariaLabel="Open room information"
+              title="Open room information"
+            >
+              <p className="truncate">
+                {isLoadingRoom ? "Loading..." : room?.name || "Room"}
+              </p>
+            </ResponsiveButton>
+          </div>
         }
         opened={roomOpened && !!room}
         onClose={() => setRoomOpened(!roomOpened)}
         position="top-right"
         className="w-90 max-h-[80vh] overflow-y-auto"
       >
-        <div className="p-lg space-y-md">
+        <div id="room-content" className="p-lg space-y-md">
           <div className="flex justify-between text-secondary items-center overflow-hidden">
             <div className="flex items-center gap-x-xs">
               {isOwner && showMembers ? (
