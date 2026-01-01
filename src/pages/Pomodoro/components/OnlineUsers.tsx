@@ -8,7 +8,7 @@ function OnlineUsers({ members }: OnlineUsersProps) {
   if (onlineMembers.length === 0) return null;
 
   return (
-    <div className="fixed top-20 right-4">
+    <div id="online-users" className="fixed top-20 right-4">
       <div className="flex items-center gap-2 bg-primary/60 backdrop-blur-xl border border-primary/50 rounded-lg px-4 py-2 shadow-lg">
         <span className="text-xs text-text-inactive font-medium">
           Online: {onlineMembers.length}

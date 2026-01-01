@@ -2,8 +2,6 @@ import React, { useState } from "react";
 import Popover from "../Popover";
 import {
   IconChevronRight,
-  IconFriends,
-  IconLogout,
   IconLogout2,
   IconMessage,
   IconSettings,
@@ -55,22 +53,24 @@ function UserMenu() {
         opened={isPopoverOpen}
         onClose={() => setIsPopoverOpen(!isPopoverOpen)}
         trigger={
-          user?.avatar ? (
-            <img
-              src={`${user.avatar}`}
-              alt="Avatar"
-              className="w-11 h-11 border border-white rounded-full cursor-pointer"
-            />
-          ) : (
-            <div className="flex justify-center items-center rounded-full border-1 p-sm border-secondary bg-primary-light hover:bg-primary-hover cursor-pointer">
-              <IconUser className="text-secondary" />
-            </div>
-          )
+          <div id="user-menu-trigger">
+            {user?.avatar ? (
+              <img
+                src={`${user.avatar}`}
+                alt="Avatar"
+                className="w-11 h-11 border border-white rounded-full cursor-pointer"
+              />
+            ) : (
+              <div className="flex justify-center items-center rounded-full border-1 p-sm border-secondary bg-primary-light hover:bg-primary-hover cursor-pointer">
+                <IconUser className="text-secondary" />
+              </div>
+            )}
+          </div>
         }
         className="w-[18rem]"
         position="top-right"
       >
-        <div className="font-light text-sm">
+        <div id="user-menu-content" className="font-light text-sm">
           <p className="text-white px-lg py-md font-semibold">
             {user?.name || "User"}
           </p>

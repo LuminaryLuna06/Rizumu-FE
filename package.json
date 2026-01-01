@@ -21,6 +21,7 @@
     "@vercel/analytics": "^1.6.1",
     "axios": "^1.13.2",
     "dayjs": "^1.11.19",
+    "driver.js": "^1.4.0",
     "js-cookie": "^3.0.5",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

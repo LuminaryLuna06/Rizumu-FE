@@ -107,28 +107,40 @@ function Header({
           <div className="hidden md:block lg:hidden">
             <TagSelector selectedTag={selectedTag} onTagSelect={onTagSelect} />
           </div>
-          <StreakPopover />
+          <div id="header-streak">
+            <StreakPopover />
+          </div>
 
-          <ResponsiveButton
-            leftSection={<IconClock size={16} />}
-            className="font-semibold md:py-sm"
-            onClick={() => setActivitiesModalOpened(!activitiesModalOpened)}
-            ariaLabel="Open activities analytic"
-            title="Open activities analytic"
-          >
-            {formatTime(totalTime)}
-          </ResponsiveButton>
+          <div id="header-activities">
+            <ResponsiveButton
+              leftSection={<IconClock size={16} />}
+              className="font-semibold md:py-sm"
+              onClick={() => setActivitiesModalOpened(!activitiesModalOpened)}
+              ariaLabel="Open activities analytic"
+              title="Open activities analytic"
+            >
+              {formatTime(totalTime)}
+            </ResponsiveButton>
+          </div>
 
-          <ResponsiveButton
-            className="md:py-sm"
-            onClick={() => setOpened(!opened)}
-            ariaLabel="Open leaderboard"
-            title="Open leaderboard"
-          >
-            <IconChartColumn size={22} />
-          </ResponsiveButton>
-          {!user ? null : <RoomPopover />}
-          <UserMenu />
+          <div id="header-leaderboard">
+            <ResponsiveButton
+              className="md:py-sm"
+              onClick={() => setOpened(!opened)}
+              ariaLabel="Open leaderboard"
+              title="Open leaderboard"
+            >
+              <IconChartColumn size={22} />
+            </ResponsiveButton>
+          </div>
+          {!user ? null : (
+            <div id="header-room">
+              <RoomPopover />
+            </div>
+          )}
+          <div id="header-user-menu">
+            <UserMenu />
+          </div>
         </div>
 
         <div

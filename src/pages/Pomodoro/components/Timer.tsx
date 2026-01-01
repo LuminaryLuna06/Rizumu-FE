@@ -112,10 +112,10 @@ function Timer({
 
     if (storedPresets) {
       const loadedPresets: Preset[] = JSON.parse(storedPresets);
-      return loadedPresets[currentId]?.durations.pomodoro * 60 || 25 * 60;
+      return (loadedPresets[currentId]?.durations?.pomodoro ?? 25) * 60;
     }
 
-    return DEFAULT_PRESETS[currentId]?.durations.pomodoro * 60 || 25 * 60;
+    return (DEFAULT_PRESETS[currentId]?.durations?.pomodoro ?? 25) * 60;
   });
 
   const [timeLeft, setTimeLeft] = useState(() => {
@@ -126,9 +126,9 @@ function Timer({
     let duration = 25 * 60;
     if (storedPresets) {
       const loadedPresets: Preset[] = JSON.parse(storedPresets);
-      duration = loadedPresets[currentId]?.durations.pomodoro * 60 || 25 * 60;
+      duration = (loadedPresets[currentId]?.durations?.pomodoro ?? 25) * 60;
     } else {
-      duration = DEFAULT_PRESETS[currentId]?.durations.pomodoro * 60 || 25 * 60;
+      duration = (DEFAULT_PRESETS[currentId]?.durations?.pomodoro ?? 25) * 60;
     }
 
     return direction === "countup" ? 0 : duration;
@@ -265,10 +265,28 @@ function Timer({
       setRunning(false);
       const targetMode = newMode || mode;
 
+      // Stopwatch mode: no preset, always starts at 0
+      if (targetMode === "stopwatch") {
+        setTargetDuration(0);
+        setTimeLeft(0);
+        durationRef.current = 0;
+        dataRef.current = {
+          completed: false,
+          started_at: "",
+          duration: 0,
+          ended_at: "",
+          session_type: targetMode,
+          timer_type: "focus",
+          user_id: "",
+          tag_id: "",
+        };
+        return;
+      }
+
       const targetPresetId =
         presetId !== undefined ? presetId : currentPresetId;
       const currentPreset = presets[targetPresetId];
-      const duration = currentPreset?.durations[targetMode] * 60 || 25 * 60;
+      const duration = (currentPreset?.durations?.[targetMode] ?? 25) * 60;
 
       setTargetDuration(duration);
       setTimeLeft(timerDirection === "countup" ? 0 : duration);
@@ -319,6 +337,10 @@ function Timer({
       intervalRef.current = setInterval(() => {
         durationRef.current += 1;
         setTimeLeft((prev) => {
+          if (mode === "stopwatch") {
+            return prev + 1;
+          }
+
           let newTimeLeft: number;
           let isCompleted: boolean;
 
@@ -448,7 +470,7 @@ function Timer({
 
     const newPreset = presets.find((p) => p.id === presetId);
     if (newPreset) {
-      setTimeLeft(newPreset.durations[mode] * 60);
+      setTimeLeft((newPreset.durations?.[mode] ?? 25) * 60);
       resetTimer(mode, presetId);
     }
 
@@ -459,6 +481,22 @@ function Timer({
     clearTimer();
     setRunning(false);
     setFocusMode(false);
+
+    if (mode === "stopwatch") {
+      setTimeLeft(0);
+      durationRef.current = 0;
+      dataRef.current = {
+        completed: false,
+        started_at: "",
+        duration: 0,
+        ended_at: "",
+        session_type: "stopwatch",
+        timer_type: "focus",
+        user_id: "",
+        tag_id: "",
+      };
+      return;
+    }
 
     if (dataRef.current.started_at) {
       dataRef.current.ended_at = new Date().toISOString();
@@ -794,8 +832,12 @@ function Timer({
           </button>
         </div>
       ) : (
-        <>
+        <div
+          className="flex flex-col justify-center items-center"
+          id="timer-container"
+        >
           <div
+            id="timer-tag-selector"
             className={`block md:hidden lg:block transition-all duration-500 ${
               focusMode ? "opacity-0 pointer-events-none" : "opacity-100"
             }`}
@@ -803,56 +845,60 @@ function Timer({
             <TagSelector selectedTag={selectedTag} onTagSelect={onTagSelect} />
           </div>
 
-          <div
-            className={`flex gap-x-xl items-center mt-4 md:mt-6 transition-all duration-500`}
-          >
-            <button
-              onClick={() => handleModeChange("pomodoro")}
-              className={`rounded-full bg-secondary transition-all duration-slow ${
-                mode === "pomodoro"
-                  ? "w-8 h-8"
-                  : "w-7 h-7 hover:w-8 hover:h-8 bg-secondary/60 hover:bg-secondary"
-              }`}
-              aria-label="Pomodoro mode"
-              title="Pomodoro"
-              style={{
-                boxShadow:
-                  "0 2px 4px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)",
-              }}
-            ></button>
+          {mode !== "stopwatch" && (
+            <div
+              id="timer-mode-buttons"
+              className={`flex gap-x-xl items-center mt-4 md:mt-6 transition-all duration-500`}
+            >
+              <button
+                onClick={() => handleModeChange("pomodoro")}
+                className={`rounded-full bg-secondary transition-all duration-slow ${
+                  mode === "pomodoro"
+                    ? "w-8 h-8"
+                    : "w-7 h-7 hover:w-8 hover:h-8 bg-secondary/60 hover:bg-secondary"
+                }`}
+                aria-label="Pomodoro mode"
+                title="Pomodoro"
+                style={{
+                  boxShadow:
+                    "0 2px 4px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)",
+                }}
+              ></button>
 
-            <button
-              onClick={() => handleModeChange("short_break")}
-              className={`rounded-full bg-secondary transition-all duration-slow ${
-                mode === "short_break"
-                  ? "w-8 h-8"
-                  : "w-7 h-7 hover:w-8 hover:h-8 bg-secondary/60 hover:bg-secondary"
-              }`}
-              aria-label="Short break mode"
-              title="Short Break"
-              style={{
-                boxShadow:
-                  "0 2px 4px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)",
-              }}
-            ></button>
+              <button
+                onClick={() => handleModeChange("short_break")}
+                className={`rounded-full bg-secondary transition-all duration-slow ${
+                  mode === "short_break"
+                    ? "w-8 h-8"
+                    : "w-7 h-7 hover:w-8 hover:h-8 bg-secondary/60 hover:bg-secondary"
+                }`}
+                aria-label="Short break mode"
+                title="Short Break"
+                style={{
+                  boxShadow:
+                    "0 2px 4px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)",
+                }}
+              ></button>
 
-            <button
-              onClick={() => handleModeChange("long_break")}
-              className={`rounded-full bg-secondary transition-all duration-slow ${
-                mode === "long_break"
-                  ? "w-8 h-8"
-                  : "w-7 h-7 hover:w-8 hover:h-8 bg-secondary/60 hover:bg-secondary"
-              }`}
-              aria-label="Long break mode"
-              title="Long Break"
-              style={{
-                boxShadow:
-                  "0 2px 4px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)",
-              }}
-            ></button>
-          </div>
+              <button
+                onClick={() => handleModeChange("long_break")}
+                className={`rounded-full bg-secondary transition-all duration-slow ${
+                  mode === "long_break"
+                    ? "w-8 h-8"
+                    : "w-7 h-7 hover:w-8 hover:h-8 bg-secondary/60 hover:bg-secondary"
+                }`}
+                aria-label="Long break mode"
+                title="Long Break"
+                style={{
+                  boxShadow:
+                    "0 2px 4px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)",
+                }}
+              ></button>
+            </div>
+          )}
 
           <p
+            id="timer-display"
             className="leading-tight text-[4.5em] sm:text-[5.5em] md:text-[7em] lg:text-[10em] font-extrabold tracking-[0.07em] transition-all duration-slower ease-in-out"
             style={{
               textShadow:
@@ -873,6 +919,7 @@ function Timer({
               }`}
             >
               <div
+                id="timer-preset-button"
                 className="rounded-full hover:scale-110 transition-all cursor-pointer"
                 onClick={() => setOpenedPreset(true)}
                 style={{
@@ -889,6 +936,7 @@ function Timer({
 
             <div className="flex justify-center">
               <button
+                id="timer-start-button"
                 onClick={() => {
                   setRunning((prev) => !prev);
                   initAudio();
@@ -909,6 +957,7 @@ function Timer({
 
             <div className="flex justify-start gap-x-lg">
               <div
+                id="timer-pip-button"
                 className={`hidden md:block rounded-full hover:scale-110 transition-all cursor-pointer ${
                   !isPipSupported ? "opacity-30 cursor-not-allowed" : ""
                 } ${pipWindow ? "text-accent" : ""}`}
@@ -931,6 +980,7 @@ function Timer({
                 />
               </div>
               <div
+                id="timer-skip-button"
                 className="rounded-full hover:scale-110 transition-all cursor-pointer"
                 onClick={handleSkipSessionWrapper}
                 style={{
@@ -945,7 +995,7 @@ function Timer({
               </div>
             </div>
           </div>
-        </>
+        </div>
       )}
       <PresetModal
         opened={openedPreset}
@@ -955,6 +1005,8 @@ function Timer({
         onPresetChange={handlePresetChange}
         timerDirection={timerDirection}
         onToggleTimerDirection={handleToggleTimerDirection}
+        currentMode={mode}
+        onModeChange={handleModeChange}
       />
     </div>
   );

@@ -1,9 +1,9 @@
-export type TimerMode = "pomodoro" | "short_break" | "long_break";
+export type TimerMode = "pomodoro" | "short_break" | "long_break" | "stopwatch";
 export type TimerDirection = "countdown" | "countup";
 export interface Preset {
   id: number;
   name: string;
-  durations: Record<TimerMode, number>;
+  durations: Partial<Record<TimerMode, number>>;
 }
 export const DEFAULT_PRESETS: Preset[] = [
   {
