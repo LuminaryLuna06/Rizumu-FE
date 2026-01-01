@@ -1,5 +1,6 @@
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
+import "./useDriverTour.css";
 
 export const useDriverTour = () => {
   const startTimerTour = () => {

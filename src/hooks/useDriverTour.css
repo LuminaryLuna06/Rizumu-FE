@@ -1,0 +1,100 @@
+/* Popover wrapper - dark background */
+.driver-popover {
+  background-color: #1f2937 !important;
+  color: #ffffff !important;
+  font-family: "Poppins", sans-serif !important;
+  border: 1px solid #374151 !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5),
+    0 10px 10px -5px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Title styling */
+.driver-popover-title {
+  font-family: "Poppins", sans-serif !important;
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  color: #ffffff !important;
+}
+
+/* Description styling */
+.driver-popover-description {
+  font-family: "Poppins", sans-serif !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+  line-height: 1.6 !important;
+}
+
+/* Close button */
+.driver-popover-close-btn {
+  color: #9ca3af !important;
+  background-color: transparent !important;
+  border: none !important;
+}
+
+.driver-popover-close-btn:hover {
+  color: #ffffff !important;
+  background-color: transparent !important;
+  transform: scale(1.1) !important;
+}
+
+/* Progress text */
+.driver-popover-progress-text {
+  font-family: "Poppins", sans-serif !important;
+  color: rgba(255, 255, 255, 0.6) !important;
+  font-size: 14px !important;
+}
+
+/* Next button - Light background with dark text */
+.driver-popover-next-btn {
+  font-family: "Poppins", sans-serif !important;
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 2px solid #ffffff !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  padding: 8px 16px !important;
+  border-radius: 6px !important;
+  transition: all 0.2s ease !important;
+  text-shadow: none !important;
+}
+
+.driver-popover-next-btn:hover {
+  background-color: #f3f4f6 !important;
+  border-color: #d1d5db !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Previous button - Dark gray */
+.driver-popover-prev-btn {
+  font-family: "Poppins", sans-serif !important;
+  background-color: #374151 !important;
+  color: #ffffff !important;
+  border: 2px solid #374151 !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  padding: 8px 16px !important;
+  border-radius: 6px !important;
+  transition: all 0.2s ease !important;
+  text-shadow: none !important;
+}
+
+.driver-popover-prev-btn:hover {
+  background-color: #4b5563 !important;
+  border-color: #6b7280 !important;
+}
+
+/* Arrow colors to match dark background */
+.driver-popover-arrow-side-left.driver-popover-arrow {
+  border-left-color: #1f2937 !important;
+}
+
+.driver-popover-arrow-side-right.driver-popover-arrow {
+  border-right-color: #1f2937 !important;
+}
+
+.driver-popover-arrow-side-top.driver-popover-arrow {
+  border-top-color: #1f2937 !important;
+}
+
+.driver-popover-arrow-side-bottom.driver-popover-arrow {
+  border-bottom-color: #1f2937 !important;
+}
