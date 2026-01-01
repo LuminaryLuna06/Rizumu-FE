@@ -6,6 +6,7 @@ export const useDriverTour = () => {
     const driverObj = driver({
       showProgress: true,
       showButtons: ["next", "previous", "close"],
+      overlayClickBehavior: "nextStep",
       steps: [
         {
           popover: {
