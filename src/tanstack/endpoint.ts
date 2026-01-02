@@ -75,6 +75,13 @@ export const TAG_ENDPOINTS = {
   // BY_ID: (id: string | number) => `/tags/${id}`,
 } as const;
 
+export const TASK_ENDPOINTS = {
+  TASKS: "/task",
+  CREATE: "/task",
+  UPDATE: (id: string) => `/task/${id}`,
+  DELETE: (id: string) => `/task/${id}`,
+  DELETE_COMPLETED: "/task/completed",
+};
 /**
  * Friend Endpoints
  */

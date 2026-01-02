@@ -35,6 +35,14 @@ export const queryKeys = {
       [...queryKeys.tags.lists(), { filters }] as const,
   },
 
+  // Task keys
+  tasks: {
+    all: ["tasks"] as const,
+    lists: () => [...queryKeys.tasks.all, "list"] as const,
+    list: (filters: Record<string, unknown>) =>
+      [...queryKeys.tasks.lists(), { filters }] as const,
+  },
+
   // Session keys
   sessions: {
     all: ["sessions"] as const,
@@ -95,5 +103,4 @@ export const queryKeys = {
         ? ([...queryKeys.messages.all, "list", roomId, before] as const)
         : ([...queryKeys.messages.all, "list", roomId] as const),
   },
-
 } as const;
