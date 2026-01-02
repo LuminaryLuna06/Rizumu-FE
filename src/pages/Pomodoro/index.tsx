@@ -296,10 +296,10 @@ function PomodoroPage() {
 
   return (
     <>
-      <div className="flex flex-col min-h-screen w-full overflow-hidden text-secondary font-light text-sm z-base">
+      <div className="flex flex-col h-[100dvh] w-full overflow-hidden text-secondary font-light text-sm z-base">
         {background.type === "static" ? (
           <div
-            className={`fixed top-0 left-0 w-screen h-screen bg-cover bg-center -z-10 transition-opacity duration-700 ${
+            className={`fixed top-0 left-0 w-screen h-[100dvh] bg-cover bg-center -z-10 transition-opacity duration-700 ${
               isBackgroundLoaded ? "opacity-100" : "opacity-0"
             }`}
             style={{
@@ -317,7 +317,7 @@ function PomodoroPage() {
             loop
             playsInline
             onLoadedData={() => setIsVideoLoaded(true)}
-            className={`fixed top-0 left-0 w-screen h-screen object-cover -z-10 transition-opacity duration-700 ${
+            className={`fixed top-0 left-0 w-screen h-[100dvh] object-cover -z-10 transition-opacity duration-700 ${
               isVideoLoaded ? "opacity-100" : "opacity-0"
             }`}
             style={{
