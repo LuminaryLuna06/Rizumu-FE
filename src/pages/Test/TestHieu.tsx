@@ -10,6 +10,13 @@ import { useAuth } from "@rizumu/context/AuthContext";
 import { IconMessage, IconSend2, IconUsers } from "@tabler/icons-react";
 import { useState, useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
+import {
+  useTasks,
+  useCreateTask,
+  useUpdateTask,
+  useDeleteTask,
+  useDeleteCompletedTasks,
+} from "@rizumu/tanstack/api/hooks/useTask";
 
 interface Message {
   _id: string;
@@ -34,6 +41,17 @@ function TestHieu() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [roomMembers, setRoomMembers] = useState<RoomMember[]>([]);
+
+  // Task API Hooks
+  const {
+    data: tasks,
+    refetch: refetchTasks,
+    isLoading: isTasksLoading,
+  } = useTasks();
+  const createTask = useCreateTask();
+  const updateTask = useUpdateTask();
+  const deleteTask = useDeleteTask();
+  const deleteCompleted = useDeleteCompletedTasks();
 
   const [hasMoreMessage, setHasMoreMessage] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -351,6 +369,115 @@ function TestHieu() {
         >
           Test Hourly Stats
         </button>
+
+        {/* Task API Test Section */}
+        <div className="flex flex-col gap-2 border-l pl-4 ml-2 bg-black/40 p-4 rounded-xl w-[300px]">
+          <h3 className="text-white font-bold text-sm border-b border-white/10 pb-2 mb-2">
+            Task API Test
+          </h3>
+
+          <div className="flex gap-2 mb-2">
+            <button
+              className="flex-1 px-3 py-1 bg-green-600/80 text-white rounded hover:bg-green-700 transition text-[10px]"
+              onClick={() => {
+                const title = prompt(
+                  "Enter task title",
+                  "New Task " + new Date().toLocaleTimeString()
+                );
+                if (title) createTask.mutate({ title });
+              }}
+              disabled={createTask.isPending}
+            >
+              {createTask.isPending ? "Adding..." : "Add Task"}
+            </button>
+            <button
+              className="px-3 py-1 bg-red-600/80 text-white rounded hover:bg-red-700 transition text-[10px]"
+              onClick={() => {
+                if (confirm("Clear all completed tasks?"))
+                  deleteCompleted.mutate();
+              }}
+              disabled={deleteCompleted.isPending}
+            >
+              Clear Done
+            </button>
+          </div>
+
+          <div className="flex flex-col gap-1 max-h-[200px] overflow-y-auto custom-scrollbar pr-1">
+            {isTasksLoading && (
+              <p className="text-text-inactive text-[10px]">Loading tasks...</p>
+            )}
+            {tasks?.map((task) => (
+              <div
+                key={task._id}
+                className={`flex items-center justify-between p-2 rounded border ${
+                  task.is_complete
+                    ? "bg-green-900/10 border-green-800/30"
+                    : "bg-white/5 border-white/10"
+                }`}
+              >
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <input
+                    type="checkbox"
+                    checked={task.is_complete}
+                    onChange={() =>
+                      updateTask.mutate({
+                        taskId: task._id,
+                        data: { is_complete: !task.is_complete },
+                      })
+                    }
+                    className="w-3 h-3 cursor-pointer"
+                  />
+                  <span
+                    className={`truncate text-[11px] ${
+                      task.is_complete
+                        ? "line-through text-text-inactive"
+                        : "text-white/90"
+                    }`}
+                  >
+                    {task.title}
+                  </span>
+                </div>
+                <div className="flex gap-1 ml-2">
+                  <button
+                    className="text-blue-400/60 hover:text-blue-500 transition px-1"
+                    onClick={() => {
+                      const newTitle = prompt("Edit task title", task.title);
+                      if (newTitle && newTitle !== task.title) {
+                        updateTask.mutate({
+                          taskId: task._id,
+                          data: { title: newTitle },
+                        });
+                      }
+                    }}
+                  >
+                    <span className="text-[9px]">Edit</span>
+                  </button>
+                  <button
+                    className="text-red-400/60 hover:text-red-500 transition px-1"
+                    onClick={() => {
+                      if (confirm("Delete this task?"))
+                        deleteTask.mutate(task._id);
+                    }}
+                  >
+                    <span className="text-[9px]">Del</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+            {!isTasksLoading && tasks?.length === 0 && (
+              <p className="text-text-inactive text-[10px] italic py-2">
+                No tasks available.
+              </p>
+            )}
+          </div>
+
+          <button
+            className="mt-2 text-[10px] text-blue-400 hover:underline text-left"
+            onClick={() => refetchTasks()}
+          >
+            ↻ Refresh List
+          </button>
+        </div>
 
         <Popover
           trigger={

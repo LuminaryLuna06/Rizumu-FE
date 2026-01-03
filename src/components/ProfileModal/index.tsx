@@ -186,6 +186,11 @@ function ProfileModal({
     return heatmapDataObj;
   }, [heatmap, startTime, targetUserId]);
 
+  // console.log(
+  //   (((stats.current_xp - 50 * (stats.level - 1)) ^ 1.2) /
+  //     ((stats.remaining_xp - 50 * (stats.level - 1)) ^ 1.2)) *
+  //     100
+  // );
   return (
     <>
       <Modal
@@ -207,7 +212,7 @@ function ProfileModal({
                 Edit
               </ResponsiveButton>
               <ResponsiveButton
-                className="!bg-emerald-500 hover:bg-emarald-600 h-11 md:h-5 gap-x-xs text-sm"
+                className="!bg-emerald-500 hover:bg-emerald-600 h-11 md:h-5 gap-x-xs text-sm"
                 leftSection={<IconShare2 size={16} />}
                 onClick={() => handleShareProfile()}
               >
@@ -295,7 +300,7 @@ function ProfileModal({
                     Edit
                   </ResponsiveButton>
                   <ResponsiveButton
-                    className="!bg-emerald-500 hover:bg-emarald-600 h-11 md:h-8 lg:h-5 gap-x-xs text-sm min-w-[100px]"
+                    className="!bg-emerald-500 hover:bg-emerald-600 h-11 md:h-8 lg:h-5 gap-x-xs text-sm min-w-[100px]"
                     leftSection={<IconShare2 size={16} />}
                     onClick={() => handleShareProfile()}
                   >
@@ -342,11 +347,12 @@ function ProfileModal({
                   className="bg-gradient-to-r from-green-400 to-emerald-500 h-1 rounded-full transition-all duration-500"
                   style={{
                     width: `${
-                      isLoading
+                      isLoading || statsLoading || !stats
                         ? 0
-                        : ((stats?.current_xp || 0) /
-                            ((stats?.current_xp || 0) +
-                              (stats?.remaining_xp || 0) || 1)) *
+                        : ((stats.current_xp -
+                            Math.pow(50 * (stats.level - 1), 1.2)) /
+                            (stats.remaining_xp -
+                              Math.pow(50 * (stats.level - 1), 1.2))) *
                           100
                     }%`,
                   }}

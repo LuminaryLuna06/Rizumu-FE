@@ -19,6 +19,7 @@ import {
   useRoomBySlug,
   useRoomById,
 } from "@rizumu/tanstack/api/hooks";
+import Tasks from "./components/Tasks";
 
 function PomodoroPage() {
   const toast = useToast();
@@ -330,6 +331,8 @@ function PomodoroPage() {
 
         {/* Online Users Display */}
         {!!user && <OnlineUsers members={members} />}
+        {/* Tasks Display */}
+        {!!user && <Tasks />}
 
         {/* Header */}
         <Header
