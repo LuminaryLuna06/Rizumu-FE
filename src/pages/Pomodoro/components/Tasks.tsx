@@ -20,8 +20,10 @@ import TextInput from "@rizumu/components/TextInput";
 import ResponsiveButton from "@rizumu/components/ResponsiveButton";
 import Modal from "@rizumu/components/Modal";
 import type { ModelTask } from "@rizumu/models/task";
+import { useToast } from "@rizumu/utils/toast/toast";
 
 function Tasks() {
+  const toast = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState("");
@@ -38,6 +40,8 @@ function Tasks() {
   const [editTitle, setEditTitle] = useState("");
   const [editDate, setEditDate] = useState("");
   const [editTime, setEditTime] = useState("");
+
+  const isEditing = !!editingTaskId;
 
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
@@ -67,6 +71,12 @@ function Tasks() {
           setNewTaskDate("");
           setNewTaskTime("");
           setIsAddingTask(false);
+          toast.success("Task created successfully!");
+        },
+        onError: (error: any) => {
+          toast.error(
+            error?.response?.data?.message || "Failed to create task"
+          );
         },
       }
     );
@@ -101,6 +111,12 @@ function Tasks() {
       {
         onSuccess: () => {
           setEditingTaskId(null);
+          toast.success("Task updated successfully!");
+        },
+        onError: (error: any) => {
+          toast.error(
+            error?.response?.data?.message || "Failed to update task"
+          );
         },
       }
     );
@@ -112,7 +128,16 @@ function Tasks() {
       message: "Are you sure you want to delete this task?",
       type: "delete",
       onConfirm: () => {
-        deleteTask.mutate(taskId);
+        deleteTask.mutate(taskId, {
+          onSuccess: () => {
+            toast.success("Task deleted successfully!");
+          },
+          onError: (error: any) => {
+            toast.error(
+              error?.response?.data?.message || "Failed to delete task"
+            );
+          },
+        });
         setConfirmModal((prev) => ({ ...prev, isOpen: false }));
       },
     });
@@ -124,7 +149,17 @@ function Tasks() {
       message: "Clear all completed tasks?",
       type: "clear",
       onConfirm: () => {
-        deleteCompleted.mutate();
+        deleteCompleted.mutate(undefined, {
+          onSuccess: () => {
+            toast.success("Completed tasks cleared!");
+          },
+          onError: (error: any) => {
+            toast.error(
+              error?.response?.data?.message ||
+                "Failed to clear completed tasks"
+            );
+          },
+        });
         setConfirmModal((prev) => ({ ...prev, isOpen: false }));
       },
     });
@@ -153,28 +188,32 @@ function Tasks() {
             isOpen ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"
           }`}
         >
-          <div className="px-3 py-2 border-b border-white/5 flex justify-between items-center">
-            <div className="flex gap-2">
-              <ResponsiveButton
-                onClick={() => setIsAddingTask(!isAddingTask)}
-                disabled={createTask.isPending}
-                className={`p-1.5 !bg-green-400/70 !text-text-active h-[30px] rounded-lg cursor-pointer font-medium`}
-                title="Add Task"
-              >
-                New task
-              </ResponsiveButton>
-              <ResponsiveButton
-                onClick={openClearConfirm}
-                disabled={deleteCompleted.isPending}
-                className={`p-1.5 !bg-red-500/70 !text-text-active h-[30px] rounded-lg cursor-pointer font-medium`}
-                title="Clear Completed"
-              >
-                Clear completed task
-              </ResponsiveButton>
-            </div>
+          <div className="px-3 py-2 border-b border-white/5 flex items-center">
+            {!isAddingTask && !isEditing ? (
+              <div className="mr-auto flex gap-2">
+                <ResponsiveButton
+                  onClick={() => setIsAddingTask(!isAddingTask)}
+                  disabled={createTask.isPending}
+                  className={`p-1.5 !bg-primary-hover !hover:bg-primary-hover/80 !text-text-active h-[30px] rounded-lg cursor-pointer font-medium`}
+                  title="Add Task"
+                >
+                  Add
+                </ResponsiveButton>
+                <ResponsiveButton
+                  onClick={openClearConfirm}
+                  disabled={deleteCompleted.isPending}
+                  className={`p-1.5 !bg-primary-hover !hover:bg-primary-hover/80 !text-text-active h-[30px] rounded-lg cursor-pointer font-medium`}
+                  title="Clear Completed"
+                >
+                  Clear Completed
+                </ResponsiveButton>
+              </div>
+            ) : (
+              <></>
+            )}
             <button
               onClick={() => setIsOpen(false)}
-              className="justify-self-end p-1.5 hover:bg-white/10 rounded-lg text-white/60 transition-colors cursor-pointer"
+              className="ml-auto p-1.5 hover:bg-white/10 rounded-lg text-white/60 transition-colors cursor-pointer"
             >
               <IconX size={18} />
             </button>
@@ -198,19 +237,30 @@ function Tasks() {
                   withTime
                   timeValue={newTaskTime}
                   onTimeChange={setNewTaskTime}
+                  className="mb-2"
                 />
 
-                <button
-                  onClick={handleCreate}
-                  disabled={createTask.isPending || !newTaskTitle.trim()}
-                  className={`w-full py-2 rounded-md text-xs font-bold transition-all mt-1 ${
-                    createTask.isPending || !newTaskTitle.trim() || !newTaskTime
-                      ? "bg-white/30 text-white/40 cursor-not-allowed border border-white/5"
-                      : "bg-text-active text-primary hover:bg-text-active/80 active:scale-[0.98]"
-                  }`}
-                >
-                  {createTask.isPending ? "ADDING..." : "ADD TASK"}
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setIsAddingTask(!isAddingTask)}
+                    className="flex-1 py-1.5 px-2 bg-white/5 text-white/50 rounded-md text-xs font-bold hover:bg-white/10 transition-colors"
+                  >
+                    CANCEL
+                  </button>
+                  <button
+                    onClick={handleCreate}
+                    disabled={createTask.isPending || !newTaskTitle.trim()}
+                    className={`flex-2 py-2 rounded-md text-xs font-bold transition-all ${
+                      createTask.isPending ||
+                      !newTaskTitle.trim() ||
+                      !newTaskTime
+                        ? "bg-white/30 text-white/40 cursor-not-allowed border border-white/5"
+                        : "bg-text-active text-primary hover:bg-text-active/80 active:scale-[0.98]"
+                    }`}
+                  >
+                    {createTask.isPending ? "ADDING..." : "ADD TASK"}
+                  </button>
+                </div>
               </div>
             )}
             {isLoading ? (
@@ -267,10 +317,27 @@ function Tasks() {
                         <div className="flex items-start gap-2">
                           <button
                             onClick={() =>
-                              updateTask.mutate({
-                                taskId: task._id,
-                                data: { is_complete: !task.is_complete },
-                              })
+                              updateTask.mutate(
+                                {
+                                  taskId: task._id,
+                                  data: { is_complete: !task.is_complete },
+                                },
+                                {
+                                  onSuccess: () => {
+                                    toast.success(
+                                      task.is_complete
+                                        ? "Task marked as incomplete"
+                                        : "Task completed!"
+                                    );
+                                  },
+                                  onError: (error: any) => {
+                                    toast.error(
+                                      error?.response?.data?.message ||
+                                        "Failed to update task status"
+                                    );
+                                  },
+                                }
+                              )
                             }
                             className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors cursor-pointer ${
                               task.is_complete
