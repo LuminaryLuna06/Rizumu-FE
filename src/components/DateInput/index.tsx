@@ -100,11 +100,31 @@ function DateInput({
 
     // Check if date is before min
     if (min) {
-      const minDate = new Date(min);
+      // Parse YYYY-MM-DD as local date instead of UTC
+      const minStr = min.split("T")[0];
+      const [y, m, d] = minStr.split("-").map(Number);
+      const minDate = new Date(y, m - 1, d);
       if (newDate < minDate) return;
     }
 
     setSelectedDate(newDate);
+
+    // If today is selected and tempTime is in the past, reset it
+    const now = new Date();
+    const isToday =
+      newDate.getDate() === now.getDate() &&
+      newDate.getMonth() === now.getMonth() &&
+      newDate.getFullYear() === now.getFullYear();
+
+    if (isToday && tempTime) {
+      const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(
+        now.getMinutes()
+      ).padStart(2, "0")}`;
+      if (tempTime < currentTime) {
+        setTempTime("");
+      }
+    }
+
     if (!withTime) {
       if (onChange) {
         // Format as YYYY-MM-DD for datetime-local compatibility
@@ -118,7 +138,28 @@ function DateInput({
   };
 
   const handleConfirm = () => {
-    if (selectedDate && onChange) {
+    if (!selectedDate) return;
+
+    if (withTime && tempTime) {
+      const now = new Date();
+      const isTodayStr =
+        selectedDate.getDate() === now.getDate() &&
+        selectedDate.getMonth() === now.getMonth() &&
+        selectedDate.getFullYear() === now.getFullYear();
+
+      if (isTodayStr) {
+        const currentTime = `${String(now.getHours()).padStart(
+          2,
+          "0"
+        )}:${String(now.getMinutes()).padStart(2, "0")}`;
+        if (tempTime < currentTime) {
+          // You could show a toast here, but for now we just prevent confirm
+          return;
+        }
+      }
+    }
+
+    if (onChange) {
       const year = selectedDate.getFullYear();
       const month = String(selectedDate.getMonth() + 1).padStart(2, "0");
       const dayStr = String(selectedDate.getDate()).padStart(2, "0");
@@ -148,7 +189,10 @@ function DateInput({
   const isDateDisabled = (day: number) => {
     if (!min) return false;
     const date = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
-    const minDate = new Date(min);
+    // Parse 'YYYY-MM-DD' as local date instead of UTC
+    const minStr = min.split("T")[0];
+    const [y, m, d] = minStr.split("-").map(Number);
+    const minDate = new Date(y, m - 1, d);
     return date < minDate;
   };
 
@@ -312,20 +356,126 @@ function DateInput({
 
             {/* Time Input */}
             {withTime && (
-              <div className="mt-4 pt-4 border-t border-white/10 flex items-center gap-2">
-                <input
-                  type="time"
-                  value={tempTime}
-                  onChange={(e) => setTempTime(e.target.value)}
-                  className="flex-1 bg-[#2a2a2a] border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:border-white/30 focus:outline-none"
-                  placeholder="--:--"
-                />
+              <div className="mt-4 pt-4 border-t border-white/10">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="flex-1 grid grid-cols-2 gap-2">
+                    {/* Hour Selector */}
+                    <div className="relative">
+                      <div className="text-xs text-white/60 mb-1 text-center">
+                        Hour
+                      </div>
+                      <div className="h-32 overflow-y-auto custom-scrollbar scrollbar-hidden bg-[#2a2a2a] border border-white/10 rounded-md">
+                        {Array.from({ length: 24 }, (_, i) => {
+                          const hour = String(i).padStart(2, "0");
+                          const now = new Date();
+                          const isToday =
+                            selectedDate &&
+                            selectedDate.getDate() === now.getDate() &&
+                            selectedDate.getMonth() === now.getMonth() &&
+                            selectedDate.getFullYear() === now.getFullYear();
+                          const currentHour = now.getHours();
+                          const isDisabled = isToday && i < currentHour;
+                          const selectedHour = tempTime.split(":")[0];
+                          const isSelected = selectedHour === hour;
+
+                          return (
+                            <button
+                              key={i}
+                              type="button"
+                              disabled={!!isDisabled}
+                              onClick={() => {
+                                const minute = tempTime.split(":")[1] || "00";
+                                const newTime = `${hour}:${minute}`;
+
+                                // Check if minute is valid for this hour
+                                if (isToday && i === currentHour) {
+                                  const currentMinute = now.getMinutes();
+                                  const selectedMinute = parseInt(minute);
+                                  if (selectedMinute < currentMinute) {
+                                    setTempTime(
+                                      `${hour}:${String(currentMinute).padStart(
+                                        2,
+                                        "0"
+                                      )}`
+                                    );
+                                    return;
+                                  }
+                                }
+                                setTempTime(newTime);
+                              }}
+                              className={`w-full py-2 text-sm transition-colors ${
+                                isDisabled
+                                  ? "text-white/20 cursor-not-allowed"
+                                  : isSelected
+                                  ? "bg-[#0ea5e9] text-white font-bold"
+                                  : "text-white/80 hover:bg-white/10"
+                              }`}
+                            >
+                              {hour}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Minute Selector */}
+                    <div className="relative">
+                      <div className="text-xs text-white/60 mb-1 text-center">
+                        Minute
+                      </div>
+                      <div className="h-32 overflow-y-auto custom-scrollbar scrollbar-hidden bg-[#2a2a2a] border border-white/10 rounded-md">
+                        {Array.from({ length: 60 }, (_, i) => {
+                          const minute = String(i).padStart(2, "0");
+                          const now = new Date();
+                          const isToday =
+                            selectedDate &&
+                            selectedDate.getDate() === now.getDate() &&
+                            selectedDate.getMonth() === now.getMonth() &&
+                            selectedDate.getFullYear() === now.getFullYear();
+                          const selectedHour = parseInt(
+                            tempTime.split(":")[0] || "0"
+                          );
+                          const currentHour = now.getHours();
+                          const currentMinute = now.getMinutes();
+                          const isDisabled =
+                            isToday &&
+                            selectedHour === currentHour &&
+                            i < currentMinute;
+                          const selectedMinute = tempTime.split(":")[1];
+                          const isSelected = selectedMinute === minute;
+
+                          return (
+                            <button
+                              key={i}
+                              type="button"
+                              disabled={!!isDisabled}
+                              onClick={() => {
+                                const hour = tempTime.split(":")[0] || "00";
+                                setTempTime(`${hour}:${minute}`);
+                              }}
+                              className={`w-full py-2 text-sm transition-colors ${
+                                isDisabled
+                                  ? "text-white/20 cursor-not-allowed"
+                                  : isSelected
+                                  ? "bg-[#0ea5e9] text-white font-bold"
+                                  : "text-white/80 hover:bg-white/10"
+                              }`}
+                            >
+                              {minute}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <button
                   type="button"
                   onClick={handleConfirm}
-                  className="p-2 bg-[#0ea5e9] hover:bg-[#0ea5e9]/80 rounded-md transition-colors"
+                  className="p-2 bg-[#0ea5e9] hover:bg-[#0ea5e9]/80 rounded-md transition-colors w-full"
                 >
-                  <IconCheck size={18} className="text-white" />
+                  <IconCheck size={18} className="text-white mx-auto" />
                 </button>
               </div>
             )}
