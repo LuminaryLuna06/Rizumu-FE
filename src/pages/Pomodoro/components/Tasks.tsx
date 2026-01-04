@@ -9,7 +9,6 @@ import {
 import {
   IconCheck,
   IconTrash,
-  IconPlus,
   IconListCheck,
   IconX,
   IconPencil,
@@ -40,8 +39,8 @@ function Tasks() {
   const [editTitle, setEditTitle] = useState("");
   const [editDate, setEditDate] = useState("");
   const [editTime, setEditTime] = useState("");
-
-  const isEditing = !!editingTaskId;
+  const [isEditing, setIsEditing] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
@@ -86,9 +85,16 @@ function Tasks() {
     setEditingTaskId(task._id);
     setEditTitle(task.title);
     if (task.time_complete && task.time_complete.includes("T")) {
-      const parts = task.time_complete.split("T");
-      setEditDate(parts[0]);
-      setEditTime(parts[1].slice(0, 5));
+      const date = new Date(task.time_complete);
+
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      setEditDate(`${year}-${month}-${day}`);
+
+      const hours = String(date.getHours()).padStart(2, "0");
+      const minutes = String(date.getMinutes()).padStart(2, "0");
+      setEditTime(`${hours}:${minutes}`);
     } else {
       setEditDate("");
       setEditTime("");
@@ -97,6 +103,7 @@ function Tasks() {
 
   const handleUpdateSave = (taskId: string) => {
     if (!editTitle.trim()) return;
+    setIsEditing(true);
     updateTask.mutate(
       {
         taskId,
@@ -111,9 +118,11 @@ function Tasks() {
       {
         onSuccess: () => {
           setEditingTaskId(null);
+          setIsEditing(false);
           toast.success("Task updated successfully!");
         },
         onError: (error: any) => {
+          setIsEditing(false);
           toast.error(
             error?.response?.data?.message || "Failed to update task"
           );
@@ -128,17 +137,20 @@ function Tasks() {
       message: "Are you sure you want to delete this task?",
       type: "delete",
       onConfirm: () => {
+        setIsDeleting(true);
         deleteTask.mutate(taskId, {
           onSuccess: () => {
             toast.success("Task deleted successfully!");
+            setIsDeleting(false);
+            setConfirmModal((prev) => ({ ...prev, isOpen: false }));
           },
           onError: (error: any) => {
+            setIsDeleting(false);
             toast.error(
               error?.response?.data?.message || "Failed to delete task"
             );
           },
         });
-        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
       },
     });
   };
@@ -165,6 +177,18 @@ function Tasks() {
     });
   };
 
+  const getBackground = (task: ModelTask) => {
+    if (task.is_complete) {
+      return "bg-green-500/10 border-green-500/20";
+    }
+
+    if (new Date(task.time_complete) < new Date()) {
+      return "bg-red-500/30 border-red-500/30";
+    }
+    return "bg-white/5 border-white/10 text-white";
+  };
+  const availableClick =
+    !!editingTaskId || isAddingTask || isEditing || isDeleting;
   return (
     <div id="tasks-container" className="fixed top-20 left-4">
       {/* Task Toggle Button */}
@@ -188,12 +212,13 @@ function Tasks() {
             isOpen ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"
           }`}
         >
+          {/* Task Header */}
           <div className="px-3 py-2 border-b border-white/5 flex items-center">
-            {!isAddingTask && !isEditing ? (
+            {!isAddingTask && !editingTaskId && (
               <div className="mr-auto flex gap-2">
                 <ResponsiveButton
                   onClick={() => setIsAddingTask(!isAddingTask)}
-                  disabled={createTask.isPending}
+                  disabled={availableClick}
                   className={`p-1.5 !bg-primary-hover !hover:bg-primary-hover/80 !text-text-active h-[30px] rounded-lg cursor-pointer font-medium`}
                   title="Add Task"
                 >
@@ -201,15 +226,13 @@ function Tasks() {
                 </ResponsiveButton>
                 <ResponsiveButton
                   onClick={openClearConfirm}
-                  disabled={deleteCompleted.isPending}
+                  disabled={availableClick}
                   className={`p-1.5 !bg-primary-hover !hover:bg-primary-hover/80 !text-text-active h-[30px] rounded-lg cursor-pointer font-medium`}
                   title="Clear Completed"
                 >
                   Clear Completed
                 </ResponsiveButton>
               </div>
-            ) : (
-              <></>
             )}
             <button
               onClick={() => setIsOpen(false)}
@@ -219,7 +242,7 @@ function Tasks() {
             </button>
           </div>
 
-          <div className="p-3 max-h-[350px] overflow-y-auto custom-scrollbar scrollbar-hidden">
+          <div className="p-3 h-[45vh] md:h-[30vh] overflow-y-auto custom-scrollbar scrollbar-hidden">
             {isAddingTask && (
               <div className="flex flex-col mb-3 p-3 bg-white/5 border border-white/10 rounded-sm gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
                 <TextInput
@@ -272,11 +295,9 @@ function Tasks() {
                 {tasks.map((task) => (
                   <div
                     key={task._id}
-                    className={`flex flex-col gap-2 p-2 rounded-sm w-full transition-all border ${
-                      task.is_complete
-                        ? "bg-green-500/10 border-green-500/20 text-text-active"
-                        : "bg-white/5 border-white/10 text-white"
-                    } group`}
+                    className={`flex flex-col gap-2 p-2 rounded-sm w-full transition-all border ${getBackground(
+                      task
+                    )} group`}
                   >
                     {editingTaskId === task._id ? (
                       <div className="flex flex-col gap-2 animate-in fade-in zoom-in-95 duration-200">
@@ -305,10 +326,14 @@ function Tasks() {
                           </button>
                           <button
                             onClick={() => handleUpdateSave(task._id)}
-                            disabled={updateTask.isPending || !editTitle.trim()}
-                            className="flex-[2] py-1.5 bg-text-active text-primary rounded-sm text-sm font-bold hover:bg-text-active/80 transition-colors"
+                            disabled={isEditing || !editTitle.trim()}
+                            className={`flex-[2] py-1.5 bg-text-active text-primary rounded-sm text-sm font-bold hover:bg-text-active/80 transition-colors ${
+                              isEditing || !editTitle.trim()
+                                ? "opacity-50 cursor-not-allowed"
+                                : ""
+                            }`}
                           >
-                            {updateTask.isPending ? "SAVING..." : "SAVE"}
+                            {isEditing ? "SAVING..." : "SAVE"}
                           </button>
                         </div>
                       </div>
@@ -341,7 +366,7 @@ function Tasks() {
                             }
                             className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors cursor-pointer ${
                               task.is_complete
-                                ? "bg-green-500 border-green-500 text-primary"
+                                ? "bg-green-500 border-green-500"
                                 : "border-white/30 hover:border-text-active"
                             }`}
                           >
@@ -363,12 +388,13 @@ function Tasks() {
                                 {task.time_complete.includes("T")
                                   ? new Date(
                                       task.time_complete
-                                    ).toLocaleTimeString("en-US", {
+                                    ).toLocaleTimeString("en-GB", {
                                       hour: "2-digit",
                                       minute: "2-digit",
                                       day: "2-digit",
                                       month: "short",
                                       year: "numeric",
+                                      hour12: false,
                                     })
                                   : task.time_complete}
                               </span>
@@ -378,14 +404,24 @@ function Tasks() {
                           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all ml-auto">
                             <button
                               onClick={() => startEditing(task)}
-                              className="p-1 hover:text-yellow-500 transition-colors"
+                              disabled={availableClick}
+                              className={`p-1 hover:text-yellow-500 transition-colors ${
+                                availableClick
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : ""
+                              }`}
                               title="Edit Task"
                             >
                               <IconPencil size={18} />
                             </button>
                             <button
                               onClick={() => openDeleteConfirm(task._id)}
-                              className="p-1 hover:text-red-400 transition-colors"
+                              disabled={availableClick}
+                              className={`p-1 hover:text-red-400 transition-colors ${
+                                availableClick
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : ""
+                              }`}
                               title="Delete Task"
                             >
                               <IconTrash size={20} />
@@ -448,13 +484,16 @@ function Tasks() {
             </button>
             <button
               onClick={confirmModal.onConfirm}
+              disabled={isDeleting}
               className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                isDeleting ? "opacity-50 cursor-not-allowed" : ""
+              } ${
                 confirmModal.type === "delete"
                   ? "bg-red-500 text-white hover:bg-red-600"
                   : "bg-yellow-500 text-black hover:bg-yellow-600"
               }`}
             >
-              Confirm
+              {isDeleting ? "Processing..." : "Confirm"}
             </button>
           </div>
         </div>

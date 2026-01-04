@@ -362,7 +362,7 @@ function DateInput({
                     {/* Hour Selector */}
                     <div className="relative">
                       <div className="text-xs text-white/60 mb-1 text-center">
-                        Giờ
+                        Hour
                       </div>
                       <div className="h-32 overflow-y-auto custom-scrollbar scrollbar-hidden bg-[#2a2a2a] border border-white/10 rounded-md">
                         {Array.from({ length: 24 }, (_, i) => {
@@ -421,7 +421,7 @@ function DateInput({
                     {/* Minute Selector */}
                     <div className="relative">
                       <div className="text-xs text-white/60 mb-1 text-center">
-                        Phút
+                        Minute
                       </div>
                       <div className="h-32 overflow-y-auto custom-scrollbar scrollbar-hidden bg-[#2a2a2a] border border-white/10 rounded-md">
                         {Array.from({ length: 60 }, (_, i) => {
