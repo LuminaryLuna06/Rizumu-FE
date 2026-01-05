@@ -1,7 +1,7 @@
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Timer from "./components/Timer";
-import OnlineUsers from "./components/OnlineUsers";
+import OnlineUsers from "../../components/OnlineUsers";
 import { useAuth } from "@rizumu/context/AuthContext";
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -24,6 +24,7 @@ import Tasks from "./components/Tasks";
 function PomodoroPage() {
   const toast = useToast();
   const { user, isAuthenticated } = useAuth();
+  const { socket } = useSocket();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const [isFocusMode, setIsFocusMode] = useState<boolean>(false);
@@ -161,9 +162,7 @@ function PomodoroPage() {
     }
   }, [userId, user]);
 
-  // Socket.IO: Listen for background changes
-  const { socket } = useSocket();
-
+  //Listen for background changes
   useEffect(() => {
     if (!socket) return;
 
@@ -174,7 +173,6 @@ function PomodoroPage() {
           type: data.background.type,
         });
 
-        // Show toast notification
         if (data.changed_by?.id !== user?._id) {
           toast.info(`Admin changed the background`, "Background Update");
         }
@@ -188,7 +186,7 @@ function PomodoroPage() {
     };
   }, [socket, user?._id]);
 
-  // Socket.IO: Listen for online users and status changes
+  // Listen for online users and status changes
   useEffect(() => {
     if (!socket) return;
 
@@ -217,7 +215,6 @@ function PomodoroPage() {
         const existingIndex = prev.findIndex((m) => m.user_id === data.user_id);
 
         if (existingIndex >= 0) {
-          // Update existing member
           return prev.map((member) =>
             member.user_id === data.user_id
               ? {

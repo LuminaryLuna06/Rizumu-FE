@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Modal from "../Modal";
 import { IconSearch, IconCheck, IconX } from "@tabler/icons-react";
-import TextInput from "../TextInput";
+import TextInput from "../FormComponent/TextInput";
 import { useToast } from "@rizumu/utils/toast/toast";
 import { useAuth } from "@rizumu/context/AuthContext";
 import ProfileModal from "../ProfileModal";

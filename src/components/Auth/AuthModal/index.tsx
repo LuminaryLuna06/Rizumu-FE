@@ -1,5 +1,5 @@
 import Modal from "@rizumu/components/Modal";
-import TextInput from "@rizumu/components/TextInput";
+import TextInput from "@rizumu/components/FormComponent/TextInput";
 import { useAuth } from "@rizumu/context/AuthContext";
 import { useToast } from "@rizumu/utils/toast/toast";
 import {

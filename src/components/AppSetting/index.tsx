@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import Modal from "../Modal";
-import Switch from "../Switch";
-import SelectInput from "../SelectInput";
+import Switch from "../FormComponent/Switch";
+import SelectInput from "../FormComponent/SelectInput";
 import {
   getTimerSettings,
   saveTimerSettings,

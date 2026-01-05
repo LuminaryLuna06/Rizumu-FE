@@ -7,7 +7,7 @@ import {
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import ResponsiveButton from "../../ResponsiveButton";
-import TextInput from "../../TextInput";
+import TextInput from "../../FormComponent/TextInput";
 import {
   useUpdateSessionNote,
   useUpdateSessionTag,

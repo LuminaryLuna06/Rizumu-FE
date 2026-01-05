@@ -22,8 +22,8 @@ import {
   IconPictureInPicture,
   IconFlagFilled,
 } from "@tabler/icons-react";
-import PresetModal from "./PresetModal";
-import TagSelector from "./TagSelector";
+import PresetModal from "../../../components/PresetModal";
+import TagSelector from "../../../components/TagSelector";
 import {
   useCreateSession,
   useUpdateSession,

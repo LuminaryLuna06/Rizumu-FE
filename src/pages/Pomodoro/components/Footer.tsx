@@ -1,9 +1,9 @@
 import ResponsiveButton from "@rizumu/components/ResponsiveButton";
 import { IconPhoto, IconUsers, IconHelp } from "@tabler/icons-react";
 import { useState } from "react";
-import IframePopover from "./IframePopover";
+import IframePopover from "../../../components/IframePopover";
 import ManageFriendModal from "@rizumu/components/ManageFriendModal";
-import ChatPopover from "./ChatPopover";
+import ChatPopover from "../../../components/ChatPopover";
 import BackgroundModal from "@rizumu/components/BackgroundModal";
 import { useMemo } from "react";
 import { useAuth } from "@rizumu/context/AuthContext";

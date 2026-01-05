@@ -1,8 +1,8 @@
 import Modal from "@rizumu/components/Modal";
 import ResponsiveButton from "@rizumu/components/ResponsiveButton";
-import SelectInput from "@rizumu/components/SelectInput";
-import TextArea from "@rizumu/components/TextArea";
-import TextInput from "@rizumu/components/TextInput";
+import SelectInput from "@rizumu/components/FormComponent/SelectInput";
+import TextArea from "@rizumu/components/FormComponent/TextArea";
+import TextInput from "@rizumu/components/FormComponent/TextInput";
 import type { ModelUserProfile } from "@rizumu/models/userProfile";
 import { useToast } from "@rizumu/utils/toast/toast";
 import { IconCamera, IconUser, IconX } from "@tabler/icons-react";

@@ -1,5 +1,5 @@
 import ResponsiveButton from "@rizumu/components/ResponsiveButton";
-import TextInput from "@rizumu/components/TextInput";
+import TextInput from "@rizumu/components/FormComponent/TextInput";
 import { TAG_COLORS } from "@rizumu/constants/tagColors";
 import type { ModelTag } from "@rizumu/models/tag";
 import {

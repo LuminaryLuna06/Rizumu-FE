@@ -1,6 +1,6 @@
 import Popover from "@rizumu/components/Popover";
 import ResponsiveButton from "@rizumu/components/ResponsiveButton";
-import TextInput from "@rizumu/components/TextInput";
+import TextInput from "@rizumu/components/FormComponent/TextInput";
 import { useAuth } from "@rizumu/context/AuthContext";
 import { useSocket } from "@rizumu/context/SocketContext";
 import { IconMessage, IconSend2, IconUsers } from "@tabler/icons-react";

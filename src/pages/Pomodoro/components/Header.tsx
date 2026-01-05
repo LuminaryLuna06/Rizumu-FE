@@ -8,14 +8,14 @@ import {
   IconMinimize,
 } from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
-import RoomPopover from "./RoomPopover";
+import RoomPopover from "../../../components/RoomPopover";
 import LeaderboardModal from "@rizumu/components/RankingBoard";
 import ActivitiesModal from "@rizumu/components/ActivitiesModal";
 import StreakPopover from "@rizumu/components/StreakPopover";
 import { useAuth } from "@rizumu/context/AuthContext";
 import { useState, useMemo, useEffect } from "react";
 import { useHourlyData } from "@rizumu/tanstack/api/hooks";
-import TagSelector from "./TagSelector";
+import TagSelector from "../../../components/TagSelector";
 import type { ModelTag } from "@rizumu/models/tag";
 
 function Header({

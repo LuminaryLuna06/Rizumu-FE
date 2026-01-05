@@ -1,6 +1,6 @@
 import Modal from "@rizumu/components/Modal";
-import SelectInput from "@rizumu/components/SelectInput";
-import Switch from "@rizumu/components/Switch";
+import SelectInput from "@rizumu/components/FormComponent/SelectInput";
+import Switch from "@rizumu/components/FormComponent/Switch";
 import type { Preset, TimerMode } from "@rizumu/constants/timer";
 import { IconStopwatch } from "@tabler/icons-react";
 import { useState } from "react";

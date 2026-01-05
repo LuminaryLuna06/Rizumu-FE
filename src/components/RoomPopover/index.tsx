@@ -1,8 +1,8 @@
 import Popover from "@rizumu/components/Popover";
 import ProfileModal from "@rizumu/components/ProfileModal";
 import ResponsiveButton from "@rizumu/components/ResponsiveButton";
-import Switch from "@rizumu/components/Switch";
-import TextInput from "@rizumu/components/TextInput";
+import Switch from "@rizumu/components/FormComponent/Switch";
+import TextInput from "@rizumu/components/FormComponent/TextInput";
 import { useAuth } from "@rizumu/context/AuthContext";
 import { useToast } from "@rizumu/utils/toast/toast";
 import {
