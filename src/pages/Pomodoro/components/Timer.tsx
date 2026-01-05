@@ -907,10 +907,6 @@ function Timer({
           >
             {formatTime(timeLeft)}
           </p>
-          <button className="flex justify-center items-center gap-x-xs font-semibold">
-            <IconFlagFilled size={20} />
-            <p>Task (under_dev)</p>
-          </button>
 
           <div className="grid grid-cols-3 items-center w-full max-w-[35rem] gap-x-4">
             <div
