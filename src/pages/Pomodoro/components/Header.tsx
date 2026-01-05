@@ -104,7 +104,7 @@ function Header({
             focusMode ? "opacity-0 pointer-events-none" : "opacity-100"
           }`}
         >
-          <div className="hidden md:block lg:hidden">
+          <div id="header-tag-selector" className="hidden md:block lg:hidden">
             <TagSelector selectedTag={selectedTag} onTagSelect={onTagSelect} />
           </div>
           <div id="header-streak">

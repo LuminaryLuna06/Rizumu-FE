@@ -1,9 +1,34 @@
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
 import "./useDriverTour.css";
+import { useState, useEffect } from "react";
 
 export const useDriverTour = () => {
+  const [screenSize, setScreenSize] = useState<"mobile" | "tablet" | "desktop">(
+    "desktop"
+  );
+
+  useEffect(() => {
+    const checkScreenSize = () => {
+      const width = window.innerWidth;
+      if (width < 768) {
+        setScreenSize("mobile"); // < md
+      } else if (width < 1024) {
+        setScreenSize("tablet"); // md -> lg
+      } else {
+        setScreenSize("desktop"); // >= lg
+      }
+    };
+
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
+
   const startTimerTour = () => {
+    const tagSelectorElement =
+      screenSize === "tablet" ? "#header-tag-selector" : "#timer-tag-selector";
+
     const driverObj = driver({
       showProgress: true,
       showButtons: ["next", "previous", "close"],
@@ -27,7 +52,7 @@ export const useDriverTour = () => {
           },
         },
         {
-          element: "#timer-tag-selector",
+          element: tagSelectorElement,
           popover: {
             title: "🏷️ Tag Selector",
             description: "Select a tag to categorize your pomodoro sessions.",
