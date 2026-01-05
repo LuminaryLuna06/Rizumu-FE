@@ -14,12 +14,12 @@ import {
   IconPencil,
   IconAlertCircle,
 } from "@tabler/icons-react";
-import DateInput from "@rizumu/components/DateInput";
-import TextInput from "@rizumu/components/TextInput";
+import DateInput from "@rizumu/components/FormComponent/DateInput";
 import ResponsiveButton from "@rizumu/components/ResponsiveButton";
 import Modal from "@rizumu/components/Modal";
 import type { ModelTask } from "@rizumu/models/task";
 import { useToast } from "@rizumu/utils/toast/toast";
+import TextInput from "@rizumu/components/FormComponent/TextInput";
 
 function Tasks() {
   const toast = useToast();
@@ -386,9 +386,7 @@ function Tasks() {
                                 ? "!bg-red-500 !border-red-500"
                                 : "!bg-transparent !border-white/30 hover:!border-text-active"
                             } ${
-                              unAvailable
-                                ? "opacity-50 cursor-not-allowed"
-                                : ""
+                              unAvailable ? "opacity-50 cursor-not-allowed" : ""
                             }`}
                           >
                             {task.is_complete ? (
