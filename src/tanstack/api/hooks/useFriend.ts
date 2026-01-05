@@ -47,8 +47,6 @@ export const useSendFriendRequest = () => {
       return response.data;
     },
     onSuccess: () => {
-      // Don't invalidate friends list since request is pending
-      // Only invalidate after accept/reject
       queryClient.invalidateQueries({ queryKey: queryKeys.friends.requests() });
     },
   });
@@ -68,7 +66,6 @@ export const useAcceptFriendRequest = () => {
       return response.data;
     },
     onSuccess: () => {
-      // Invalidate both friends list and requests
       queryClient.invalidateQueries({ queryKey: queryKeys.friends.list() });
       queryClient.invalidateQueries({ queryKey: queryKeys.friends.requests() });
     },
@@ -89,7 +86,6 @@ export const useDeleteFriend = () => {
       return response.data;
     },
     onSuccess: () => {
-      // Invalidate both friends list and requests
       queryClient.invalidateQueries({ queryKey: queryKeys.friends.list() });
       queryClient.invalidateQueries({ queryKey: queryKeys.friends.requests() });
     },

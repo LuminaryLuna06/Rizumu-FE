@@ -44,7 +44,6 @@ export const useCreateTask = () => {
       return response.data;
     },
     onSuccess: () => {
-      // Invalidate task queries to refresh the list
       queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all });
     },
   });

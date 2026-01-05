@@ -32,7 +32,6 @@ export const useCreateTag = () => {
       return response.data;
     },
     onSuccess: () => {
-      // Invalidate tag queries
       queryClient.invalidateQueries({ queryKey: queryKeys.tags.all });
     },
   });
@@ -56,7 +55,6 @@ export const useUpdateTag = () => {
       return response.data;
     },
     onSuccess: () => {
-      // Invalidate tag queries
       queryClient.invalidateQueries({ queryKey: queryKeys.tags.all });
     },
   });
@@ -74,7 +72,6 @@ export const useDeleteTag = () => {
       return response.data;
     },
     onSuccess: () => {
-      // Invalidate tag queries
       queryClient.invalidateQueries({ queryKey: queryKeys.tags.all });
     },
   });
