@@ -197,7 +197,7 @@ function ProfileModal({
         opened={opened}
         onClose={onClose}
         title={data?.name ? `${data?.name}'s Profile` : "User's Profile"}
-        className="w-full max-w-[1000px] max-h-[70vh] overflow-y-auto overflow-x-hidden custom-scrollbar scrollbar-hidden"
+        className="profile-modal w-full max-w-[1000px] max-h-[70vh] overflow-y-auto overflow-x-hidden custom-scrollbar scrollbar-hidden"
         more={
           isOwnProfile ? (
             <div className="flex items-center h-20 lg:h-10 gap-2 md:gap-sm hidden md:flex">

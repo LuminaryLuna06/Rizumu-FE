@@ -37,6 +37,7 @@ function FindStudyRoomModal({
       onClose={onClose}
       title="Public study rooms"
       more={<IconLibrary />}
+      className="study-room-modal"
     >
       {/* --- Content --- */}
       <div className="grid grid-cols-12 gap-2 text-secondary/80 font-semibold text-sm mb-3 px-3">
@@ -47,9 +48,9 @@ function FindStudyRoomModal({
         <div className="col-span-3 md:col-span-2"></div>
       </div>
 
-      <div className="space-y-3 max-h-[60vh] overflow-y-auto custom-scrollbar scrollbar-hidden px-1">
+      <div className="h-[calc(90vh-90px)] max-h-[600px] min-h-0 space-y-3 max-h-[60vh] overflow-y-auto custom-scrollbar scrollbar-hidden px-1">
         {isLoading
-          ? Array.from({ length: 5 }).map((_, idx) => (
+          ? Array.from({ length: 8 }).map((_, idx) => (
               <div
                 key={idx}
                 className="bg-secondary/5 grid grid-cols-12 gap-2 items-center p-3 rounded-xl border border-transparent"

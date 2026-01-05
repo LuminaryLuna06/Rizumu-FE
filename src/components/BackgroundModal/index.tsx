@@ -77,7 +77,7 @@ function BackgroundModal({ opened, onClose, onChange }: BackgroundModalProps) {
       opened={opened}
       onClose={onClose}
       title="Set your focus screen"
-      className="overflow-y-auto overflow-x-hidden custom-scrollbar scrollbar-hidden"
+      className="background-modal overflow-y-auto overflow-x-hidden custom-scrollbar scrollbar-hidden"
     >
       <div className="flex w-full mb-xl">
         <ResponsiveButton

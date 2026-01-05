@@ -74,7 +74,9 @@ const formatDisplayDate = (timeFilter: string, currentDate: Date) => {
               month: "short",
             })}
         </p>
-        <p className="sm:hidden">{yearStart === yearEnd ? yearStart : yearStart + " -> " + yearEnd}</p>
+        <p className="sm:hidden">
+          {yearStart === yearEnd ? yearStart : yearStart + " -> " + yearEnd}
+        </p>
       </>
     );
   } else {
@@ -188,7 +190,7 @@ const LeaderboardModal = ({
         opened={opened}
         onClose={() => setOpened(false)}
         title=""
-        className="overflow-y-hidden"
+        className="leaderboard-modal overflow-y-hidden"
       >
         <div className="bg-modal-layout">
           <div className="flex flex-col sm:flex-row  justify-between items-center">
@@ -271,7 +273,7 @@ const LeaderboardModal = ({
           </div>
 
           {/* Table */}
-          <div className="max-h-[calc(60vh)] md:max-h-[calc(87vh-170px)] overflow-y-auto overflow-x-hidden scrollbar-hidden px-2">
+          <div className="h-[calc(90vh-90px)] max-h-[600px] min-h-0 max-h-[calc(60vh)] md:max-h-[calc(87vh-170px)] overflow-y-auto overflow-x-hidden scrollbar-hidden px-2">
             <table className="w-full relative mb-md">
               <thead>
                 <tr>

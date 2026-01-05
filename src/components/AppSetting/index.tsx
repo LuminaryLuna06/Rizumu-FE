@@ -92,7 +92,7 @@ function AppSetting({
       opened={opened}
       onClose={() => onClose()}
       title="Settings"
-      className="!max-w-[700px] text-white overflow-y-auto [&::-webkit-scrollbar]:hidden"
+      className="app-setting-modal !max-w-[700px] text-white overflow-y-auto [&::-webkit-scrollbar]:hidden"
     >
       {/* Alarm sound */}
       <div className="mb-10">

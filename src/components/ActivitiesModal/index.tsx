@@ -161,7 +161,7 @@ function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
         setSelectedDate(new Date());
       }}
       title="Activities summary"
-      className="w-full max-w-[800px] max-h-[70vh] overflow-y-auto overflow-x-hidden custom-scrollbar scrollbar-hidden"
+      className="activities-modal w-full max-w-[800px] max-h-[70vh] overflow-y-auto overflow-x-hidden custom-scrollbar scrollbar-hidden"
     >
       <div className="flex w-full mb-md">
         <ResponsiveButton
