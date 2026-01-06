@@ -120,6 +120,7 @@ function ManageFriendModal({ opened, onClose }: ManageFriendModalProps) {
         opened={opened}
         onClose={onClose}
         title="Focus Friends"
+        className="friends-modal"
         more={
           <div className="hidden md:block w-64">
             <TextInput
@@ -222,12 +223,12 @@ function ManageFriendModal({ opened, onClose }: ManageFriendModalProps) {
           </div>
 
           {/* Main Content */}
-          <div className="flex flex-col justify-start text-center min-h-0 flex-1 overflow-y-auto scroll-smooth scrollbar-hidden pr-1">
+          <div className="flex flex-col justify-start text-center h-[calc(90vh-90px)] max-h-[600px] min-h-0 flex-1 overflow-y-auto scroll-smooth scrollbar-hidden pr-1">
             {activeTab === "activity" ? (
               <>
                 {friendsLoading ? (
                   <div className="flex flex-col gap-2 pb-4">
-                    {Array.from({ length: 3 }).map((_, idx) => (
+                    {Array.from({ length: 8 }).map((_, idx) => (
                       <div
                         key={idx}
                         className="flex items-start gap-3 p-3 rounded-lg"

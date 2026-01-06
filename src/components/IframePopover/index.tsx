@@ -383,7 +383,7 @@ function IframePopover() {
         </ResponsiveButton>
       }
       position="bottom-left"
-      className="w-80 md:w-120 max-h-[70vh]"
+      className="iframe-popover w-80 md:w-120 max-h-[70vh]"
     >
       <div className="flex items-center justify-between px-lg py-md">
         <h3 className="text-secondary capitalize">
