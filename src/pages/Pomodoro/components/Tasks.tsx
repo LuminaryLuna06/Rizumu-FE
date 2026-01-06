@@ -221,7 +221,7 @@ function Tasks() {
                 <ResponsiveButton
                   onClick={() => setIsAddingTask(!isAddingTask)}
                   disabled={unAvailable}
-                  className={`p-1.5 !bg-primary-hover !hover:bg-primary-hover/80 !text-text-active h-[30px] rounded-lg cursor-pointer font-medium`}
+                  className={`p-1.5 !bg-secondary hover:!bg-secondary-hover !text-primary/80 h-[30px] rounded-lg cursor-pointer font-medium`}
                   title="Add Task"
                 >
                   Add
@@ -229,7 +229,7 @@ function Tasks() {
                 <ResponsiveButton
                   onClick={openClearConfirm}
                   disabled={unAvailable}
-                  className={`p-1.5 !bg-primary-hover !hover:bg-primary-hover/80 !text-text-active h-[30px] rounded-lg cursor-pointer font-medium`}
+                  className={`p-1.5 !bg-secondary hover:!bg-secondary-hover !text-primary/80 h-[30px] rounded-lg cursor-pointer font-medium`}
                   title="Clear Completed"
                 >
                   Clear Completed
