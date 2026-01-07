@@ -27,6 +27,7 @@ const MOTION_VIDEOS = [
   "/video/cozy-room.mp4",
   "/video/lazy-cat.mp4",
   "/video/sunset.mp4",
+  "/video/Chisa.mp4",
 ];
 
 interface BackgroundModalProps {
