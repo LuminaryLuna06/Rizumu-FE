@@ -96,7 +96,7 @@ function DateInput({
       if (isOpen && triggerRef.current && !isMobile) {
         const rect = triggerRef.current.getBoundingClientRect();
         const estimatedHeight = withTime ? 520 : 360;
-        const dropdownWidth = window.innerWidth < 1024 ? 250 : 320;
+        const dropdownWidth = window.innerWidth < 1024 ? 300 : 320;
 
         let top = rect.bottom + 8;
         let left = rect.left;
@@ -107,6 +107,17 @@ function DateInput({
           rect.top > estimatedHeight
         ) {
           top = rect.top - estimatedHeight - 8;
+        }
+
+        // Final top clamp to ensure it doesn't go off top of screen
+        if (top < 8) top = 8;
+        // Final bottom clamp to ensure it doesn't go off bottom of screen
+        if (top + (withTime ? 450 : 320) > window.innerHeight) {
+          if (rect.top > (withTime ? 450 : 320)) {
+            top = rect.top - (withTime ? 450 : 320) - 8;
+          } else {
+            top = 8;
+          }
         }
 
         // Horizontal adjustment
@@ -601,7 +612,7 @@ function DateInput({
                   top: `${dropdownPosition.top}px`,
                   left: `${dropdownPosition.left}px`,
                 }}
-                className="fixed z-[9999] bg-[#1a1a1a] border border-white/10 rounded-lg shadow-2xl p-4 w-[300px] lg:w-[320px] max-h-[80vh] overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2 duration-200"
+                className="fixed z-[9999] bg-[#1a1a1a] border border-white/10 rounded-lg shadow-2xl p-4 w-[300px] lg:w-[320px] max-h-[calc(100vh-32px)] overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2 duration-200"
               >
                 {/* Month/Year Header */}
                 <div className="flex items-center justify-between mb-4">

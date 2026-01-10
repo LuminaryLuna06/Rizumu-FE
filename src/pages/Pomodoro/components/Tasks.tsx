@@ -244,7 +244,7 @@ function Tasks() {
             </ResponsiveButton>
           </div>
 
-          <div className="p-3 h-[45vh] md:h-[30vh] overflow-y-auto custom-scrollbar scrollbar-hidden">
+          <div className="p-3 min-h-[10vh] max-h-[45vh] md:max-h-[400px] overflow-y-auto custom-scrollbar scrollbar-hidden">
             {/* Adding panel */}
             {isAddingTask && (
               <div className="flex flex-col mb-3 p-3 bg-white/5 border border-white/30 rounded-sm gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
