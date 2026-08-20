@@ -9,6 +9,8 @@ type ModalProps = {
   className?: string;
   more?: React.ReactNode;
   closeOnClickOutside?: boolean;
+  hideHeader?: boolean;
+  hideCloseButton?: boolean;
 };
 
 const Modal: React.FC<ModalProps> = ({
@@ -19,6 +21,8 @@ const Modal: React.FC<ModalProps> = ({
   className,
   more,
   closeOnClickOutside = true,
+  hideHeader = false,
+  hideCloseButton = false,
 }) => {
   if (!opened) return null;
   return (
@@ -32,18 +36,32 @@ const Modal: React.FC<ModalProps> = ({
         ).trim()} mx-sm md:mx-xl w-full max-w-[800px] max-h-[90%] bg-modal-overlay text-secondary rounded-3xl shadow-2xl p-md md:p-xl border border-gray-800 relative animate-dropdown font-poppins`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex justify-between items-center mb-lg">
-          <div className="flex items-center">
-            <h2 className="md:text-2xl text-lg font-semibold mr-lg">{title}</h2>
-            {more}
+        {!hideHeader && (
+          <div className="flex justify-between items-center mb-lg">
+            <div className="flex items-center">
+              {title && <h2 className="md:text-2xl text-lg font-semibold mr-lg">{title}</h2>}
+              {more}
+            </div>
+            {!hideCloseButton && (
+              <IconX
+                size={20}
+                onClick={onClose}
+                className="text-secondary transition-colors cursor-pointer"
+                aria-label="Close modal"
+              />
+            )}
           </div>
-          <IconX
-            size={20}
-            onClick={onClose}
-            className="text-secondary transition-colors cursor-pointer"
-            aria-label="Close modal"
-          />
-        </div>
+        )}
+        {hideHeader && !hideCloseButton && (
+          <div className="absolute top-4 right-4 z-10">
+            <IconX
+              size={20}
+              onClick={onClose}
+              className="text-white/60 hover:text-white transition-colors cursor-pointer"
+              aria-label="Close modal"
+            />
+          </div>
+        )}
         <div>{children}</div>
       </div>
     </div>

@@ -4,6 +4,8 @@
 export const AUTH_ENDPOINTS = {
   LOGIN: "/auth/login",
   REGISTER: "/auth/register",
+  GOOGLE_LOGIN: "/auth/google",
+  CHANGE_PASSWORD: "/auth/change-password",
   LOGOUT: "/auth/logout",
   REFRESH: "/auth/refresh",
   PROFILE: "/auth/profile",

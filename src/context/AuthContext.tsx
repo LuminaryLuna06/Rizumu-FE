@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import type { ModelUserProfile } from "@rizumu/models/userProfile";
@@ -8,6 +8,7 @@ import {
 } from "@rizumu/utils/cookieManager";
 import { queryKeys } from "@rizumu/tanstack/api/query/queryKeys";
 import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
+import { signInWithGoogle } from "@rizumu/config/firebase";
 
 interface AuthContextType {
   user: ModelUserProfile | null;
@@ -18,6 +19,8 @@ interface AuthContextType {
   closeAuthModal: () => void;
   login: (username: string, password: string) => Promise<void>;
   register: (username: string, password: string) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
+  changePassword: (oldPassword: string, newPassword: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -30,6 +33,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const openAuthModal = () => setAuthModalOpened(true);
   const closeAuthModal = () => setAuthModalOpened(false);
+
+  useEffect(() => {
+    const handleOpenAuthModal = () => {
+      setAuthModalOpened(true);
+    };
+
+    window.addEventListener("open-auth-modal", handleOpenAuthModal);
+    return () =>
+      window.removeEventListener("open-auth-modal", handleOpenAuthModal);
+  }, []);
 
   const { data: user, isLoading } = useQuery<ModelUserProfile>({
     queryKey: queryKeys.auth.me(),
@@ -87,6 +100,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     },
   });
 
+  const googleLoginMutation = useMutation({
+    mutationFn: async (payload: {
+      email: string;
+      name?: string;
+      avatar?: string;
+      googleId?: string;
+      idToken?: string;
+    }) => {
+      const response = await axiosClient.post("/auth/google", payload);
+      return response.data;
+    },
+    onSuccess: (data) => {
+      const { access_token, data: userData } = data;
+      updateAccessToken(access_token);
+
+      queryClient.setQueryData(queryKeys.auth.me(), userData);
+      closeAuthModal();
+    },
+  });
+
+  const changePasswordMutation = useMutation({
+    mutationFn: async ({
+      oldPassword,
+      newPassword,
+    }: {
+      oldPassword: string;
+      newPassword: string;
+    }) => {
+      const response = await axiosClient.post("/auth/change-password", {
+        oldPassword,
+        newPassword,
+      });
+      return response.data;
+    },
+  });
+
   // Logout mutation
   const logoutMutation = useMutation({
     mutationFn: async () => {
@@ -111,6 +160,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await registerMutation.mutateAsync({ username, password });
   };
 
+  const loginWithGoogle = async () => {
+    const { user: googleUser, idToken } = await signInWithGoogle();
+    if (!googleUser.email) {
+      throw new Error("No email found from Google account");
+    }
+
+    await googleLoginMutation.mutateAsync({
+      email: googleUser.email,
+      name: googleUser.displayName || "",
+      avatar: googleUser.photoURL || "",
+      googleId: googleUser.uid,
+      idToken,
+    });
+  };
+
+  const changePassword = async (oldPassword: string, newPassword: string) => {
+    await changePasswordMutation.mutateAsync({ oldPassword, newPassword });
+  };
+
   const logout = async () => {
     await logoutMutation.mutateAsync();
   };
@@ -132,6 +200,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         closeAuthModal,
         login,
         register,
+        loginWithGoogle,
+        changePassword,
         logout,
         refreshUser,
       }}

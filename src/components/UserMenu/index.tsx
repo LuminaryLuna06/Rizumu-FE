@@ -5,6 +5,7 @@ import {
   IconChevronDown,
   IconChevronRight,
   IconExternalLink,
+  IconKey,
   IconLogout2,
   IconMessage,
   IconSettings,
@@ -16,15 +17,30 @@ import { useAuth } from "@rizumu/context/AuthContext";
 import FindStudyRoomModal from "../FindStudyRoomModal";
 import { useToast } from "@rizumu/utils/toast/toast";
 import AppSetting from "../AppSetting";
+import ChangePasswordModal from "../Auth/ChangePasswordModal";
 
 function UserMenu() {
-  const { user, logout } = useAuth();
+  const { user, logout, openAuthModal } = useAuth();
   const toast = useToast();
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isStudyRoomOpen, setIsStudyRoomOpen] = useState(false);
   const [isSettingOpen, setIsSettingOpen] = useState(false);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
+
+  if (!user) {
+    return (
+      <button
+        onClick={openAuthModal}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white text-black text-xs font-semibold hover:bg-white/90 active:scale-95 transition-all shadow-md cursor-pointer"
+        aria-label="Sign in"
+      >
+        <IconUser size={16} />
+        <span className="hidden sm:inline">Sign In</span>
+      </button>
+    );
+  }
   const menuItems = [
     {
       icon: <IconUser size={16} />,
@@ -35,6 +51,14 @@ function UserMenu() {
       icon: <IconMessage size={16} />,
       label: "Find study room",
       onClick: () => setIsStudyRoomOpen(true),
+    },
+    {
+      icon: <IconKey size={16} />,
+      label: "Change Password",
+      onClick: () => {
+        setIsPopoverOpen(false);
+        setIsChangePasswordOpen(true);
+      },
     },
     {
       icon: <IconSettings size={16} />,
@@ -137,6 +161,10 @@ function UserMenu() {
       <AppSetting
         opened={isSettingOpen}
         onClose={() => setIsSettingOpen(false)}
+      />
+      <ChangePasswordModal
+        opened={isChangePasswordOpen}
+        onClose={() => setIsChangePasswordOpen(false)}
       />
     </>
   );

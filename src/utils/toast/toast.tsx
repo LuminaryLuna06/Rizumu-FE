@@ -84,19 +84,20 @@ interface ToastItemProps {
 
 const ToastItem: React.FC<ToastItemProps> = ({ toast, onClose }) => {
   const [isLeaving, setIsLeaving] = React.useState(false);
+  const duration = toast.duration ?? 5000;
 
   const getIcon = () => {
     if (toast.icon) return toast.icon;
 
     switch (toast.type) {
       case "success":
-        return <IconCircleCheck size={20} />;
+        return <IconCircleCheck size={18} stroke={2.5} />;
       case "error":
-        return <IconAlertCircle size={20} />;
+        return <IconAlertCircle size={18} stroke={2.5} />;
       case "warning":
-        return <IconAlertTriangle size={20} />;
+        return <IconAlertTriangle size={18} stroke={2.5} />;
       case "info":
-        return <IconInfoCircle size={20} />;
+        return <IconInfoCircle size={18} stroke={2.5} />;
       default:
         return null;
     }
@@ -106,18 +107,18 @@ const ToastItem: React.FC<ToastItemProps> = ({ toast, onClose }) => {
     setIsLeaving(true);
     setTimeout(() => {
       onClose(toast.id);
-    }, 300); // Match animation duration
+    }, 250); // Match animation duration
   };
 
   React.useEffect(() => {
-    if (toast.duration && toast.duration > 0) {
+    if (duration && duration > 0) {
       const timer = setTimeout(() => {
         handleClose();
-      }, toast.duration);
+      }, duration);
 
       return () => clearTimeout(timer);
     }
-  }, [toast.duration, toast.id]);
+  }, [duration, toast.id]);
 
   return (
     <div
@@ -126,7 +127,9 @@ const ToastItem: React.FC<ToastItemProps> = ({ toast, onClose }) => {
       }`}
       role="alert"
     >
-      <div className="toast-icon">{getIcon()}</div>
+      <div className="toast-icon-wrapper">
+        <div className="toast-icon">{getIcon()}</div>
+      </div>
 
       <div className="toast-content">
         {toast.title && <div className="toast-title">{toast.title}</div>}
@@ -148,10 +151,17 @@ const ToastItem: React.FC<ToastItemProps> = ({ toast, onClose }) => {
       <button
         className="toast-close-btn"
         onClick={handleClose}
-        aria-label="Close"
+        aria-label="Close notification"
       >
-        <IconX size={16} />
+        <IconX size={15} />
       </button>
+
+      {duration > 0 && (
+        <div
+          className="toast-progress-bar"
+          style={{ animationDuration: `${duration}ms` }}
+        />
+      )}
     </div>
   );
 };

@@ -5,11 +5,12 @@ import TextArea from "@rizumu/components/FormComponent/TextArea";
 import TextInput from "@rizumu/components/FormComponent/TextInput";
 import type { ModelUserProfile } from "@rizumu/models/userProfile";
 import { useToast } from "@rizumu/utils/toast/toast";
-import { IconCamera, IconUser, IconX } from "@tabler/icons-react";
+import { IconCamera, IconKey, IconUser, IconX } from "@tabler/icons-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { countries } from "../../../constants/countries";
 import { useAuth } from "@rizumu/context/AuthContext";
 import { useUploadAvatar, useUpdateProfile } from "@rizumu/tanstack/api/hooks";
+import ChangePasswordModal from "@rizumu/components/Auth/ChangePasswordModal";
 
 interface EditProfileModalProps {
   opened: boolean;
@@ -29,6 +30,7 @@ function EditProfileModal({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [formData, setFormData] = useState({ name: "", bio: "", country: "" });
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
   const updateAvatar = useUploadAvatar();
   const updateProfile = useUpdateProfile();
@@ -189,15 +191,26 @@ function EditProfileModal({
           )}
         </div>
 
+        <div className="pt-1">
+          <button
+            type="button"
+            onClick={() => setIsChangePasswordOpen(true)}
+            className="flex items-center gap-2 px-3.5 py-2 bg-white/5 hover:bg-white/10 border border-white/15 rounded-xl text-xs sm:text-sm font-medium text-white transition-all cursor-pointer shadow-sm active:scale-[0.99]"
+          >
+            <IconKey size={16} className="text-secondary" />
+            <span>Change Password</span>
+          </button>
+        </div>
+
         <div className="flex flex-col gap-sm"></div>
-        <hr />
+        <hr className="border-white/10" />
         <div className="flex gap-sm">
           <ResponsiveButton
             onClick={() => {
               onOpenProfile();
               setPreviewUrl(null);
             }}
-            className="flex-1 flex justify-center px-6 py-3 border border-white rounded-lg font-semibold"
+            className="flex-1 flex justify-center px-6 py-3 border border-white/20 rounded-lg font-semibold"
             disabled={updateAvatar.isPending || updateProfile.isPending}
           >
             Cancel
@@ -215,6 +228,11 @@ function EditProfileModal({
           </ResponsiveButton>
         </div>
       </form>
+
+      <ChangePasswordModal
+        opened={isChangePasswordOpen}
+        onClose={() => setIsChangePasswordOpen(false)}
+      />
     </Modal>
   );
 }
