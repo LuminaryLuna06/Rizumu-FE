@@ -1,62 +1,18 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useAuth } from "@rizumu/context/AuthContext";
-import { useToast } from "@rizumu/utils/toast/toast";
-import {
-  DEFAULT_PRESETS,
-  type Preset,
-  type TimerDirection,
-  type TimerMode,
-} from "@rizumu/constants/timer";
-import type { ModelTimer } from "@rizumu/models/timer";
 import type { ModelTag } from "@rizumu/models/tag";
-import {
-  getCurrentPresetId,
-  initializePresets,
-  saveCurrentPresetId,
-} from "@rizumu/utils/presets";
 import { getTimerSettings } from "@rizumu/utils/timerSettings";
 import { playSound, createAudioContext } from "@rizumu/utils/audioPresets";
 import {
   IconClockHour11Filled,
   IconPlayerSkipForwardFilled,
   IconPictureInPicture,
-  IconFlagFilled,
 } from "@tabler/icons-react";
 import PresetModal from "../../../components/PresetModal";
 import TagSelector from "../../../components/TagSelector";
-import {
-  useCreateSession,
-  useUpdateSession,
-  useUpdateStats,
-} from "@rizumu/tanstack/api/hooks";
+import { usePomodoroTimer } from "@rizumu/hooks/usePomodoroTimer";
 
-const TIMER_DIRECTION_KEY = "pomodoro_timer_direction";
 const SELECTED_TAG_KEY = "pomodoro_selected_tag";
-
-const getTimerDirection = (): TimerDirection => {
-  try {
-    const stored = localStorage.getItem(TIMER_DIRECTION_KEY);
-    return (stored as TimerDirection) || "countdown";
-  } catch {
-    return "countdown";
-  }
-};
-
-const saveTimerDirection = (direction: TimerDirection) => {
-  try {
-    localStorage.setItem(TIMER_DIRECTION_KEY, direction);
-  } catch (error) {
-    console.error("Failed to save timer direction:", error);
-  }
-};
-
-const formatTime = (seconds: number) => {
-  const m = Math.floor(seconds / 60)
-    .toString()
-    .padStart(2, "0");
-  const s = (seconds % 60).toString().padStart(2, "0");
-  return `${m}:${s}`;
-};
 
 interface TimerProps {
   bgType: string;
@@ -76,96 +32,83 @@ function Timer({
   setFocusMode,
 }: TimerProps) {
   const { user } = useAuth();
-  const toast = useToast();
-  const create = useCreateSession();
-  const update = useUpdateSession();
-  const updateStats = useUpdateStats();
-
-  const [mode, setMode] = useState<TimerMode>("pomodoro");
   const [openedPreset, setOpenedPreset] = useState(false);
-  const [currentPresetId, setCurrentPresetId] = useState(0);
-  const [presets, setPresets] = useState<Preset[]>([]);
-
-  const [running, setRunning] = useState(false);
-  const [pomodoroCount, setPomodoroCount] = useState(0);
-
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const durationRef = useRef(0);
-  const dataRef = useRef<ModelTimer>({
-    completed: false,
-    started_at: "",
-    duration: 0,
-    ended_at: "",
-    session_type: "pomodoro",
-    timer_type: "focus",
-    user_id: "",
-    tag_id: "",
-  });
-  const shouldAutoStartRef = useRef(false);
-  const [timerDirection, setTimerDirection] = useState<TimerDirection>(() =>
-    getTimerDirection()
-  );
-
-  const [targetDuration, setTargetDuration] = useState(() => {
-    const storedPresets = localStorage.getItem("pomodoro_presets");
-    const currentId = getCurrentPresetId();
-
-    if (storedPresets) {
-      const loadedPresets: Preset[] = JSON.parse(storedPresets);
-      return (loadedPresets[currentId]?.durations?.pomodoro ?? 25) * 60;
-    }
-
-    return (DEFAULT_PRESETS[currentId]?.durations?.pomodoro ?? 25) * 60;
-  });
-
-  const [timeLeft, setTimeLeft] = useState(() => {
-    const direction = getTimerDirection();
-    const storedPresets = localStorage.getItem("pomodoro_presets");
-    const currentId = getCurrentPresetId();
-
-    let duration = 25 * 60;
-    if (storedPresets) {
-      const loadedPresets: Preset[] = JSON.parse(storedPresets);
-      duration = (loadedPresets[currentId]?.durations?.pomodoro ?? 25) * 60;
-    } else {
-      duration = (DEFAULT_PRESETS[currentId]?.durations?.pomodoro ?? 25) * 60;
-    }
-
-    return direction === "countup" ? 0 : duration;
-  });
 
   // Picture-in-Picture
   const [pipWindow, setPipWindow] = useState<Window | null>(null);
   const [isPipSupported] = useState(() => "documentPictureInPicture" in window);
-  const modeRef = useRef<TimerMode>("pomodoro");
   const audioCtxRef = useRef<AudioContext | null>(null);
-  useEffect(() => {
-    const storedPresets = localStorage.getItem("pomodoro_presets");
-    let loadedPresets: Preset[];
 
-    if (storedPresets) {
-      loadedPresets = JSON.parse(storedPresets);
-    } else {
-      initializePresets();
-      loadedPresets = DEFAULT_PRESETS;
+  // Audio initializers
+  const initAudio = useCallback(() => {
+    if (!audioCtxRef.current) {
+      audioCtxRef.current = createAudioContext();
     }
-
-    setPresets(loadedPresets);
-
-    const currentId = getCurrentPresetId();
-    setCurrentPresetId(currentId);
   }, []);
 
-  useEffect(() => {
-    if (user?._id) {
-      dataRef.current.user_id = user._id;
+  const playDing = useCallback(() => {
+    const ctx = audioCtxRef.current;
+    if (!ctx) return;
+
+    const settings = getTimerSettings();
+    if (settings.alarmEnabled) {
+      playSound(settings.alarmSound, ctx, 1, settings.alarmVolume);
     }
-  }, [user?._id]);
+  }, []);
 
-  useEffect(() => {
-    modeRef.current = mode;
-  }, [mode]);
+  const playClickSound = useCallback(() => {
+    const ctx = audioCtxRef.current;
+    if (!ctx) return;
 
+    if (ctx.state === "suspended") {
+      ctx.resume();
+    }
+
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const highpass = ctx.createBiquadFilter();
+
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(800, t);
+
+    highpass.type = "highpass";
+    highpass.frequency.value = 700;
+
+    gain.gain.setValueAtTime(0.62, t);
+    highpass.connect(gain);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(t);
+    osc.stop(t + 0.06);
+  }, []);
+
+  // Use Timestamp-based Pomodoro Timer Hook
+  const {
+    formattedTime,
+    running,
+    mode,
+    timerDirection,
+    presets,
+    currentPresetId,
+    toggleStartPause,
+    skipSession,
+    changeMode,
+    changePreset,
+    toggleDirection,
+  } = usePomodoroTimer({
+    user,
+    selectedTag,
+    setFocusMode,
+    playClickSound,
+    playDing,
+    initAudio,
+  });
+
+  // Restore tag on user login/change
   useEffect(() => {
     if (!user) {
       onTagSelect(null);
@@ -182,395 +125,15 @@ function Timer({
     }
   }, [user, onTagSelect]);
 
+  // Document Title
   useEffect(() => {
-    saveTimerDirection(timerDirection);
-  }, [timerDirection]);
-
-  useEffect(() => {
-    if (!running) {
-      setTimeLeft(timerDirection === "countup" ? 0 : targetDuration);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timerDirection]);
-
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (running) {
-        e.preventDefault();
-        e.returnValue = "";
-        return "";
-      }
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [running]);
-
-  useEffect(() => {
-    document.title = `${formatTime(timeLeft)} - Rizumu`;
+    document.title = `${formattedTime} - Rizumu`;
     return () => {
       document.title = "Rizumu";
     };
-  }, [timeLeft]);
+  }, [formattedTime]);
 
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      const settings = getTimerSettings();
-      if (settings.autoMiniTimer && document.hidden && running && !pipWindow) {
-        openPictureInPicture();
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [running, pipWindow]);
-
-  // Auto-start
-  useEffect(() => {
-    if (shouldAutoStartRef.current) {
-      shouldAutoStartRef.current = false;
-      const settings = getTimerSettings();
-
-      if (mode === "pomodoro" && settings.autoStartPomodoro) {
-        setRunning(true);
-        setFocusMode(true);
-      } else if (
-        (mode === "short_break" || mode === "long_break") &&
-        settings.autoStartBreak
-      ) {
-        setRunning(true);
-        setFocusMode(true);
-      }
-    }
-  }, [mode, setFocusMode]);
-
-  const handleToggleTimerDirection = () => {
-    setTimerDirection((prev) =>
-      prev === "countdown" ? "countup" : "countdown"
-    );
-  };
-
-  const clearTimer = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  }, []);
-
-  const resetTimer = useCallback(
-    (newMode?: TimerMode, presetId?: number) => {
-      clearTimer();
-      setRunning(false);
-      const targetMode = newMode || mode;
-
-      // Stopwatch mode: no preset, always starts at 0
-      if (targetMode === "stopwatch") {
-        setTargetDuration(0);
-        setTimeLeft(0);
-        durationRef.current = 0;
-        dataRef.current = {
-          completed: false,
-          started_at: "",
-          duration: 0,
-          ended_at: "",
-          session_type: targetMode,
-          timer_type: "focus",
-          user_id: "",
-          tag_id: "",
-        };
-        return;
-      }
-
-      const targetPresetId =
-        presetId !== undefined ? presetId : currentPresetId;
-      const currentPreset = presets[targetPresetId];
-      const duration = (currentPreset?.durations?.[targetMode] ?? 25) * 60;
-
-      setTargetDuration(duration);
-      setTimeLeft(timerDirection === "countup" ? 0 : duration);
-      durationRef.current = 0;
-      dataRef.current = {
-        completed: false,
-        started_at: "",
-        duration: 0,
-        ended_at: "",
-        session_type: targetMode,
-        timer_type: "focus",
-        user_id: "",
-        tag_id: "",
-      };
-    },
-    [clearTimer, mode, presets, currentPresetId, timerDirection]
-  );
-
-  useEffect(() => {
-    if (running) {
-      if (!dataRef.current.started_at) {
-        dataRef.current.started_at = new Date().toISOString();
-        dataRef.current.user_id = user?._id;
-        dataRef.current.tag_id = selectedTag?._id || " ";
-        console.log("Started: ", dataRef.current);
-        if (dataRef.current.session_type === "pomodoro") {
-          create.mutate(
-            {
-              completed: false,
-              duration: 0,
-              session_type: dataRef.current.session_type,
-              started_at: dataRef.current.started_at,
-              timer_type: dataRef.current.timer_type,
-              tag_id: dataRef.current.tag_id,
-            },
-            {
-              onError: (error: any) => {
-                toast.error(
-                  error?.response?.data?.message || "Failed to start a session",
-                  "Error"
-                );
-              },
-            }
-          );
-          setFocusMode(true);
-        }
-      }
-      intervalRef.current = setInterval(() => {
-        durationRef.current += 1;
-        setTimeLeft((prev) => {
-          if (mode === "stopwatch") {
-            return prev + 1;
-          }
-
-          let newTimeLeft: number;
-          let isCompleted: boolean;
-
-          if (timerDirection === "countup") {
-            newTimeLeft = prev + 1;
-            isCompleted = newTimeLeft >= targetDuration;
-          } else {
-            newTimeLeft = prev - 1;
-            isCompleted = newTimeLeft <= 0;
-          }
-
-          if (isCompleted) {
-            dataRef.current.ended_at = new Date().toISOString();
-            dataRef.current.duration = durationRef.current;
-            dataRef.current.completed = true;
-
-            initAudio();
-            playDing();
-
-            const completedSession = { ...dataRef.current };
-            setFocusMode(false);
-            if (completedSession.session_type === "pomodoro") {
-              const duration = durationRef.current;
-              const xp = Math.floor(duration / 60);
-              const coin = Math.floor(duration / 600);
-              if (xp > 0 || coin > 0) {
-                updateStats.mutate(
-                  { current_xp: xp, coins: coin },
-                  {
-                    onSuccess: () => {
-                      toast.info(
-                        `You gained ${xp} xp${
-                          coin > 0 ? ` and ${coin} coins` : ""
-                        }.`,
-                        "Let's fucking gooooo!"
-                      );
-                    },
-                    onError: (error: any) => {
-                      toast.error(
-                        error?.response?.data?.message ||
-                          "Failed to update stats",
-                        "Error"
-                      );
-                    },
-                  }
-                );
-              }
-              update.mutate(
-                {
-                  completed: true,
-                  duration: dataRef.current.duration,
-                  ended_at: dataRef.current.ended_at,
-                },
-                {
-                  onError: (error: any) => {
-                    toast.error(
-                      error?.response?.data?.message || "Failed to end session",
-                      "Error"
-                    );
-                  },
-                }
-              );
-            }
-
-            // Auto-switch mode
-            queueMicrotask(() => {
-              let nextMode: TimerMode;
-              const settings = getTimerSettings();
-
-              if (mode === "pomodoro") {
-                const newCount = pomodoroCount + 1;
-                setPomodoroCount(newCount);
-
-                if (newCount >= settings.longBreakInterval) {
-                  nextMode = "long_break";
-                  setPomodoroCount(0);
-                } else {
-                  nextMode = "short_break";
-                }
-              } else {
-                nextMode = "pomodoro";
-              }
-
-              setMode(nextMode);
-              resetTimer(nextMode);
-
-              if (
-                (nextMode === "pomodoro" && settings.autoStartPomodoro) ||
-                ((nextMode === "short_break" || nextMode === "long_break") &&
-                  settings.autoStartBreak)
-              ) {
-                shouldAutoStartRef.current = true;
-              }
-            });
-
-            return timerDirection === "countup" ? targetDuration : 0;
-          }
-          return newTimeLeft;
-        });
-      }, 1000);
-    } else {
-      clearTimer();
-    }
-    return clearTimer;
-  }, [running, clearTimer, resetTimer, user?._id]);
-
-  useEffect(() => {
-    return clearTimer;
-  }, [clearTimer]);
-
-  const handleModeChange = (newMode: TimerMode) => {
-    if (running) {
-      setRunning(false);
-      setFocusMode(false);
-    }
-    setMode(newMode);
-    resetTimer(newMode);
-  };
-
-  const handlePresetChange = (presetId: number) => {
-    if (running) {
-      setRunning(false);
-      setFocusMode(false);
-    }
-
-    setCurrentPresetId(presetId);
-
-    const newPreset = presets.find((p) => p.id === presetId);
-    if (newPreset) {
-      setTimeLeft((newPreset.durations?.[mode] ?? 25) * 60);
-      resetTimer(mode, presetId);
-    }
-
-    saveCurrentPresetId(presetId);
-  };
-
-  const handleSkipSession = () => {
-    clearTimer();
-    setRunning(false);
-    setFocusMode(false);
-
-    if (mode === "stopwatch") {
-      setTimeLeft(0);
-      durationRef.current = 0;
-      dataRef.current = {
-        completed: false,
-        started_at: "",
-        duration: 0,
-        ended_at: "",
-        session_type: "stopwatch",
-        timer_type: "focus",
-        user_id: "",
-        tag_id: "",
-      };
-      return;
-    }
-
-    if (dataRef.current.started_at) {
-      dataRef.current.ended_at = new Date().toISOString();
-      dataRef.current.duration = durationRef.current;
-      dataRef.current.completed = true;
-
-      initAudio();
-      playDing();
-
-      if (dataRef.current.session_type === "pomodoro") {
-        const duration = durationRef.current;
-        const xp = Math.floor(duration / 60);
-        const coin = Math.floor(duration / 600);
-        if (xp > 0 || coin > 0) {
-          updateStats.mutate(
-            { current_xp: xp, coins: coin },
-            {
-              onSuccess: () => {
-                toast.info(
-                  `You gained ${xp} xp${coin > 0 ? ` and ${coin} coins` : ""}.`,
-                  "Let's fucking gooooo!"
-                );
-              },
-              onError: (error: any) => {
-                toast.error(
-                  error?.response?.data?.message || "Failed to update stats",
-                  "Error"
-                );
-              },
-            }
-          );
-        }
-        update.mutate(
-          {
-            completed: true,
-            duration: dataRef.current.duration,
-            ended_at: dataRef.current.ended_at,
-          },
-          {
-            onError: (error: any) => {
-              toast.error(
-                error?.response?.data?.message || "Failed to end session",
-                "Error"
-              );
-            },
-          }
-        );
-      }
-    }
-
-    // Switch mode
-    const currentMode = modeRef.current;
-    let nextMode: TimerMode;
-    const settings = getTimerSettings();
-
-    if (currentMode === "pomodoro") {
-      const newCount = pomodoroCount + 1;
-      setPomodoroCount(newCount);
-
-      if (newCount >= settings.longBreakInterval) {
-        nextMode = "long_break";
-        setPomodoroCount(0);
-      } else {
-        nextMode = "short_break";
-      }
-    } else {
-      nextMode = "pomodoro";
-    }
-
-    setMode(nextMode);
-    resetTimer(nextMode);
-  };
-
-  // Picture-in-Picture
+  // Picture-in-Picture logic
   const openPictureInPicture = async () => {
     if (!window.documentPictureInPicture || pipWindow) return;
 
@@ -678,10 +241,7 @@ function Timer({
       const skipBtn = pip.document.getElementById("pip-skip");
 
       const toggleClickListener = () => {
-        setRunning((prev) => !prev);
-        initAudio();
-        playClickSound();
-        setFocusMode();
+        toggleStartPause();
       };
       const toggleMouseEnterListener = () => {
         toggleBtn!.style.transform = "scale(1.05)";
@@ -690,7 +250,9 @@ function Timer({
         toggleBtn!.style.transform = "scale(1)";
       };
 
-      const skipClickListener = handleSkipSession;
+      const skipClickListener = () => {
+        skipSession();
+      };
       const skipMouseEnterListener = () => {
         skipBtn!.style.background = "rgba(255, 255, 255, 0.3)";
         skipBtn!.style.transform = "scale(1.1)";
@@ -741,20 +303,36 @@ function Timer({
     }
   };
 
+  // Update PiP window when time/status changes
   useEffect(() => {
     if (pipWindow) {
       const timerEl = pipWindow.document.getElementById("pip-timer");
       const toggleBtn = pipWindow.document.getElementById("pip-toggle");
 
       if (timerEl) {
-        timerEl.textContent = formatTime(timeLeft);
+        timerEl.textContent = formattedTime;
       }
 
       if (toggleBtn) {
         toggleBtn.textContent = running ? "Pause" : "Start";
       }
     }
-  }, [pipWindow, timeLeft, running]);
+  }, [pipWindow, formattedTime, running]);
+
+  // Auto Mini Timer in PiP when tab is hidden
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      const settings = getTimerSettings();
+      if (settings.autoMiniTimer && document.hidden && running && !pipWindow) {
+        openPictureInPicture();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [running, pipWindow]);
 
   const handleTogglePiP = () => {
     if (pipWindow) {
@@ -765,57 +343,16 @@ function Timer({
   };
 
   const handleSkipSessionWrapper = () => {
-    handleSkipSession();
+    skipSession();
     if (pipWindow) {
       closePictureInPicture();
     }
   };
 
-  // Ding dong
-  const initAudio = () => {
-    if (!audioCtxRef.current) {
-      audioCtxRef.current = createAudioContext();
-    }
+  const handlePresetChange = (presetId: number) => {
+    changePreset(presetId);
   };
-  const playDing = () => {
-    const ctx = audioCtxRef.current;
-    if (!ctx) return;
 
-    const settings = getTimerSettings();
-    if (settings.alarmEnabled) {
-      playSound(settings.alarmSound, ctx, 1, settings.alarmVolume);
-    }
-  };
-  // Click click
-  const playClickSound = () => {
-    const ctx = audioCtxRef.current;
-    if (!ctx) return;
-
-    if (ctx.state === "suspended") {
-      ctx.resume();
-    }
-
-    const t = ctx.currentTime;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    const highpass = ctx.createBiquadFilter();
-
-    osc.type = "triangle";
-    osc.frequency.setValueAtTime(800, t);
-
-    highpass.type = "highpass";
-    highpass.frequency.value = 700;
-
-    gain.gain.setValueAtTime(0.62, t);
-    highpass.connect(gain);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc.start(t);
-    osc.stop(t + 0.06);
-  };
   return (
     <div className="main-content flex flex-col justify-center items-center gap-y-xs h-[82vh]">
       {pipWindow ? (
@@ -851,7 +388,7 @@ function Timer({
               className={`flex gap-x-xl items-center mt-4 md:mt-6 transition-all duration-500`}
             >
               <button
-                onClick={() => handleModeChange("pomodoro")}
+                onClick={() => changeMode("pomodoro")}
                 className={`rounded-full bg-secondary transition-all duration-slow ${
                   mode === "pomodoro"
                     ? "w-8 h-8"
@@ -866,7 +403,7 @@ function Timer({
               ></button>
 
               <button
-                onClick={() => handleModeChange("short_break")}
+                onClick={() => changeMode("short_break")}
                 className={`rounded-full bg-secondary transition-all duration-slow ${
                   mode === "short_break"
                     ? "w-8 h-8"
@@ -881,7 +418,7 @@ function Timer({
               ></button>
 
               <button
-                onClick={() => handleModeChange("long_break")}
+                onClick={() => changeMode("long_break")}
                 className={`rounded-full bg-secondary transition-all duration-slow ${
                   mode === "long_break"
                     ? "w-8 h-8"
@@ -905,7 +442,7 @@ function Timer({
                 "0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), 0 10px 20px rgba(0, 0, 0, 0.15)",
             }}
           >
-            {formatTime(timeLeft)}
+            {formattedTime}
           </p>
 
           <div className="grid grid-cols-3 items-center w-full max-w-[35rem] gap-x-4">
@@ -933,12 +470,7 @@ function Timer({
             <div className="flex justify-center">
               <button
                 id="timer-start-button"
-                onClick={() => {
-                  setRunning((prev) => !prev);
-                  initAudio();
-                  playClickSound();
-                  setFocusMode();
-                }}
+                onClick={toggleStartPause}
                 className="px-lg py-lg w-[140px] md:w-[200px] my-lg text-primary rounded-full bg-secondary text-lg font-bold hover:bg-secondary-hover cursor-pointer transition-all duration-300 hover:scale-[1.02]"
                 style={{
                   boxShadow:
@@ -1000,9 +532,9 @@ function Timer({
         currentPresetId={currentPresetId}
         onPresetChange={handlePresetChange}
         timerDirection={timerDirection}
-        onToggleTimerDirection={handleToggleTimerDirection}
+        onToggleTimerDirection={toggleDirection}
         currentMode={mode}
-        onModeChange={handleModeChange}
+        onModeChange={changeMode}
       />
     </div>
   );

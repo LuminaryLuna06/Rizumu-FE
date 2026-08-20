@@ -1,5 +1,7 @@
 export type ModelUserPomodoroSession = {
   id: string;
+  _id?: string;
+  session_id?: string;
   user_id: string;
   // room_id: string;
   tag_id: string;
@@ -15,3 +17,4 @@ export type ModelUserPomodoroSession = {
   started_at: string;
   ended_at: string;
 };
+
