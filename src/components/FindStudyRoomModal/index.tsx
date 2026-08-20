@@ -40,7 +40,7 @@ function FindStudyRoomModal({
       className="study-room-modal"
     >
       {/* --- Content --- */}
-      <div className="grid grid-cols-12 gap-2 text-secondary/80 font-semibold text-sm mb-3 px-3">
+      <div className="sticky top-0 z-10 bg-modal-overlay/95 backdrop-blur-md grid grid-cols-12 gap-2 text-secondary/80 font-semibold text-xs sm:text-sm py-2 px-3 mb-3 border-b border-white/10">
         <div className="col-span-5 md:col-span-3">Name</div>
         <div className="hidden md:block md:col-span-3">About</div>
         <div className="col-span-4 md:col-span-2">Members</div>
@@ -48,7 +48,7 @@ function FindStudyRoomModal({
         <div className="col-span-3 md:col-span-2"></div>
       </div>
 
-      <div className="h-[calc(90vh-90px)] max-h-[600px] min-h-0 space-y-3 max-h-[60vh] overflow-y-auto custom-scrollbar scrollbar-hidden px-1">
+      <div className="space-y-3 px-1 pb-2">
         {isLoading
           ? Array.from({ length: 8 }).map((_, idx) => (
               <div

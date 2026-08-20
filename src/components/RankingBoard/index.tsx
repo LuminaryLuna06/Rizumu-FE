@@ -273,23 +273,24 @@ const LeaderboardModal = ({
           </div>
 
           {/* Table */}
-          <div className="h-[calc(90vh-90px)] max-h-[600px] min-h-0 max-h-[calc(60vh)] md:max-h-[calc(87vh-170px)] overflow-y-auto overflow-x-hidden scrollbar-hidden px-2">
+          <div className="flex-1 min-h-[260px] max-h-[calc(68dvh-120px)] overflow-y-auto overflow-x-hidden custom-scrollbar overscroll-contain px-2">
             <table className="w-full relative mb-md">
-              <thead>
+              <thead className="sticky top-0 bg-[#16171b] z-10">
                 <tr>
-                  <th className="pb-4 pt-2 text-center w-[10%]">#</th>
-                  <th className="pb-4 pt-2 text-left pl-2 w-[60%]">User</th>
-                  <th className="pb-4 pt-2 pr-4 w-[20%]">
-                    <div className="flex justify-end">
-                      <IconClockHour3 />
+                  <th className="pb-3 pt-2 text-center w-[10%] font-semibold text-xs text-white/50">#</th>
+                  <th className="pb-3 pt-2 text-left pl-2 w-[60%] font-semibold text-xs text-white/50">User</th>
+                  <th className="pb-3 pt-2 pr-4 w-[20%] font-semibold text-xs text-white/50">
+                    <div className="flex justify-end items-center gap-1">
+                      <IconClockHour3 size={16} />
+                      <span className="hidden sm:inline">Time</span>
                     </div>
                   </th>
-                  <th className="pb-4 pt-2 text-center w-[10%]"></th>
+                  <th className="pb-3 pt-2 text-center w-[10%]"></th>
                 </tr>
 
                 <tr>
-                  <th colSpan={3} className="p-0">
-                    <div className="h-[1px] w-full bg-gray-800 mb-2"></div>
+                  <th colSpan={4} className="p-0">
+                    <div className="h-[1px] w-full bg-white/10 mb-2"></div>
                   </th>
                 </tr>
               </thead>
@@ -315,6 +316,7 @@ const LeaderboardModal = ({
                     <tr
                       key={user._id}
                       onClick={() => handleUserClick(user._id)}
+                      style={{ contentVisibility: "auto", containIntrinsicSize: "0 56px" }}
                       className="group hover:bg-primary-hover cursor-pointer last:border-none"
                     >
                       {/* Cột 1 */}

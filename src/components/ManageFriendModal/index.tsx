@@ -137,8 +137,8 @@ function ManageFriendModal({ opened, onClose }: ManageFriendModalProps) {
         }
       >
         {/* Container*/}
-        <div className="flex flex-col h-[calc(90vh-90px)] max-h-[600px] overflow-hidden">
-          <div className="block md:hidden mb-4 shrink-0 w-full">
+        <div className="flex flex-col flex-1 min-h-0">
+          <div className="block md:hidden mb-3 shrink-0 w-full">
             <TextInput
               placeholder="Search by email"
               radius="md"
@@ -153,7 +153,7 @@ function ManageFriendModal({ opened, onClose }: ManageFriendModalProps) {
 
           {/* Search Results */}
           {searchQuery && (
-            <div className="mb-4 shrink-0 max-h-48 overflow-y-auto scroll-smooth scrollbar-hidden">
+            <div className="mb-4 shrink-0 max-h-48 overflow-y-auto custom-scrollbar overscroll-contain">
               {searchLoading ? (
                 <div className="text-center py-4 text-secondary">
                   Searching...
@@ -199,23 +199,23 @@ function ManageFriendModal({ opened, onClose }: ManageFriendModalProps) {
           )}
 
           {/* Tab */}
-          <div className="flex gap-1 bg-secondary/5 p-1 rounded-md mb-4 md:mb-8 text-white">
+          <div className="sticky top-0 z-10 bg-modal-overlay/95 backdrop-blur-md flex gap-1 p-1 rounded-xl mb-4 text-white border border-white/10">
             <button
               onClick={() => setActiveTab("activity")}
-              className={`flex-1 py-2 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer ${
+              className={`flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all duration-200 cursor-pointer ${
                 activeTab === "activity"
-                  ? "bg-secondary/10"
-                  : "text-secondary/50 hover:text-secondary/80 hover:bg-secondary/5"
+                  ? "bg-white/15 text-white font-semibold shadow-sm"
+                  : "text-secondary/50 hover:text-secondary/80 hover:bg-white/5"
               }`}
             >
               Friends activity
             </button>
             <button
               onClick={() => setActiveTab("requests")}
-              className={`flex-1 py-2 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer ${
+              className={`flex-1 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all duration-200 cursor-pointer ${
                 activeTab === "requests"
-                  ? "bg-secondary/10"
-                  : "text-secondary/50 hover:text-secondary/80 hover:bg-secondary/5"
+                  ? "bg-white/15 text-white font-semibold shadow-sm"
+                  : "text-secondary/50 hover:text-secondary/80 hover:bg-white/5"
               }`}
             >
               Manage requests

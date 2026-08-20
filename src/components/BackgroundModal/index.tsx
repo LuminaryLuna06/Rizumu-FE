@@ -30,6 +30,55 @@ const MOTION_VIDEOS = [
   "/video/Chisa.mp4",
 ];
 
+interface MotionVideoCardProps {
+  src: string;
+  onSelect: () => void;
+}
+
+const MotionVideoCard: React.FC<MotionVideoCardProps> = ({ src, onSelect }) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  return (
+    <div
+      onClick={onSelect}
+      onMouseEnter={(e) => {
+        const video = e.currentTarget.querySelector("video");
+        if (video) {
+          video.play().catch(() => {});
+          setIsPlaying(true);
+        }
+      }}
+      onMouseLeave={(e) => {
+        const video = e.currentTarget.querySelector("video");
+        if (video) {
+          video.pause();
+          video.currentTime = 0;
+          setIsPlaying(false);
+        }
+      }}
+      className="group relative flex items-center justify-center cursor-pointer overflow-hidden rounded-2xl border border-white/10 hover:border-white/40 hover:shadow-xl hover:shadow-black/50 transition-all active:scale-[0.98] bg-black/40"
+    >
+      <video
+        src={src}
+        muted
+        playsInline
+        loop
+        preload="metadata"
+        className="w-full aspect-video object-cover transition-transform duration-300 group-hover:scale-105"
+      />
+      {!isPlaying && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-transparent transition-colors pointer-events-none">
+          <div className="w-9 h-9 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-white/80 group-hover:opacity-0 transition-opacity">
+            <svg className="w-4 h-4 translate-x-0.5" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 interface BackgroundModalProps {
   opened: boolean;
   onClose: () => void;
@@ -78,63 +127,56 @@ function BackgroundModal({ opened, onClose, onChange }: BackgroundModalProps) {
       opened={opened}
       onClose={onClose}
       title="Set your focus screen"
-      className="background-modal overflow-y-auto overflow-x-hidden custom-scrollbar scrollbar-hidden"
+      className="background-modal"
     >
-      <div className="flex w-full mb-xl">
+      {/* Sticky Tabs */}
+      <div className="sticky top-0 z-10 bg-modal-overlay/95 backdrop-blur-md flex w-full pb-3 mb-4 pt-1 border-b border-white/10">
         <ResponsiveButton
-          className={`flex justify-center w-1/2 border-b-1 rounded-none bg-transparent hover:bg-transparent font-semibold text-base ${
+          className={`flex justify-center w-1/2 border-b-2 rounded-none bg-transparent hover:bg-transparent font-semibold text-sm sm:text-base transition-all ${
             activeTab === "Motion"
-              ? "text-text-active border-b-2 border-text-active"
-              : "text-text-inactive hover:text-text-active transition-all duration-300"
+              ? "text-white border-white"
+              : "text-white/50 border-transparent hover:text-white"
           }`}
           onClick={() => setActiveTab("Motion")}
         >
-          Motion
+          Motion Videos
         </ResponsiveButton>
         <ResponsiveButton
-          className={`flex justify-center w-1/2 border-b-1 rounded-none bg-transparent hover:bg-transparent font-semibold text-base ${
+          className={`flex justify-center w-1/2 border-b-2 rounded-none bg-transparent hover:bg-transparent font-semibold text-sm sm:text-base transition-all ${
             activeTab === "Still"
-              ? "text-text-active border-b-2 border-text-active"
-              : "text-text-inactive hover:text-text-active transition-all duration-300"
+              ? "text-white border-white"
+              : "text-white/50 border-transparent hover:text-white"
           }`}
           onClick={() => setActiveTab("Still")}
         >
-          Stills
+          Still Images
         </ResponsiveButton>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pb-2">
         {activeTab === "Motion"
           ? MOTION_VIDEOS.map((src, index) => (
-              <div
+              <MotionVideoCard
                 key={index}
-                className="flex items-center justify-center cursor-pointer overflow-hidden rounded-xl hover:ring-2 hover:ring-primary transition-all"
-              >
-                <video
-                  src={src}
-                  muted
-                  playsInline
-                  loop
-                  autoPlay
-                  onClick={() =>
-                    changeBackGround({ name: src, type: "animated" })
-                  }
-                  className="w-full aspect-video object-cover"
-                />
-              </div>
+                src={src}
+                onSelect={() =>
+                  changeBackGround({ name: src, type: "animated" })
+                }
+              />
             ))
           : STATIC_IMAGES.map((img, index) => (
               <div
                 key={index}
-                className="flex items-center justify-center cursor-pointer overflow-hidden rounded-xl hover:ring-2 hover:ring-primary transition-all"
+                onClick={() =>
+                  changeBackGround({ name: img.name, type: "static" })
+                }
+                className="group flex items-center justify-center cursor-pointer overflow-hidden rounded-2xl border border-white/10 hover:border-white/40 hover:shadow-xl hover:shadow-black/50 transition-all active:scale-[0.98] bg-black/40"
               >
                 <img
                   src={img.name}
                   alt={img.alt}
-                  onClick={() =>
-                    changeBackGround({ name: img.name, type: "static" })
-                  }
-                  className="w-full aspect-video object-cover hover:scale-110 transition-transform duration-500"
+                  loading="lazy"
+                  className="w-full aspect-video object-cover group-hover:scale-105 transition-transform duration-300"
                 />
               </div>
             ))}

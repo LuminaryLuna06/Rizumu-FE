@@ -35,6 +35,25 @@ function PomodoroPage() {
   const [isBackgroundLoaded, setIsBackgroundLoaded] = useState(false);
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const previousBackgroundName = useRef<string>("");
+  const bgVideoRef = useRef<HTMLVideoElement | null>(null);
+
+  // Power & GPU Saver: Pause video background when tab is inactive / hidden
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!bgVideoRef.current || background.type !== "animated") return;
+
+      if (document.hidden) {
+        bgVideoRef.current.pause();
+      } else {
+        bgVideoRef.current.play().catch(() => {});
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [background.type]);
 
   const [joinRoomModalOpened, setJoinRoomModalOpened] = useState(false);
   const [hasCheckedQuery, setHasCheckedQuery] = useState(false);
@@ -309,6 +328,7 @@ function PomodoroPage() {
           />
         ) : (
           <video
+            ref={bgVideoRef}
             src={background.name}
             autoPlay
             muted

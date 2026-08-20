@@ -161,15 +161,15 @@ function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
         setSelectedDate(new Date());
       }}
       title="Activities summary"
-      className="activities-modal w-full max-w-[800px] max-h-[70vh] overflow-y-auto overflow-x-hidden custom-scrollbar scrollbar-hidden"
+      className="activities-modal"
     >
-      <div className="flex w-full mb-md">
+      <div className="sticky top-0 z-10 bg-modal-overlay/95 backdrop-blur-md flex w-full mb-4 pb-2 pt-1 border-b border-white/10">
         <ResponsiveButton
-          leftSection={<IconChartColumn />}
-          className={`flex justify-center w-1/2 border-b-1 rounded-none bg-transparent hover:bg-transparent font-semibold ${
+          leftSection={<IconChartColumn size={18} />}
+          className={`flex justify-center w-1/2 border-b-2 rounded-none bg-transparent hover:bg-transparent font-semibold text-sm sm:text-base transition-all ${
             activeTab === "Analytics"
-              ? "text-text-active"
-              : "text-text-inactive hover:text-text-active hover:border-text-inactive transition-all duration-300"
+              ? "text-white border-white"
+              : "text-white/50 border-transparent hover:text-white"
           }`}
           onClick={() => {
             setActiveTab("Analytics");
@@ -178,11 +178,11 @@ function ActivitiesModal({ opened, onClose }: ActivitiesModalProps) {
           Analytics
         </ResponsiveButton>
         <ResponsiveButton
-          leftSection={<IconList />}
-          className={`flex justify-center w-1/2 border-b-1 rounded-none bg-transparent hover:bg-transparent font-semibold ${
+          leftSection={<IconList size={18} />}
+          className={`flex justify-center w-1/2 border-b-2 rounded-none bg-transparent hover:bg-transparent font-semibold text-sm sm:text-base transition-all ${
             activeTab === "Review"
-              ? "text-text-active"
-              : "text-text-inactive hover:text-text-active hover:border-text-inactive transition-all duration-300"
+              ? "text-white border-white"
+              : "text-white/50 border-transparent hover:text-white"
           }`}
           onClick={() => {
             setActiveTab("Review");

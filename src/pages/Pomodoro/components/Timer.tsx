@@ -84,6 +84,13 @@ function Timer({
 
     osc.start(t);
     osc.stop(t + 0.06);
+
+    // Auto-suspend audio context after 2s of idle time to conserve CPU/Battery
+    setTimeout(() => {
+      if (ctx && ctx.state === "running") {
+        ctx.suspend().catch(() => {});
+      }
+    }, 2000);
   }, []);
 
   // Use Timestamp-based Pomodoro Timer Hook
