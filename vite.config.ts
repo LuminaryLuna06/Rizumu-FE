@@ -12,6 +12,19 @@ export default defineConfig({
       "@rizumu": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          "vendor-react": ["react", "react-dom", "react-router-dom"],
+          "vendor-query": ["@tanstack/react-query"],
+          "vendor-firebase": ["firebase/app", "firebase/auth"],
+          "vendor-charts": ["recharts"],
+          "vendor-icons": ["@tabler/icons-react"],
+        },
+      },
+    },
+  },
   server: {
     allowedHosts: true,
     https:
