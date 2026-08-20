@@ -21,6 +21,8 @@ import {
 } from "@rizumu/tanstack/api/hooks";
 import Tasks from "./components/Tasks";
 
+import BackgroundView from "./components/BackgroundView";
+
 function PomodoroPage() {
   const toast = useToast();
   const { user, isAuthenticated } = useAuth();
@@ -32,28 +34,6 @@ function PomodoroPage() {
     name: "/image/aurora-2k.webp",
     type: "static",
   });
-  const [isBackgroundLoaded, setIsBackgroundLoaded] = useState(false);
-  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
-  const previousBackgroundName = useRef<string>("");
-  const bgVideoRef = useRef<HTMLVideoElement | null>(null);
-
-  // Power & GPU Saver: Pause video background when tab is inactive / hidden
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!bgVideoRef.current || background.type !== "animated") return;
-
-      if (document.hidden) {
-        bgVideoRef.current.pause();
-      } else {
-        bgVideoRef.current.play().catch(() => {});
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [background.type]);
 
   const [joinRoomModalOpened, setJoinRoomModalOpened] = useState(false);
   const [hasCheckedQuery, setHasCheckedQuery] = useState(false);
@@ -88,49 +68,6 @@ function PomodoroPage() {
       console.error("Failed to save selected tag:", error);
     }
   }, [selectedTag, user]);
-
-  useEffect(() => {
-    const img = new Image();
-    img.onload = () => setIsBackgroundLoaded(true);
-    img.onerror = () => setIsBackgroundLoaded(true);
-    img.src = "/image/aurora-2k.webp";
-  }, []);
-
-  // Preload background image for smooth transitions
-  useEffect(() => {
-    if (previousBackgroundName.current !== background.name) {
-      previousBackgroundName.current = background.name;
-
-      if (background.type === "static") {
-        setIsBackgroundLoaded(false);
-
-        let isCancelled = false;
-        const img = new Image();
-
-        img.onload = () => {
-          if (!isCancelled) {
-            setIsBackgroundLoaded(true);
-          }
-        };
-
-        img.onerror = () => {
-          if (!isCancelled) {
-            setIsBackgroundLoaded(true);
-          }
-        };
-
-        img.src = background.name;
-
-        return () => {
-          isCancelled = true;
-          img.onload = null;
-          img.onerror = null;
-        };
-      } else {
-        setIsVideoLoaded(false);
-      }
-    }
-  }, [background]);
 
   const handleJoinRoom = () => {
     if (!room) return;
@@ -314,37 +251,8 @@ function PomodoroPage() {
   return (
     <>
       <div className="flex flex-col h-[100dvh] w-full overflow-hidden text-secondary font-light text-sm z-base">
-        {background.type === "static" ? (
-          <div
-            className={`fixed top-0 left-0 w-screen h-[100dvh] bg-cover bg-center -z-10 transition-opacity duration-700 ${
-              isBackgroundLoaded ? "opacity-100" : "opacity-0"
-            }`}
-            style={{
-              backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), url(${background.name})`,
-              willChange: "opacity",
-              backfaceVisibility: "hidden",
-              transform: "translateZ(0)",
-            }}
-          />
-        ) : (
-          <video
-            ref={bgVideoRef}
-            src={background.name}
-            autoPlay
-            muted
-            loop
-            playsInline
-            onLoadedData={() => setIsVideoLoaded(true)}
-            className={`fixed top-0 left-0 w-screen h-[100dvh] object-cover -z-10 transition-opacity duration-700 ${
-              isVideoLoaded ? "opacity-100" : "opacity-0"
-            }`}
-            style={{
-              willChange: "opacity",
-              backfaceVisibility: "hidden",
-              transform: "translateZ(0)",
-            }}
-          />
-        )}
+        {/* Smooth 2-Layer Cross-fade Background */}
+        <BackgroundView background={background} />
 
         {/* Online Users Display */}
         {!!user && <OnlineUsers members={members} />}
