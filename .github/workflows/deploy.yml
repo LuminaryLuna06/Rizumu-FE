@@ -1,0 +1,57 @@
+name: Frontend CI/CD
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  # -------------------------------------------------------------
+  # 1. CI Job: Lint & Build Test
+  # -------------------------------------------------------------
+  ci:
+    name: Lint & Build Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Lint check (Optional warning)
+        run: yarn lint
+        continue-on-error: true
+
+      - name: Test Build Production
+        run: yarn build
+
+  # -------------------------------------------------------------
+  # 2. CD Job: Tự động deploy trên Self-Hosted Server
+  # -------------------------------------------------------------
+  deploy:
+    name: Deploy to Server
+    needs: ci
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: [self-hosted, linux]
+    steps:
+      - name: Pull latest code, Build & Reload PM2
+        run: |
+          set -e
+          echo "🚀 Bắt đầu deploy Frontend..."
+          cd /home/luna/Github/Rizumu-FE
+          git fetch origin main
+          git reset --hard origin/main
+          yarn install
+          yarn build
+          pm2 reload rizumu-frontend || pm2 restart rizumu-frontend || pm2 start "npx vite preview --host 0.0.0.0 --port 5173" --name "rizumu-frontend"
+          pm2 save
+          echo "✅ Deploy Frontend hoàn tất!"
