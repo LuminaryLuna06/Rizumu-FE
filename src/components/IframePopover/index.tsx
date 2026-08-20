@@ -8,15 +8,16 @@ import {
   IconBrandApple,
   IconBrandSoundcloud,
   IconTrash,
+  IconSparkles,
+  IconPlayerPlay,
 } from "@tabler/icons-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import Popover from "@rizumu/components/Popover";
 import ResponsiveButton from "@rizumu/components/ResponsiveButton";
-import { SpotifyApi } from "@spotify/web-api-ts-sdk";
 
 const STORAGE_KEY_CURRENT = "iframe_current_link";
 const STORAGE_KEY_HISTORY = "iframe_link_history";
-const MAX_HISTORY_ITEMS = 10;
+const MAX_HISTORY_ITEMS = 12;
 
 interface LinkData {
   url: string;
@@ -27,518 +28,517 @@ interface LinkData {
   thumbnail?: string;
 }
 
-function IframePopover() {
-  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-  const [inputUrl, setInputUrl] = useState("");
-  const [isEditing, setIsEditing] = useState(false);
-  const [showRecent, setShowRecent] = useState(false);
-  const [linkHistory, setLinkHistory] = useState<LinkData[]>([]);
-  const [previewData, setPreviewData] = useState<{
-    type: "youtube" | "spotify" | "appleMusic" | "soundCloud" | null;
-    embedUrl: string;
-  }>({ type: null, embedUrl: "" });
-  const [tempPreviewData, setTempPreviewData] = useState<{
-    type: "youtube" | "spotify" | "appleMusic" | "soundCloud" | null;
-    embedUrl: string;
-  }>({ type: null, embedUrl: "" });
+const FEATURED_PRESETS: LinkData[] = [
+  {
+    url: "https://www.youtube.com/watch?v=jfKfPfyJRdk",
+    type: "youtube",
+    embedUrl: "https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=1",
+    timestamp: 0,
+    title: "Lofi Girl - Relax / Study Beats 🎧",
+    thumbnail: "https://img.youtube.com/vi/jfKfPfyJRdk/hqdefault.jpg",
+  },
+  {
+    url: "https://www.youtube.com/watch?v=4xDzrJKXOOY",
+    type: "youtube",
+    embedUrl: "https://www.youtube.com/embed/4xDzrJKXOOY?autoplay=1",
+    timestamp: 0,
+    title: "Synthwave / Chill Radio 🌌",
+    thumbnail: "https://img.youtube.com/vi/4xDzrJKXOOY/hqdefault.jpg",
+  },
+  {
+    url: "https://www.youtube.com/watch?v=5qap5aO4i9A",
+    type: "youtube",
+    embedUrl: "https://www.youtube.com/embed/5qap5aO4i9A?autoplay=1",
+    timestamp: 0,
+    title: "Lofi Hip Hop / Chillhop Cafe ☕",
+    thumbnail: "https://img.youtube.com/vi/5qap5aO4i9A/hqdefault.jpg",
+  },
+  {
+    url: "https://open.spotify.com/playlist/37i9dQZF1DX8Uebhn9wzrS",
+    type: "spotify",
+    embedUrl: "https://open.spotify.com/embed/playlist/37i9dQZF1DX8Uebhn9wzrS",
+    timestamp: 0,
+    title: "Spotify - Chill Lofi Study",
+  },
+  {
+    url: "https://open.spotify.com/playlist/37i9dQZF1DX4sWSpwq3LiO",
+    type: "spotify",
+    embedUrl: "https://open.spotify.com/embed/playlist/37i9dQZF1DX4sWSpwq3LiO",
+    timestamp: 0,
+    title: "Spotify - Peaceful Piano",
+  },
+  {
+    url: "https://open.spotify.com/playlist/37i9dQZF1DWZeKCadgRdKQ",
+    type: "spotify",
+    embedUrl: "https://open.spotify.com/embed/playlist/37i9dQZF1DWZeKCadgRdKQ",
+    timestamp: 0,
+    title: "Spotify - Deep Focus",
+  },
+];
 
-  // Load current link and history from localStorage on mount
-  useEffect(() => {
-    const savedCurrent = localStorage.getItem(STORAGE_KEY_CURRENT);
-    if (savedCurrent) {
-      try {
-        const currentData = JSON.parse(savedCurrent) as LinkData;
-        setPreviewData({
-          type: currentData.type,
-          embedUrl: currentData.embedUrl,
-        });
-      } catch (error) {
-        console.error("Failed to load current link:", error);
-      }
+/**
+ * Parses user input URL and returns embed URL + detected platform type
+ */
+function parseMediaUrl(url: string): {
+  type: LinkData["type"] | null;
+  embedUrl: string;
+} {
+  const trimmed = url.trim();
+  if (!trimmed) return { type: null, embedUrl: "" };
+
+  // 1. YouTube (Supports watch?v=, youtu.be, shorts/, live/, embed/, playlist list=)
+  if (
+    trimmed.includes("youtube.com") ||
+    trimmed.includes("youtu.be") ||
+    trimmed.includes("youtube-nocookie.com")
+  ) {
+    let videoId = "";
+    let playlistId = "";
+
+    if (trimmed.includes("list=")) {
+      playlistId = trimmed.split("list=")[1]?.split("&")[0];
     }
 
-    const savedHistory = localStorage.getItem(STORAGE_KEY_HISTORY);
-    if (savedHistory) {
-      try {
-        const history = JSON.parse(savedHistory) as LinkData[];
-        setLinkHistory(history);
-      } catch (error) {
-        console.error("Failed to load link history:", error);
+    if (trimmed.includes("youtube.com/watch?v=")) {
+      videoId = trimmed.split("v=")[1]?.split("&")[0];
+    } else if (trimmed.includes("youtu.be/")) {
+      videoId = trimmed.split("youtu.be/")[1]?.split("?")[0];
+    } else if (trimmed.includes("youtube.com/shorts/")) {
+      videoId = trimmed.split("shorts/")[1]?.split("?")[0];
+    } else if (trimmed.includes("youtube.com/live/")) {
+      videoId = trimmed.split("live/")[1]?.split("?")[0];
+    } else if (trimmed.includes("youtube.com/embed/")) {
+      videoId = trimmed.split("embed/")[1]?.split("?")[0];
+    }
+
+    if (playlistId && !videoId) {
+      return {
+        type: "youtube",
+        embedUrl: `https://www.youtube.com/embed/videoseries?list=${playlistId}&autoplay=1`,
+      };
+    } else if (videoId) {
+      const extra = playlistId ? `?list=${playlistId}&autoplay=1` : "?autoplay=1";
+      return {
+        type: "youtube",
+        embedUrl: `https://www.youtube.com/embed/${videoId}${extra}`,
+      };
+    }
+  }
+
+  // 2. Spotify (Supports track, playlist, album, artist, episode)
+  if (trimmed.includes("spotify.com")) {
+    let embedUrl = trimmed;
+    if (trimmed.includes("open.spotify.com") && !trimmed.includes("/embed")) {
+      embedUrl = trimmed.replace("open.spotify.com", "open.spotify.com/embed");
+    }
+    return {
+      type: "spotify",
+      embedUrl,
+    };
+  }
+
+  // 3. Apple Music
+  if (trimmed.includes("music.apple.com")) {
+    let embedUrl = trimmed;
+    if (!trimmed.includes("embed.music.apple.com")) {
+      embedUrl = trimmed.replace("music.apple.com", "embed.music.apple.com");
+    }
+    return {
+      type: "appleMusic",
+      embedUrl,
+    };
+  }
+
+  // 4. SoundCloud
+  if (trimmed.includes("soundcloud.com")) {
+    const encodedUrl = encodeURIComponent(trimmed);
+    return {
+      type: "soundCloud",
+      embedUrl: `https://w.soundcloud.com/player/?url=${encodedUrl}&color=%23f59e0b&auto_play=true&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false`,
+    };
+  }
+
+  return { type: null, embedUrl: "" };
+}
+
+function IframePopover() {
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"player" | "featured" | "recent" | "custom">("player");
+  const [inputUrl, setInputUrl] = useState("");
+  const [linkHistory, setLinkHistory] = useState<LinkData[]>([]);
+  const [currentMedia, setCurrentMedia] = useState<LinkData | null>(null);
+
+  // Load state from localStorage on mount
+  useEffect(() => {
+    try {
+      const savedCurrent = localStorage.getItem(STORAGE_KEY_CURRENT);
+      if (savedCurrent) {
+        setCurrentMedia(JSON.parse(savedCurrent));
       }
+      const savedHistory = localStorage.getItem(STORAGE_KEY_HISTORY);
+      if (savedHistory) {
+        setLinkHistory(JSON.parse(savedHistory));
+      }
+    } catch (e) {
+      console.error("Failed to load music player state:", e);
     }
   }, []);
 
-  useEffect(() => {
-    if (!inputUrl.trim() || !isEditing) {
-      setTempPreviewData({ type: null, embedUrl: "" });
-      return;
+  const parsedInput = useMemo(() => parseMediaUrl(inputUrl), [inputUrl]);
+
+  const handleSelectMedia = useCallback((media: LinkData) => {
+    setCurrentMedia(media);
+    setActiveTab("player");
+    try {
+      localStorage.setItem(STORAGE_KEY_CURRENT, JSON.stringify(media));
+
+      setLinkHistory((prev) => {
+        const filtered = prev.filter((item) => item.url !== media.url);
+        const updated = [media, ...filtered].slice(0, MAX_HISTORY_ITEMS);
+        localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(updated));
+        return updated;
+      });
+    } catch (e) {
+      console.error("Failed to save media link:", e);
+    }
+  }, []);
+
+  const handleApplyCustomUrl = async () => {
+    if (!parsedInput.type || !parsedInput.embedUrl) return;
+
+    let title = "Custom Music Stream";
+    let thumbnail: string | undefined;
+
+    // Fast oEmbed / metadata fetch for YouTube & SoundCloud
+    if (parsedInput.type === "youtube") {
+      try {
+        const res = await fetch(
+          `https://www.youtube.com/oembed?url=${encodeURIComponent(inputUrl)}&format=json`
+        );
+        if (res.ok) {
+          const data = await res.json();
+          title = data.title || "YouTube Video";
+          thumbnail = data.thumbnail_url;
+        }
+      } catch {
+        title = "YouTube Stream";
+      }
+    } else if (parsedInput.type === "spotify") {
+      title = "Spotify Music";
+    } else if (parsedInput.type === "appleMusic") {
+      title = "Apple Music";
+    } else if (parsedInput.type === "soundCloud") {
+      title = "SoundCloud Track";
     }
 
-    if (inputUrl.includes("youtube.com") || inputUrl.includes("youtu.be")) {
-      let videoId = "";
-      let playlistId = "";
-
-      if (inputUrl.includes("list=")) {
-        playlistId = inputUrl.split("list=")[1]?.split("&")[0];
-      }
-
-      if (inputUrl.includes("youtube.com/watch?v=")) {
-        videoId = inputUrl.split("v=")[1]?.split("&")[0];
-      } else if (inputUrl.includes("youtu.be/")) {
-        videoId = inputUrl.split("youtu.be/")[1]?.split("?")[0];
-      } else if (inputUrl.includes("youtube.com/embed/")) {
-        videoId = inputUrl.split("embed/")[1]?.split("?")[0];
-      }
-
-      if (playlistId) {
-        setTempPreviewData({
-          type: "youtube",
-          embedUrl: `https://www.youtube.com/embed/${
-            videoId ? videoId : ""
-          }videoseries?list=${playlistId}`,
-        });
-      } else if (videoId) {
-        setTempPreviewData({
-          type: "youtube",
-          embedUrl: `https://www.youtube.com/embed/${videoId}`,
-        });
-      }
-    } else if (inputUrl.includes("spotify.com")) {
-      let embedUrl = inputUrl;
-
-      if (
-        inputUrl.includes("open.spotify.com") &&
-        !inputUrl.includes("embed")
-      ) {
-        embedUrl = inputUrl.replace(
-          "open.spotify.com",
-          "open.spotify.com/embed"
-        );
-      }
-
-      setTempPreviewData({
-        type: "spotify",
-        embedUrl: embedUrl,
-      });
-    } else if (inputUrl.includes("music.apple.com")) {
-      let embedUrl = inputUrl;
-
-      if (!inputUrl.includes("embed")) {
-        embedUrl = inputUrl.replace("music.apple.com", "embed.music.apple.com");
-      }
-
-      setTempPreviewData({
-        type: "appleMusic",
-        embedUrl: embedUrl,
-      });
-    } else if (inputUrl.includes("soundcloud.com")) {
-      const encodedUrl = encodeURIComponent(inputUrl);
-      setTempPreviewData({
-        type: "soundCloud",
-        embedUrl: `https://w.soundcloud.com/player/?url=${encodedUrl}&color=%232a2d2c&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true`,
-      });
-    } else {
-      setTempPreviewData({ type: null, embedUrl: "" });
-    }
-  }, [inputUrl, isEditing]);
-
-  const fetchLinkMetadata = async (
-    url: string,
-    type: "youtube" | "spotify" | "appleMusic" | "soundCloud"
-  ): Promise<{ title: string; thumbnail?: string }> => {
-    if (type === "youtube") {
-      try {
-        const response = await fetch(
-          `https://www.youtube.com/oembed?url=${encodeURIComponent(
-            url
-          )}&format=json`
-        );
-        if (response.ok) {
-          const data = await response.json();
-          return {
-            title: data.title || "YouTube Video",
-            thumbnail: data.thumbnail_url,
-          };
-        }
-      } catch (error) {
-        console.error("Failed to fetch YouTube metadata:", error);
-      }
-      return { title: "YouTube Video" };
-    } else if (type === "spotify") {
-      // For Spotify, use official Web API SDK
-      try {
-        // Initialize Spotify API with Client Credentials from environment
-        const spotify = SpotifyApi.withClientCredentials(
-          import.meta.env.VITE_SPOTIFY_CLIENT_ID,
-          import.meta.env.VITE_SPOTIFY_CLIENT_SECRET
-        );
-
-        // Extract Spotify ID from URL
-        const urlParts = url.split("/");
-        const typeIndex = urlParts.findIndex(
-          (part) => part === "track" || part === "playlist" || part === "album"
-        );
-
-        if (typeIndex === -1 || !urlParts[typeIndex + 1]) {
-          throw new Error("Invalid Spotify URL");
-        }
-
-        const contentType = urlParts[typeIndex];
-        const spotifyId = urlParts[typeIndex + 1].split("?")[0];
-
-        let title = "Spotify Content";
-        let thumbnail: string | undefined;
-
-        if (contentType === "track") {
-          const track = await spotify.tracks.get(spotifyId);
-          title = `${track.name} - ${track.artists
-            .map((a) => a.name)
-            .join(", ")}`;
-          thumbnail = track.album.images[0]?.url;
-        } else if (contentType === "playlist") {
-          const playlist = await spotify.playlists.getPlaylist(spotifyId);
-          title = playlist.name;
-          thumbnail = playlist.images[0]?.url;
-        } else if (contentType === "album") {
-          const album = await spotify.albums.get(spotifyId);
-          title = `${album.name} - ${album.artists
-            .map((a) => a.name)
-            .join(", ")}`;
-          thumbnail = album.images[0]?.url;
-        }
-
-        return { title, thumbnail };
-      } catch (error) {
-        console.error("Failed to fetch Spotify metadata:", error);
-        // Fallback to URL parsing
-        try {
-          const urlParts = url.split("/");
-          const typeIndex = urlParts.findIndex(
-            (part) =>
-              part === "track" || part === "playlist" || part === "album"
-          );
-          if (typeIndex !== -1 && urlParts[typeIndex + 1]) {
-            const contentType = urlParts[typeIndex];
-            return {
-              title: `Spotify ${
-                contentType.charAt(0).toUpperCase() + contentType.slice(1)
-              }`,
-              thumbnail: undefined,
-            };
-          }
-        } catch (parseError) {
-          console.error("Failed to parse Spotify URL:", parseError);
-        }
-      }
-      return { title: "Spotify Content" };
-    } else if (type === "appleMusic") {
-      try {
-        const parts = url.split("/");
-        const namePart = parts[parts.length - 1]?.split("?")[0];
-        if (namePart) {
-          const title = namePart
-            .split("-")
-            .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
-            .join(" ");
-          return { title: title || "Apple Music" };
-        }
-      } catch (error) {
-        console.error("Failed to parse Apple Music title:", error);
-      }
-      return { title: "Apple Music Content" };
-    } else if (type === "soundCloud") {
-      try {
-        const response = await fetch(
-          `https://soundcloud.com/oembed?url=${encodeURIComponent(
-            url
-          )}&format=json`
-        );
-        if (response.ok) {
-          const data = await response.json();
-          return {
-            title: data.title || "SoundCloud Track",
-            thumbnail: data.thumbnail_url,
-          };
-        }
-      } catch (error) {
-        console.error("Failed to fetch SoundCloud metadata:", error);
-      }
-      return { title: "SoundCloud Content" };
-    }
-    return { title: "Music Content" };
-  };
-
-  const saveToHistory = (
-    url: string,
-    type: "youtube" | "spotify" | "appleMusic" | "soundCloud",
-    embedUrl: string,
-    title?: string,
-    thumbnail?: string
-  ) => {
-    const newLink: LinkData = {
-      url,
-      type,
-      embedUrl,
+    const newMedia: LinkData = {
+      url: inputUrl,
+      type: parsedInput.type,
+      embedUrl: parsedInput.embedUrl,
       timestamp: Date.now(),
       title,
       thumbnail,
     };
 
-    setLinkHistory((prevHistory) => {
-      // Remove duplicate if exists
-      const filtered = prevHistory.filter((item) => item.url !== url);
-      // Add new link at the beginning
-      const updated = [newLink, ...filtered].slice(0, MAX_HISTORY_ITEMS);
-
-      // Save to localStorage
-      localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(updated));
-
-      return updated;
-    });
-  };
-
-  const saveCurrentLink = (linkData: LinkData) => {
-    localStorage.setItem(STORAGE_KEY_CURRENT, JSON.stringify(linkData));
-  };
-
-  const handleSetIframe = async () => {
-    if (tempPreviewData.type && tempPreviewData.embedUrl) {
-      // Fetch metadata
-      const metadata = await fetchLinkMetadata(inputUrl, tempPreviewData.type);
-
-      const linkData: LinkData = {
-        url: inputUrl,
-        type: tempPreviewData.type,
-        embedUrl: tempPreviewData.embedUrl,
-        timestamp: Date.now(),
-        title: metadata.title,
-        thumbnail: metadata.thumbnail,
-      };
-
-      setPreviewData(tempPreviewData);
-      saveCurrentLink(linkData);
-      saveToHistory(
-        inputUrl,
-        tempPreviewData.type,
-        tempPreviewData.embedUrl,
-        metadata.title,
-        metadata.thumbnail
-      );
-      setIsEditing(false);
-      setInputUrl("");
-      setTempPreviewData({ type: null, embedUrl: "" });
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setIsEditing(false);
+    handleSelectMedia(newMedia);
     setInputUrl("");
-    setTempPreviewData({ type: null, embedUrl: "" });
-    setShowRecent(false);
   };
 
-  const handleChangeClick = () => {
-    setIsEditing(true);
-    setShowRecent(false);
-  };
-
-  const handleRecentClick = () => {
-    setShowRecent(!showRecent);
-    setIsEditing(false);
-  };
-
-  const handleSelectRecent = (link: LinkData) => {
-    setPreviewData({
-      type: link.type,
-      embedUrl: link.embedUrl,
-    });
-    saveCurrentLink(link);
-    saveToHistory(
-      link.url,
-      link.type,
-      link.embedUrl,
-      link.title,
-      link.thumbnail
-    );
-    setShowRecent(false);
-  };
-
-  const handleDeleteLink = (e: React.MouseEvent, index: number) => {
-    e.stopPropagation(); // Prevent triggering handleSelectRecent
-
-    setLinkHistory((prevHistory) => {
-      const updated = prevHistory.filter((_, i) => i !== index);
+  const handleDeleteHistory = (e: React.MouseEvent, index: number) => {
+    e.stopPropagation();
+    setLinkHistory((prev) => {
+      const updated = prev.filter((_, i) => i !== index);
       localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(updated));
       return updated;
     });
+  };
+
+  const handleClearCurrent = () => {
+    setCurrentMedia(null);
+    localStorage.removeItem(STORAGE_KEY_CURRENT);
+    setActiveTab("featured");
+  };
+
+  const renderPlatformIcon = (type: LinkData["type"]) => {
+    switch (type) {
+      case "youtube":
+        return <IconBrandYoutube size={18} className="text-red-500 shrink-0" />;
+      case "spotify":
+        return <IconBrandSpotify size={18} className="text-green-500 shrink-0" />;
+      case "appleMusic":
+        return <IconBrandApple size={18} className="text-pink-400 shrink-0" />;
+      case "soundCloud":
+        return <IconBrandSoundcloud size={18} className="text-amber-500 shrink-0" />;
+      default:
+        return <IconMusic size={18} className="text-white/60 shrink-0" />;
+    }
   };
 
   return (
     <Popover
       opened={isPopoverOpen}
-      onClose={() => setIsPopoverOpen(!isPopoverOpen)}
+      onClose={() => setIsPopoverOpen(false)}
       trigger={
-        <ResponsiveButton title="Add music" ariaLabel="Add music">
+        <ResponsiveButton
+          title="Music & Lofi Player"
+          ariaLabel="Music Player"
+          className={currentMedia ? "text-yellow-400 border-yellow-400/40" : ""}
+        >
           <IconMusic size={20} />
         </ResponsiveButton>
       }
       position="bottom-left"
-      className="iframe-popover w-80 md:w-120 max-h-[70vh]"
+      className="iframe-popover w-[calc(100vw-2rem)] sm:w-[440px] max-w-[480px] z-50 shadow-2xl"
     >
-      <div className="flex items-center justify-between px-lg py-md">
-        <h3 className="text-secondary capitalize">
-          {previewData.type === "appleMusic"
-            ? "Apple Music"
-            : previewData.type === "soundCloud"
-            ? "SoundCloud"
-            : previewData.type || "Music Player"}
-        </h3>
-
-        {isEditing ? (
-          <div className="flex items-center gap-sm flex-1 ml-md">
-            <input
-              type="text"
-              value={inputUrl}
-              onChange={(e) => setInputUrl(e.target.value)}
-              placeholder="URL from YT, Spotify, Apple, SC"
-              className="flex-1 px-md py-xs rounded-md bg-secondary text-primary outline-none transition-all duration-base text-xs"
-              autoFocus
-            />
+      <div className="flex flex-col max-h-[80vh] overflow-hidden bg-primary/95 backdrop-blur-2xl border border-white/10 rounded-2xl">
+        {/* Navigation Tabs Header */}
+        <div className="flex items-center justify-between p-3 border-b border-white/10 bg-white/5">
+          <div className="flex items-center gap-1">
+            {currentMedia && (
+              <button
+                type="button"
+                onClick={() => setActiveTab("player")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  activeTab === "player"
+                    ? "bg-white/15 text-white shadow-sm"
+                    : "text-white/60 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                Now Playing
+              </button>
+            )}
             <button
-              onClick={handleSetIframe}
-              disabled={!tempPreviewData.type}
-              className="p-xs rounded-md text-secondary hover:bg-secondary hover:text-primary transition-all duration-base disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
-              title="Set iframe"
+              type="button"
+              onClick={() => setActiveTab("featured")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                activeTab === "featured"
+                  ? "bg-white/15 text-white shadow-sm"
+                  : "text-white/60 hover:text-white hover:bg-white/5"
+              }`}
             >
-              <IconCheck size={18} />
+              <IconSparkles size={14} className="text-yellow-400" />
+              <span>Featured</span>
             </button>
             <button
-              onClick={handleCancelEdit}
-              className="p-xs rounded-md text-secondary hover:bg-secondary hover:text-primary transition-all duration-base cursor-pointer"
-              title="Cancel"
+              type="button"
+              onClick={() => setActiveTab("recent")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                activeTab === "recent"
+                  ? "bg-white/15 text-white shadow-sm"
+                  : "text-white/60 hover:text-white hover:bg-white/5"
+              }`}
             >
-              <IconX size={18} />
+              <IconClock size={14} />
+              <span>Recent ({linkHistory.length})</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("custom")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                activeTab === "custom"
+                  ? "bg-white/15 text-white shadow-sm"
+                  : "text-white/60 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              + URL
             </button>
           </div>
-        ) : (
-          <div className="flex items-center gap-md">
-            <button
-              onClick={handleRecentClick}
-              className="flex items-center gap-xs text-secondary text-sm opacity-70 hover:opacity-100 transition-opacity duration-base"
-            >
-              <IconClock size={20} />
-              <span>Recent</span>
-            </button>
-            <button
-              onClick={handleChangeClick}
-              className="flex items-center gap-xs text-secondary text-sm opacity-70 hover:opacity-100 transition-opacity duration-base"
-            >
-              <IconMusic size={20} />
-              <span>Change</span>
-            </button>
-          </div>
-        )}
-      </div>
 
-      <div className="p-lg max-h-[calc(70vh-30px)] overflow-y-auto scrollbar-hidden">
-        {showRecent ? (
-          <div className="space-y-sm">
-            {linkHistory.length > 0 ? (
-              linkHistory.map((link, index) => (
-                <div key={index} className="relative group">
+          {currentMedia && (
+            <button
+              type="button"
+              onClick={handleClearCurrent}
+              title="Stop and clear media"
+              className="p-1.5 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+            >
+              <IconTrash size={16} />
+            </button>
+          )}
+        </div>
+
+        {/* Content Body */}
+        <div className="p-3 overflow-y-auto custom-scrollbar overscroll-contain">
+          {/* TAB 1: NOW PLAYING */}
+          {activeTab === "player" && currentMedia && (
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between px-1">
+                <div className="flex items-center gap-2 min-w-0">
+                  {renderPlatformIcon(currentMedia.type)}
+                  <span className="text-xs font-medium text-white/80 truncate">
+                    {currentMedia.title || currentMedia.url}
+                  </span>
+                </div>
+              </div>
+
+              <div className="relative w-full rounded-xl overflow-hidden bg-black/60 shadow-lg border border-white/10">
+                <iframe
+                  src={currentMedia.embedUrl}
+                  width="100%"
+                  height={
+                    currentMedia.type === "youtube"
+                      ? "240"
+                      : currentMedia.type === "spotify"
+                      ? "352"
+                      : currentMedia.type === "appleMusic"
+                      ? "220"
+                      : "166"
+                  }
+                  loading="lazy"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  className="w-full border-none block"
+                  title="Music Stream Player"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* TAB 2: FEATURED / QUICK LOFI PRESETS */}
+          {(activeTab === "featured" || (!currentMedia && activeTab === "player")) && (
+            <div className="flex flex-col gap-2">
+              <p className="text-xs text-white/50 px-1 mb-1 font-medium">
+                Curated Focus & Lofi Streams (1-Click Play ⚡)
+              </p>
+              <div className="grid grid-cols-1 gap-2">
+                {FEATURED_PRESETS.map((preset, idx) => (
                   <button
-                    onClick={() => handleSelectRecent(link)}
-                    className="w-full text-left p-sm rounded-md hover:bg-secondary/10 transition-all duration-base flex items-center gap-md"
+                    key={idx}
+                    type="button"
+                    onClick={() => handleSelectMedia(preset)}
+                    className={`flex items-center gap-3 p-2.5 rounded-xl border transition-all text-left group cursor-pointer ${
+                      currentMedia?.url === preset.url
+                        ? "bg-yellow-500/10 border-yellow-500/40 text-yellow-400"
+                        : "bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/20 text-white"
+                    }`}
                   >
-                    {/* Thumbnail */}
-                    <div className="flex-shrink-0 w-20 h-11 rounded-md overflow-hidden bg-secondary/50 flex items-center justify-center">
-                      {link.thumbnail ? (
+                    <div className="w-10 h-10 rounded-lg bg-black/40 flex items-center justify-center shrink-0 border border-white/10 overflow-hidden group-hover:scale-105 transition-transform">
+                      {preset.thumbnail ? (
                         <img
-                          src={link.thumbnail}
-                          alt={link.title || link.type}
+                          src={preset.thumbnail}
+                          alt={preset.title}
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <IconMusic
-                          size={24}
-                          className="text-secondary opacity-50"
-                        />
+                        <IconPlayerPlay size={18} className="text-yellow-400" />
                       )}
                     </div>
-
-                    {/* Title and Platform */}
                     <div className="flex-1 min-w-0">
-                      <div className="text-secondary/90 text-sm font-medium truncate">
-                        {link.title || link.url}
+                      <p className="text-xs font-semibold truncate group-hover:text-yellow-400 transition-colors">
+                        {preset.title}
+                      </p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        {renderPlatformIcon(preset.type)}
+                        <span className="text-[10px] text-white/50 uppercase tracking-wider">
+                          {preset.type}
+                        </span>
                       </div>
-                      <div className="flex items-center gap-xs mt-xs">
-                        {link.type === "youtube" ? (
-                          <IconBrandYoutube
-                            size={20}
-                            className="text-red-500"
-                          />
-                        ) : link.type === "spotify" ? (
-                          <IconBrandSpotify
-                            size={20}
-                            className="text-green-500"
-                          />
-                        ) : link.type === "appleMusic" ? (
-                          <IconBrandApple size={20} className="text-white" />
-                        ) : link.type === "soundCloud" ? (
-                          <IconBrandSoundcloud
-                            size={20}
-                            className="text-orange-500"
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: RECENT HISTORY */}
+          {activeTab === "recent" && (
+            <div className="flex flex-col gap-2">
+              {linkHistory.length > 0 ? (
+                linkHistory.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="group flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer"
+                    onClick={() => handleSelectMedia(item)}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
+                      <div className="w-9 h-9 rounded-lg bg-black/40 flex items-center justify-center shrink-0 border border-white/10 overflow-hidden">
+                        {item.thumbnail ? (
+                          <img
+                            src={item.thumbnail}
+                            alt=""
+                            className="w-full h-full object-cover"
                           />
                         ) : (
-                          <IconMusic size={20} className="text-secondary" />
+                          renderPlatformIcon(item.type)
                         )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-medium text-white truncate group-hover:text-yellow-400 transition-colors">
+                          {item.title || item.url}
+                        </p>
+                        <span className="text-[10px] text-white/40 uppercase">
+                          {item.type}
+                        </span>
                       </div>
                     </div>
 
-                    {/* Delete Button */}
                     <button
-                      onClick={(e) => handleDeleteLink(e, index)}
-                      className="flex-shrink-0 p-xs rounded-md text-secondary/50 hover:text-red-500 hover:bg-red-500/10 transition-all duration-base opacity-0 group-hover:opacity-100"
-                      title="Delete"
+                      type="button"
+                      onClick={(e) => handleDeleteHistory(e, idx)}
+                      className="p-1.5 rounded-lg text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100 cursor-pointer"
+                      title="Remove from history"
                     >
-                      <IconTrash size={16} />
+                      <IconTrash size={14} />
                     </button>
-                  </button>
+                  </div>
+                ))
+              ) : (
+                <div className="py-8 text-center text-xs text-white/40">
+                  No playback history yet.
                 </div>
-              ))
-            ) : (
-              <div className="text-center text-secondary opacity-50 py-xl">
-                No recent links
+              )}
+            </div>
+          )}
+
+          {/* TAB 4: CUSTOM URL INPUT */}
+          {activeTab === "custom" && (
+            <div className="flex flex-col gap-3 p-1">
+              <p className="text-xs text-white/60">
+                Paste any link from <b>YouTube (Video/Live/Shorts/List)</b>, <b>Spotify</b>, <b>Apple Music</b>, or <b>SoundCloud</b>:
+              </p>
+
+              <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl p-1.5 px-3 focus-within:border-yellow-400/60 transition-colors">
+                <input
+                  type="text"
+                  value={inputUrl}
+                  onChange={(e) => setInputUrl(e.target.value)}
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  className="w-full bg-transparent text-xs text-white placeholder-white/30 outline-none py-1.5"
+                  autoFocus
+                />
+                {inputUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setInputUrl("")}
+                    className="text-white/40 hover:text-white p-1"
+                  >
+                    <IconX size={14} />
+                  </button>
+                )}
               </div>
-            )}
-          </div>
-        ) : previewData.type && previewData.embedUrl ? (
-          <div className="overflow-hidden rounded-lg">
-            <iframe
-              src={previewData.embedUrl}
-              width="100%"
-              height={
-                previewData.type === "youtube"
-                  ? "252"
-                  : previewData.type === "appleMusic"
-                  ? "200"
-                  : previewData.type === "soundCloud"
-                  ? "166"
-                  : "360"
-              }
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              className="w-full"
-              title={`${
-                previewData.type === "youtube" ? "YouTube" : "Spotify"
-              } player`}
-            />
-          </div>
-        ) : (
-          <div className="text-center text-secondary opacity-50 py-xl">
-            Click "Change" to add YouTube, Spotify, Apple or SoundCloud
-          </div>
-        )}
+
+              {parsedInput.type && (
+                <div className="flex items-center gap-2 p-2 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-xs">
+                  <IconCheck size={16} className="shrink-0" />
+                  <span>Detected valid <b>{parsedInput.type}</b> media!</span>
+                </div>
+              )}
+
+              <button
+                type="button"
+                disabled={!parsedInput.type}
+                onClick={handleApplyCustomUrl}
+                className={`w-full py-2.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 ${
+                  parsedInput.type
+                    ? "bg-yellow-400 text-black hover:brightness-110 shadow-lg shadow-yellow-500/20 cursor-pointer"
+                    : "bg-white/5 text-white/30 cursor-not-allowed"
+                }`}
+              >
+                <IconPlayerPlay size={16} />
+                <span>Play Stream Now</span>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </Popover>
   );
