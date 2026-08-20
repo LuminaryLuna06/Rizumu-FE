@@ -126,7 +126,11 @@ export const useSendGift = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (giftData: { receiverId: string; icon: string }) => {
+    mutationFn: async (giftData: {
+      receiverId: string;
+      icon: string;
+      price?: number;
+    }) => {
       const response = await axiosClient.post(
         PROGRESS_ENDPOINTS.SEND_GIFT,
         giftData
@@ -134,12 +138,24 @@ export const useSendGift = () => {
       return response.data;
     },
     onSuccess: (data, { receiverId }) => {
+      // Invalidate receiver's gifts and sender's stats & coins
       queryClient.invalidateQueries({
         queryKey: queryKeys.progress.giftById(receiverId),
       });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.progress.progressById(data?.gift?.senderId),
+        queryKey: queryKeys.progress.stats(),
       });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.progress.all,
+      });
+      if (data?.gift?.senderId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.progress.statsById(data.gift.senderId),
+        });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.progress.progressById(data.gift.senderId),
+        });
+      }
     },
   });
 };
