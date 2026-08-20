@@ -90,6 +90,17 @@ export function usePomodoroTimer({
   const [timerState, setTimerState] = useState<ActiveTimerState>(() => {
     const loaded = loadActiveTimerState();
     if (loaded) {
+      // Khi mở web lại, nếu phiên trước đó vẫn đang ở trạng thái running (do tắt tab), tự động chuyển thành paused
+      if (loaded.status === "running") {
+        const pausedState: ActiveTimerState = {
+          ...loaded,
+          status: "paused",
+          lastResumedAt: null,
+          expectedEndTime: null,
+        };
+        saveActiveTimerState(pausedState);
+        return pausedState;
+      }
       return loaded;
     }
     const initialPresetId = getCurrentPresetId();
@@ -359,10 +370,35 @@ export function usePomodoroTimer({
     return () => window.removeEventListener("storage", handleStorage);
   }, []);
 
-  // BeforeUnload confirmation when timer is actively running
+  // Tự động tạm dừng (pause) và lưu trạng thái vào localStorage khi người dùng đóng web / unload
   useEffect(() => {
+    const handleUnloadOrPageHide = () => {
+      const current = stateRef.current;
+      if (current.status === "running") {
+        const now = Date.now();
+        const currentSegment = current.lastResumedAt
+          ? Math.max(0, Math.floor((now - current.lastResumedAt) / 1000))
+          : 0;
+        const updatedAccumulated = current.accumulatedSeconds + currentSegment;
+
+        const pausedState: ActiveTimerState = {
+          ...current,
+          status: "paused",
+          lastResumedAt: null,
+          expectedEndTime: null,
+          accumulatedSeconds:
+            current.mode === "stopwatch"
+              ? updatedAccumulated
+              : Math.min(current.targetDuration, updatedAccumulated),
+        };
+
+        saveActiveTimerState(pausedState);
+      }
+    };
+
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (timerState.status === "running") {
+      handleUnloadOrPageHide();
+      if (stateRef.current.status === "running") {
         e.preventDefault();
         e.returnValue = "";
         return "";
@@ -370,19 +406,13 @@ export function usePomodoroTimer({
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [timerState.status]);
+    window.addEventListener("pagehide", handleUnloadOrPageHide);
 
-  // Initial verification on mount for already finished sessions
-  useEffect(() => {
-    const current = stateRef.current;
-    if (current.status === "running") {
-      const now = Date.now();
-      if (isSessionFinished(current, now)) {
-        handleSessionComplete(current);
-      }
-    }
-  }, [handleSessionComplete]);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("pagehide", handleUnloadOrPageHide);
+    };
+  }, []);
 
   // Toggle Start / Pause
   const toggleStartPause = useCallback(() => {
@@ -404,7 +434,10 @@ export function usePomodoroTimer({
         status: "paused",
         lastResumedAt: null,
         expectedEndTime: null,
-        accumulatedSeconds: updatedAccumulated,
+        accumulatedSeconds:
+          current.mode === "stopwatch"
+            ? updatedAccumulated
+            : Math.min(current.targetDuration, updatedAccumulated),
       };
 
       setTimerState(nextState);
