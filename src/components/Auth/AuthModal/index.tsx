@@ -29,7 +29,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
   defaultMode = "login",
 }) => {
   const toast = useToast();
-  const { login, register, loginWithGoogle } = useAuth();
+  const { login, register, loginWithGoogle, isAuthenticated } = useAuth();
   const { startTimerTour } = useDriverTour();
   const [mode, setMode] = useState<"login" | "register">(defaultMode);
   const [username, setUsername] = useState<string>("");
@@ -165,8 +165,14 @@ const AuthModal: React.FC<AuthModalProps> = ({
   return (
     <Modal
       opened={opened}
-      onClose={onClose}
+      onClose={() => {
+        if (isAuthenticated) {
+          onClose();
+        }
+      }}
       hideHeader={true}
+      hideCloseButton={!isAuthenticated}
+      closeOnClickOutside={isAuthenticated}
       className="!max-w-[460px] !p-6 sm:!p-8 !bg-[#101114]/90 !backdrop-blur-2xl !border-white/10 !rounded-3xl shadow-[0_25px_60px_rgba(0,0,0,0.8)] relative overflow-hidden"
     >
       {/* Ambient background glow */}
