@@ -227,23 +227,32 @@ function PomodoroPage() {
     };
   }, [socket]);
 
-  // Update background when user joins a room
+  const lastLoadedRoomId = useRef<string | null>(null);
+
+  // Update background when user joins a room or switches rooms (do not overwrite on local selection)
   useEffect(() => {
-    if (
-      currentRoom?.background?.name &&
-      currentRoom.background.name !== "default_bg"
-    ) {
-      setBackground({
-        name: currentRoom.background.name,
-        type: currentRoom.background.type,
-      });
+    if (currentRoom?._id) {
+      if (lastLoadedRoomId.current !== currentRoom._id) {
+        lastLoadedRoomId.current = currentRoom._id;
+        if (
+          currentRoom.background?.name &&
+          currentRoom.background.name !== "default_bg"
+        ) {
+          setBackground({
+            name: currentRoom.background.name,
+            type: currentRoom.background.type || "static",
+          });
+        }
+      }
     } else if (!user) {
+      lastLoadedRoomId.current = null;
       setBackground({
         name: "/image/aurora-2k.webp",
         type: "static",
       });
     }
-  }, [currentRoom, user]);
+  }, [currentRoom?._id, currentRoom?.background?.name, user]);
+
   const handleBackgroundChange = (bg: { name: string; type: string }) => {
     setBackground(bg);
   };

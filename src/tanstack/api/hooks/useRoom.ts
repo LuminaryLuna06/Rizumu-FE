@@ -147,6 +147,18 @@ export const useUpdateRoomBackground = () => {
       );
       return response.data;
     },
+    onMutate: async ({ roomId, background }) => {
+      // Optimistically update React Query cache immediately so no stale data causes background reset
+      await queryClient.cancelQueries({ queryKey: queryKeys.rooms.byId(roomId) });
+
+      queryClient.setQueryData(queryKeys.rooms.byId(roomId), (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          background,
+        };
+      });
+    },
     onSuccess: (_, { roomId }) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.rooms.byId(roomId) });
     },
