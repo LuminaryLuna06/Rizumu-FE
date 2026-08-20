@@ -49,7 +49,6 @@ function GiftModal({ opened, onClose, profile }: GiftModalProps) {
             "Gift Sent"
           );
           setSendingGiftId(null);
-          onClose();
         },
         onError: (error: any) => {
           console.error("Error sending gift:", error);
