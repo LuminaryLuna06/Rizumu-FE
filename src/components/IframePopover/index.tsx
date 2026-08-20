@@ -277,7 +277,7 @@ function IframePopover() {
   return (
     <Popover
       opened={isPopoverOpen}
-      onClose={() => setIsPopoverOpen(false)}
+      onClose={() => setIsPopoverOpen((prev) => !prev)}
       trigger={
         <ResponsiveButton
           title="Music & Lofi Player"
