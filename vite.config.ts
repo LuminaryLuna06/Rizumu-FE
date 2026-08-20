@@ -13,6 +13,7 @@ export default defineConfig({
     },
   },
   server: {
+    allowedHosts: true,
     https:
       process.env.NODE_ENV !== "production" &&
       fs.existsSync("./localhost-key.pem")
@@ -21,5 +22,8 @@ export default defineConfig({
             cert: fs.readFileSync("./localhost.pem"),
           }
         : undefined,
+  },
+  preview: {
+    allowedHosts: true,
   },
 });
