@@ -23,6 +23,28 @@ import Tasks from "./components/Tasks";
 
 import BackgroundView from "./components/BackgroundView";
 
+const DEFAULT_BG = {
+  name: "/image/aurora-2k.webp",
+  type: "static",
+};
+
+const getBackgroundStorageKey = (userId?: string) =>
+  userId ? `rizumu_background_${userId}` : "rizumu_background_guest";
+
+const loadCachedBackground = (userId?: string) => {
+  try {
+    const key = getBackgroundStorageKey(userId);
+    const stored = localStorage.getItem(key);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (parsed && typeof parsed.name === "string") {
+        return parsed;
+      }
+    }
+  } catch {}
+  return DEFAULT_BG;
+};
+
 function PomodoroPage() {
   const toast = useToast();
   const { user, isAuthenticated } = useAuth();
@@ -30,10 +52,32 @@ function PomodoroPage() {
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const [isFocusMode, setIsFocusMode] = useState<boolean>(false);
-  const [background, setBackground] = useState({
-    name: "/image/aurora-2k.webp",
-    type: "static",
-  });
+  const [background, setBackground] = useState(() =>
+    loadCachedBackground(user?._id)
+  );
+
+  const prevUserIdRef = useRef(user?._id);
+
+  // Sync background cache to localStorage
+  useEffect(() => {
+    if (background?.name) {
+      try {
+        const key = getBackgroundStorageKey(user?._id);
+        localStorage.setItem(key, JSON.stringify(background));
+      } catch (error) {
+        console.error("Failed to cache background:", error);
+      }
+    }
+  }, [background, user?._id]);
+
+  // When user switches or logs in/out, reload their cached background
+  useEffect(() => {
+    if (prevUserIdRef.current !== user?._id) {
+      prevUserIdRef.current = user?._id;
+      lastLoadedRoomId.current = null;
+      setBackground(loadCachedBackground(user?._id));
+    }
+  }, [user?._id]);
 
   const [joinRoomModalOpened, setJoinRoomModalOpened] = useState(false);
   const [hasCheckedQuery, setHasCheckedQuery] = useState(false);
