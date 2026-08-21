@@ -6,6 +6,11 @@ import {
   clearAuthTokens,
   updateAccessToken,
 } from "@rizumu/utils/cookieManager";
+import {
+  getCachedUserProfile,
+  saveCachedUserProfile,
+  clearCachedUserProfile,
+} from "@rizumu/utils/userProfileStorage";
 import { queryKeys } from "@rizumu/tanstack/api/query/queryKeys";
 import axiosClient from "@rizumu/tanstack/api/config/axiosClient";
 import { signInWithGoogle } from "@rizumu/config/firebase";
@@ -48,8 +53,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     queryKey: queryKeys.auth.me(),
     queryFn: async () => {
       const response = await axiosClient.get("/auth/profile");
-      return response.data.data;
+      const profile = response.data?.data;
+      if (profile) {
+        saveCachedUserProfile(profile);
+      }
+      return profile;
     },
+    initialData: () => getCachedUserProfile(),
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: false,
   });
@@ -71,6 +81,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     onSuccess: (data) => {
       const { access_token, data: userData } = data;
       updateAccessToken(access_token);
+      if (userData) {
+        saveCachedUserProfile(userData);
+      }
 
       queryClient.setQueryData(queryKeys.auth.me(), userData);
       closeAuthModal();
@@ -94,6 +107,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     onSuccess: (data) => {
       const { access_token, data: userData } = data;
       updateAccessToken(access_token);
+      if (userData) {
+        saveCachedUserProfile(userData);
+      }
 
       queryClient.setQueryData(queryKeys.auth.me(), userData);
       closeAuthModal();
@@ -114,6 +130,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     onSuccess: (data) => {
       const { access_token, data: userData } = data;
       updateAccessToken(access_token);
+      if (userData) {
+        saveCachedUserProfile(userData);
+      }
 
       queryClient.setQueryData(queryKeys.auth.me(), userData);
       closeAuthModal();
@@ -143,11 +162,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     },
     onSuccess: () => {
       clearAuthTokens();
+      clearCachedUserProfile();
       queryClient.clear();
     },
     onError: (error) => {
       console.error("Logout API error:", error);
       clearAuthTokens();
+      clearCachedUserProfile();
       queryClient.clear();
     },
   });

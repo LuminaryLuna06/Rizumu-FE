@@ -9,6 +9,7 @@ import {
   updateAccessToken,
   clearAuthTokens,
 } from "@rizumu/utils/cookieManager";
+import { clearCachedUserProfile } from "@rizumu/utils/userProfileStorage";
 
 const axiosClient: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
@@ -58,6 +59,7 @@ const refreshAccessToken = async (): Promise<string> => {
     return access_token;
   } catch (error) {
     clearAuthTokens();
+    clearCachedUserProfile();
     window.dispatchEvent(new CustomEvent("open-auth-modal"));
     throw error;
   }

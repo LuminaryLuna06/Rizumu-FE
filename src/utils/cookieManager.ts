@@ -30,3 +30,24 @@ export const clearAuthTokens = (): void => {
   Cookies.remove(ACCESS_TOKEN_KEY, { path: "/" });
   Cookies.remove(REFRESH_TOKEN_KEY, { path: "/" });
 };
+
+export const getUserIdFromToken = (): string | null => {
+  try {
+    const token = getAccessToken();
+    if (!token) return null;
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    // Decode base64url payload
+    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    const payload = JSON.parse(jsonPayload);
+    return payload?.id || payload?._id || payload?.userId || null;
+  } catch {
+    return null;
+  }
+};

@@ -20,7 +20,7 @@ import AppSetting from "../AppSetting";
 import ChangePasswordModal from "../Auth/ChangePasswordModal";
 
 function UserMenu() {
-  const { user, logout, openAuthModal } = useAuth();
+  const { user, isLoading, logout, openAuthModal } = useAuth();
   const toast = useToast();
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -28,6 +28,10 @@ function UserMenu() {
   const [isSettingOpen, setIsSettingOpen] = useState(false);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
+
+  if (isLoading && !user) {
+    return <div className="w-8 h-8 rounded-full bg-secondary/10 animate-pulse" />;
+  }
 
   if (!user) {
     return (
