@@ -25,7 +25,6 @@ import {
 import {
   useCreateSession,
   useUpdateSession,
-  useUpdateStats,
 } from "@rizumu/tanstack/api/hooks";
 import { useToast } from "@rizumu/utils/toast/toast";
 
@@ -68,7 +67,6 @@ export function usePomodoroTimer({
   const toast = useToast();
   const createSession = useCreateSession();
   const updateSession = useUpdateSession();
-  const updateStats = useUpdateStats();
 
   const [presets, setPresets] = useState<Preset[]>(() => {
     try {
@@ -162,29 +160,6 @@ export function usePomodoroTimer({
 
       // Update backend if Pomodoro
       if (currentState.mode === "pomodoro") {
-        const xp = Math.floor(finalDuration / 60);
-        const coin = Math.floor(finalDuration / 600);
-
-        if (xp > 0 || coin > 0) {
-          updateStats.mutate(
-            { current_xp: xp, coins: coin },
-            {
-              onSuccess: () => {
-                toast.info(
-                  `You gained ${xp} xp${coin > 0 ? ` and ${coin} coins` : ""}.`,
-                  "Let's fucking gooooo!"
-                );
-              },
-              onError: (error: any) => {
-                toast.error(
-                  error?.response?.data?.message || "Failed to update stats",
-                  "Error"
-                );
-              },
-            }
-          );
-        }
-
         updateSession.mutate(
           {
             session_id: currentState.sessionId,
@@ -193,6 +168,22 @@ export function usePomodoroTimer({
             ended_at: endedAt,
           },
           {
+            onSuccess: (data: any) => {
+              const earnedXp = data?.rewards?.earnedXp ?? Math.floor(finalDuration / 60);
+              const earnedCoins = data?.rewards?.earnedCoins ?? 0;
+              if (earnedXp > 0 || earnedCoins > 0) {
+                toast.info(
+                  `You gained ${earnedXp} xp${earnedCoins > 0 ? ` and ${earnedCoins} coins` : ""}.`,
+                  "Let's fucking gooooo!"
+                );
+              }
+              if (data?.meta?.isDailyLimitReached) {
+                toast.info(
+                  "Bạn đã đạt giới hạn học tập tối đa 16 tiếng hôm nay rồi. Hãy nghỉ ngơi nhé!",
+                  "Giới hạn hàng ngày"
+                );
+              }
+            },
             onError: (error: any) => {
               toast.error(
                 error?.response?.data?.message || "Failed to end session",
@@ -255,9 +246,9 @@ export function usePomodoroTimer({
             {
               completed: false,
               duration: 0,
+              plannedDuration: nextTargetDuration,
               session_type: "pomodoro",
               timer_type: "focus",
-              started_at: startTimeIso,
               tag_id: selectedTag?._id || " ",
             },
             {
@@ -302,7 +293,6 @@ export function usePomodoroTimer({
       initAudio,
       playDing,
       setFocusMode,
-      updateStats,
       toast,
       updateSession,
       selectedTag?._id,
@@ -491,9 +481,9 @@ export function usePomodoroTimer({
           {
             completed: false,
             duration: 0,
+            plannedDuration: current.targetDuration,
             session_type: "pomodoro",
             timer_type: "focus",
-            started_at: startedAtIso,
             tag_id: selectedTag?._id || " ",
           },
           {
@@ -534,29 +524,6 @@ export function usePomodoroTimer({
     const elapsed = calculateElapsedSeconds(current, now);
 
     if (current.startedAt && current.mode === "pomodoro" && elapsed > 0) {
-      const xp = Math.floor(elapsed / 60);
-      const coin = Math.floor(elapsed / 600);
-
-      if (xp > 0 || coin > 0) {
-        updateStats.mutate(
-          { current_xp: xp, coins: coin },
-          {
-            onSuccess: () => {
-              toast.info(
-                `You gained ${xp} xp${coin > 0 ? ` and ${coin} coins` : ""}.`,
-                "Let's fucking gooooo!"
-              );
-            },
-            onError: (error: any) => {
-              toast.error(
-                error?.response?.data?.message || "Failed to update stats",
-                "Error"
-              );
-            },
-          }
-        );
-      }
-
       updateSession.mutate(
         {
           session_id: current.sessionId,
@@ -565,6 +532,22 @@ export function usePomodoroTimer({
           ended_at: new Date(now).toISOString(),
         },
         {
+          onSuccess: (data: any) => {
+            const earnedXp = data?.rewards?.earnedXp ?? 0;
+            const earnedCoins = data?.rewards?.earnedCoins ?? 0;
+            if (earnedXp > 0 || earnedCoins > 0) {
+              toast.info(
+                `You gained ${earnedXp} xp${earnedCoins > 0 ? ` and ${earnedCoins} coins` : ""}.`,
+                "Let's fucking gooooo!"
+              );
+            }
+            if (data?.meta?.isDailyLimitReached) {
+              toast.info(
+                "Bạn đã đạt giới hạn học tập tối đa 16 tiếng hôm nay rồi. Hãy nghỉ ngơi nhé!",
+                "Giới hạn hàng ngày"
+              );
+            }
+          },
           onError: (error: any) => {
             toast.error(
               error?.response?.data?.message || "Failed to end session",
@@ -636,7 +619,6 @@ export function usePomodoroTimer({
     initAudio,
     playDing,
     setFocusMode,
-    updateStats,
     toast,
     updateSession,
     selectedTag?._id,

@@ -38,6 +38,7 @@ export const useUpdateSession = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.progress.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.progress.stats() });
     },
   });
 };

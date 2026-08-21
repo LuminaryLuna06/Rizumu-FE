@@ -11,6 +11,7 @@ export type ModelUserPomodoroSession = {
   is_auto_started: boolean;
   session_type: string;
   timer_type: string; // "focus" | "stopwatch"
+  plannedDuration?: number;
   duration: number;
   description: string;
   created_at: string;
