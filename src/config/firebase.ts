@@ -3,23 +3,19 @@ import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey:
-    import.meta.env.VITE_FIREBASE_API_KEY ||
-    "AIzaSyBKzJhwoCXUUvwMgnEgob2iG5b3oobVIfQ",
+    import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain:
-    import.meta.env.VITE_FIREBASE_AUTH_DOMAIN ||
-    "rizumu-50f7c.firebaseapp.com",
+    import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
   projectId:
-    import.meta.env.VITE_FIREBASE_PROJECT_ID || "rizumu-50f7c",
+    import.meta.env.VITE_FIREBASE_PROJECT_ID,
   storageBucket:
-    import.meta.env.VITE_FIREBASE_STORAGE_BUCKET ||
-    "rizumu-50f7c.firebasestorage.app",
+    import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId:
-    import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "757998642379",
+    import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId:
-    import.meta.env.VITE_FIREBASE_APP_ID ||
-    "1:757998642379:web:7572464982756621d1674e",
+    import.meta.env.VITE_FIREBASE_APP_ID,
   measurementId:
-    import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-Z2MNN4QJ7P",
+    import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
