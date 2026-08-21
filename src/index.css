@@ -1,12 +1,9 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap");
 @import "tailwindcss";
 
 @theme {
   /* Fonts */
-  --font-poppins: Poppins, sans-serif;
-  --font-quicksand: Quicksand, sans-serif;
-  --font-lato: Lato, sans-serif;
   --font-inter: Inter, sans-serif;
+  --font-poppins: Poppins, sans-serif;
 
   /* Custom Color Palette */
   --color-primary: #000000;
@@ -18,8 +15,30 @@
 
   --color-popover-overlay: rgba(0, 0, 0, 0.5);
   --color-modal-overlay: rgba(0, 0, 0, 0.85);
-  --color-text-inactive: rgba(255, 255, 255, 0.5);
+
+  /* Text Hierarchy */
   --color-text-active: rgba(255, 255, 255, 1);
+  --color-text-main: rgba(255, 255, 255, 1);
+  --color-text-muted: rgba(255, 255, 255, 0.7);
+  --color-text-inactive: rgba(255, 255, 255, 0.5);
+  --color-text-subtle: rgba(255, 255, 255, 0.4);
+
+  /* Semantic Status Colors */
+  --color-danger: #ef4444;
+  --color-danger-light: rgba(239, 68, 68, 0.15);
+  --color-danger-hover: #dc2626;
+
+  --color-warning: #f59e0b;
+  --color-warning-light: rgba(245, 158, 11, 0.15);
+  --color-warning-hover: #d97706;
+
+  --color-success: #10b981;
+  --color-success-light: rgba(16, 185, 129, 0.15);
+  --color-success-hover: #059669;
+
+  --color-info: #3b82f6;
+  --color-info-light: rgba(59, 130, 246, 0.15);
+  --color-info-hover: #2563eb;
 
   --color-copy: #34d399;
 
@@ -29,7 +48,7 @@
   --radius-lg: 0.75rem; /* 12px - Bo góc lớn */
   --radius-xl: 1rem; /* 16px - Bo góc rất lớn */
   --radius-2xl: 1.5rem; /* 24px - Bo góc cực lớn */
-  --radius-3xl: 20px; /* 24px - Bo góc cực lớn */
+  --radius-3xl: 1.25rem; /* 20px - Bo góc lớn đặc biệt */
   --radius-full: 9999px; /* Bo tròn hoàn toàn */
 
   /* Spacing - Padding & Margin */

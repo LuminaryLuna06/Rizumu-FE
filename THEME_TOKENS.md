@@ -4,8 +4,15 @@ Tài liệu này chứa toàn bộ design tokens đã được setup trong `src/
 
 ---
 
-## 📋 **1. Typography - Font Sizes**
+## 📋 **1. Typography - Fonts & Sizes**
 
+### **Font Families:**
+| Token Name | CSS Variable    | Giá trị                 | Mục đích                                    |
+| ---------- | --------------- | ----------------------- | ------------------------------------------- |
+| Inter      | `--font-inter`   | `Inter, sans-serif`     | Font mặc định cho toàn bộ body, nút, inputs |
+| Poppins    | `--font-poppins` | `Poppins, sans-serif`   | Font tiêu đề, header, modals                |
+
+### **Font Sizes:**
 | Token Name  | CSS Variable       | Giá trị    | Kích thước | Sử dụng với class |
 | ----------- | ------------------ | ---------- | ---------- | ----------------- |
 | Extra Small | `--font-size-xs`   | `0.75rem`  | 12px       | `text-xs`         |
@@ -16,37 +23,18 @@ Tài liệu này chứa toàn bộ design tokens đã được setup trong `src/
 | 2X Large    | `--font-size-2xl`  | `1.5rem`   | 24px       | `text-2xl`        |
 | 3X Large    | `--font-size-3xl`  | `1.875rem` | 30px       | `text-3xl`        |
 | 4X Large    | `--font-size-4xl`  | `2.25rem`  | 36px       | `text-4xl`        |
-| 5X Large    | `--font-size-5xl`  | `3rem`     | 48px       | `text-5xl`        |
-
-### **Ví dụ:**
-
-```tsx
-<p className="text-xs">Caption - 12px</p>
-<p className="text-sm">Small text - 14px</p>
-<p className="text-base">Body - 16px</p>
-<h3 className="text-xl">Subheading - 20px</h3>
-<h2 className="text-2xl">Heading - 24px</h2>
-<h1 className="text-3xl">Main Heading - 30px</h1>
-<h1 className="text-5xl">Hero - 48px</h1>
-```
+| 5X Large    | `--font-size-5xl`  | `5rem`     | 80px       | `text-5xl`        |
 
 ---
 
-## 📐 **2. Typography - Line Heights**
+## 📐 **2. Typography - Line Heights & Numerical Display**
 
 | Token Name | CSS Variable        | Giá trị | Sử dụng với class |
 | ---------- | ------------------- | ------- | ----------------- |
 | Tight      | `--leading-tight`   | `1.25`  | `leading-tight`   |
 | Normal     | `--leading-normal`  | `1.5`   | `leading-normal`  |
 | Relaxed    | `--leading-relaxed` | `1.75`  | `leading-relaxed` |
-
-### **Ví dụ:**
-
-```tsx
-<p className="leading-tight">Tight line height (1.25)</p>
-<p className="leading-normal">Normal line height (1.5)</p>
-<p className="leading-relaxed">Relaxed line height (1.75)</p>
-```
+| Tabular    | -                   | -       | `tabular-nums` (Chống rung lắc số đồng hồ) |
 
 ---
 
@@ -62,17 +50,6 @@ Tài liệu này chứa toàn bộ design tokens đã được setup trong `src/
 | Tooltip      | `--z-tooltip`      | `3000`  | Tooltips               | `z-tooltip`       |
 | Notification | `--z-notification` | `4000`  | Toast notifications    | `z-notification`  |
 
-### **Ví dụ:**
-
-```tsx
-<div className="z-base">Normal content</div>
-<div className="z-dropdown">Dropdown menu</div>
-<header className="z-sticky sticky top-0">Sticky header</header>
-<div className="z-modal fixed inset-0">Modal overlay</div>
-<div className="z-tooltip">Tooltip</div>
-<div className="z-notification fixed top-4 right-4">Notification</div>
-```
-
 ---
 
 ## ⚡ **4. Transitions - Animation Durations**
@@ -84,42 +61,11 @@ Tài liệu này chứa toàn bộ design tokens đã được setup trong `src/
 | Slow       | `--transition-slow`   | `500ms` | Large animations                  | `duration-slow`   |
 | Slower     | `--transition-slower` | `700ms` | Modals, complex animations        | `duration-slower` |
 
-### **Ví dụ:**
-
-```tsx
-{
-  /* Fast hover - 150ms */
-}
-<button className="hover:bg-primary-hover transition-all duration-fast">
-  Quick
-</button>;
-
-{
-  /* Normal transition - 300ms */
-}
-<button className="hover:bg-secondary-hover transition-all duration-base">
-  Normal
-</button>;
-
-{
-  /* Slow fade - 500ms */
-}
-<div className="opacity-0 hover:opacity-100 transition-opacity duration-slow">
-  Slow fade
-</div>;
-
-{
-  /* Modal animation - 700ms */
-}
-<div className="scale-95 hover:scale-100 transition-transform duration-slower">
-  Modal
-</div>;
-```
-
 ---
 
-## 🎨 **5. Colors**
+## 🎨 **5. Colors & Design Palette**
 
+### **Core Palette & Overlays:**
 | Token Name      | CSS Variable              | Giá trị                  | Sử dụng với class                |
 | --------------- | ------------------------- | ------------------------ | -------------------------------- |
 | Primary         | `--color-primary`         | `#000000`                | `bg-primary`, `text-primary`     |
@@ -129,21 +75,41 @@ Tài liệu này chứa toàn bộ design tokens đã được setup trong `src/
 | Secondary Hover | `--color-secondary-hover` | `rgba(255,255,255,0.85)` | `bg-secondary-hover`             |
 | Popover Overlay | `--color-popover-overlay` | `rgba(0,0,0,0.5)`        | `bg-popover-overlay`             |
 | Modal Overlay   | `--color-modal-overlay`   | `rgba(0,0,0,0.85)`       | `bg-modal-overlay`               |
-| Text Inactive   | `--color-text-inactive`   | `rgba(255,255,255,0.5)`  | `text-text-inactive`             |
-| Text Active     | `--color-text-active`     | `rgba(255,255,255,1)`    | `text-text-active`               |
+
+### **Text Hierarchy:**
+| Token Name      | CSS Variable              | Giá trị                  | Mục đích sử dụng                 | Sử dụng với class    |
+| --------------- | ------------------------- | ------------------------ | -------------------------------- | -------------------- |
+| Text Active/Main| `--color-text-main`       | `rgba(255,255,255,1)`    | Tiêu đề chính, số đồng hồ, highlight | `text-text-main` |
+| Text Muted      | `--color-text-muted`      | `rgba(255,255,255,0.7)`  | Subtitle, label form, mô tả      | `text-text-muted`    |
+| Text Inactive   | `--color-text-inactive`   | `rgba(255,255,255,0.5)`  | Mục chưa active, icon mờ         | `text-text-inactive` |
+| Text Subtle     | `--color-text-subtle`     | `rgba(255,255,255,0.4)`  | Placeholder, timestamp, hint     | `text-text-subtle`   |
+
+### **Semantic Status Colors:**
+| Token Name    | CSS Variable            | Giá trị                   | Mục đích sử dụng                 | Sử dụng với class                  |
+| ------------- | ----------------------- | ------------------------- | -------------------------------- | ---------------------------------- |
+| Danger        | `--color-danger`        | `#ef4444`                 | Báo lỗi, xóa task, kick thành viên | `text-danger`, `bg-danger`       |
+| Danger Light  | `--color-danger-light`  | `rgba(239, 68, 68, 0.15)` | Nền cảnh báo lỗi mờ              | `bg-danger-light`                  |
+| Warning       | `--color-warning`       | `#f59e0b`                 | Streak flame, cảnh báo gần hết giờ | `text-warning`, `bg-warning`     |
+| Warning Light | `--color-warning-light` | `rgba(245, 158, 11, 0.15)`| Nền cảnh báo vàng mờ             | `bg-warning-light`                 |
+| Success       | `--color-success`       | `#10b981`                 | Hoàn thành phiên, kết bạn        | `text-success`, `bg-success`       |
+| Success Light | `--color-success-light` | `rgba(16, 185, 129, 0.15)`| Nền xanh lá mờ                   | `bg-success-light`                 |
+| Info          | `--color-info`          | `#3b82f6`                 | Tooltip, huy hiệu thông tin      | `text-info`, `bg-info`             |
+| Info Light    | `--color-info-light`    | `rgba(59, 130, 246, 0.15)`| Nền thông tin xanh dương mờ      | `bg-info-light`                    |
+| Copy / Accent | `--color-copy`          | `#34d399`                 | Nút copy, hành động nhanh        | `text-copy`, `bg-copy`             |
 
 ---
 
 ## 🔲 **6. Border Radius**
 
-| Token Name  | CSS Variable    | Giá trị   | Kích thước | Sử dụng với class |
-| ----------- | --------------- | --------- | ---------- | ----------------- |
-| Small       | `--radius-sm`   | `0.25rem` | 4px        | `rounded-sm`      |
-| Medium      | `--radius-md`   | `0.5rem`  | 8px        | `rounded-md`      |
-| Large       | `--radius-lg`   | `0.75rem` | 12px       | `rounded-lg`      |
-| Extra Large | `--radius-xl`   | `1rem`    | 16px       | `rounded-xl`      |
-| 2X Large    | `--radius-2xl`  | `1.5rem`  | 24px       | `rounded-2xl`     |
-| Full        | `--radius-full` | `9999px`  | ∞          | `rounded-full`    |
+| Token Name  | CSS Variable    | Giá trị    | Kích thước | Sử dụng với class |
+| ----------- | --------------- | ---------- | ---------- | ----------------- |
+| Small       | `--radius-sm`   | `0.25rem`  | 4px        | `rounded-sm`      |
+| Medium      | `--radius-md`   | `0.5rem`   | 8px        | `rounded-md`      |
+| Large       | `--radius-lg`   | `0.75rem`  | 12px       | `rounded-lg`      |
+| Extra Large | `--radius-xl`   | `1rem`     | 16px       | `rounded-xl`      |
+| 2X Large    | `--radius-2xl`  | `1.5rem`   | 24px       | `rounded-2xl`     |
+| 3X Large    | `--radius-3xl`  | `1.25rem`  | 20px       | `rounded-3xl`     |
+| Full        | `--radius-full` | `9999px`   | ∞          | `rounded-full`    |
 
 ---
 

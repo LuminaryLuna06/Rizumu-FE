@@ -207,6 +207,7 @@ function Timer({
             font-size: 4rem;
             font-weight: 800;
             letter-spacing: 0.07em;
+            font-variant-numeric: tabular-nums;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
             z-index: 1;
           "></div>
@@ -443,7 +444,7 @@ function Timer({
 
           <p
             id="timer-display"
-            className="leading-tight text-[4.5em] sm:text-[5.5em] md:text-[7em] lg:text-[10em] font-extrabold tracking-[0.07em] transition-all duration-slower ease-in-out"
+            className="leading-tight text-[4.5em] sm:text-[5.5em] md:text-[7em] lg:text-[10em] font-extrabold tracking-[0.07em] tabular-nums transition-all duration-slower ease-in-out"
             style={{
               textShadow:
                 "0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06), 0 10px 20px rgba(0, 0, 0, 0.15)",
