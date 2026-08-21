@@ -13,6 +13,7 @@ import {
   type SoundPresetName,
 } from "@rizumu/utils/audioPresets";
 import { IconVolume } from "@tabler/icons-react";
+import { useAuth } from "@rizumu/context/AuthContext";
 
 function AppSetting({
   opened,
@@ -21,6 +22,9 @@ function AppSetting({
   opened: boolean;
   onClose: () => void;
 }) {
+  const { user } = useAuth();
+  const userId = user?._id || "";
+
   // Timer settings - load from localStorage
   const [autoStartBreak, setAutoStartBreak] = useState(false);
   const [autoStartPomodoro, setAutoStartPomodoro] = useState(false);
@@ -39,9 +43,9 @@ function AppSetting({
   // Audio context for preview
   const audioCtxRef = useRef<AudioContext | null>(null);
 
-  // Load settings on mount
+  // Load settings on mount or when user changes
   useEffect(() => {
-    const settings = getTimerSettings();
+    const settings = getTimerSettings(userId);
     setAutoStartBreak(settings.autoStartBreak);
     setAutoStartPomodoro(settings.autoStartPomodoro);
     setLongBreakInterval(settings.longBreakInterval);
@@ -51,8 +55,10 @@ function AppSetting({
     setAlarmVolume(settings.alarmVolume);
 
     // Initialize audio context
-    audioCtxRef.current = createAudioContext();
-  }, []);
+    if (!audioCtxRef.current) {
+      audioCtxRef.current = createAudioContext();
+    }
+  }, [userId]);
 
   // Save timer settings when they change (skip initial mount)
   useEffect(() => {
@@ -70,7 +76,7 @@ function AppSetting({
       alarmEnabled,
       alarmVolume,
     };
-    saveTimerSettings(newSettings);
+    saveTimerSettings(newSettings, userId);
   }, [
     autoStartBreak,
     autoStartPomodoro,
@@ -79,6 +85,7 @@ function AppSetting({
     alarmSound,
     alarmEnabled,
     alarmVolume,
+    userId,
   ]);
 
   // Handle preview alarm sound

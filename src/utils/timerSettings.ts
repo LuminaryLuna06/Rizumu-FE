@@ -10,7 +10,9 @@ export interface TimerSettings {
   alarmEnabled: boolean;
 }
 
-const TIMER_SETTINGS_KEY = "rizumu_timer_settings";
+export const getTimerSettingsKey = (userId?: string): string => {
+  return userId ? `rizumu_timer_settings_${userId}` : "rizumu_timer_settings";
+};
 
 const DEFAULT_SETTINGS: TimerSettings = {
   autoStartBreak: false,
@@ -25,12 +27,18 @@ const DEFAULT_SETTINGS: TimerSettings = {
 /**
  * Get all timer settings from localStorage
  */
-export const getTimerSettings = (): TimerSettings => {
+export const getTimerSettings = (userId?: string): TimerSettings => {
   try {
-    const stored = localStorage.getItem(TIMER_SETTINGS_KEY);
+    const key = getTimerSettingsKey(userId);
+    const stored = localStorage.getItem(key);
     if (stored) {
       const parsed = JSON.parse(stored);
-      // Merge with defaults to handle missing keys
+      return { ...DEFAULT_SETTINGS, ...parsed };
+    }
+    // Fallback to global key if user key is not set yet
+    const legacy = localStorage.getItem("rizumu_timer_settings");
+    if (legacy) {
+      const parsed = JSON.parse(legacy);
       return { ...DEFAULT_SETTINGS, ...parsed };
     }
   } catch (error) {
@@ -42,9 +50,10 @@ export const getTimerSettings = (): TimerSettings => {
 /**
  * Save all timer settings to localStorage
  */
-export const saveTimerSettings = (settings: TimerSettings): void => {
+export const saveTimerSettings = (settings: TimerSettings, userId?: string): void => {
   try {
-    localStorage.setItem(TIMER_SETTINGS_KEY, JSON.stringify(settings));
+    const key = getTimerSettingsKey(userId);
+    localStorage.setItem(key, JSON.stringify(settings));
   } catch (error) {
     console.error("Failed to save timer settings:", error);
   }
@@ -55,19 +64,21 @@ export const saveTimerSettings = (settings: TimerSettings): void => {
  */
 export const updateTimerSetting = <K extends keyof TimerSettings>(
   key: K,
-  value: TimerSettings[K]
+  value: TimerSettings[K],
+  userId?: string
 ): void => {
-  const settings = getTimerSettings();
+  const settings = getTimerSettings(userId);
   settings[key] = value;
-  saveTimerSettings(settings);
+  saveTimerSettings(settings, userId);
 };
 
 /**
  * Get a single timer setting
  */
 export const getTimerSetting = <K extends keyof TimerSettings>(
-  key: K
+  key: K,
+  userId?: string
 ): TimerSettings[K] => {
-  const settings = getTimerSettings();
+  const settings = getTimerSettings(userId);
   return settings[key];
 };

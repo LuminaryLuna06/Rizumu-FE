@@ -3,6 +3,10 @@ import type { ActiveTimerState } from "@rizumu/models/timer";
 import { DEFAULT_PRESETS } from "@rizumu/constants/timer";
 import { getCurrentPresetId } from "@rizumu/utils/presets";
 
+export const getActiveTimerStorageKey = (userId?: string): string => {
+  return userId ? `rizumu_active_timer_state_${userId}` : "rizumu_active_timer_state_guest";
+};
+
 export const ACTIVE_TIMER_STORAGE_KEY = "rizumu_active_timer_state";
 
 export const formatTime = (seconds: number): string => {
@@ -49,13 +53,23 @@ export const getInitialActiveTimerState = (
   };
 };
 
-export const loadActiveTimerState = (): ActiveTimerState | null => {
+export const loadActiveTimerState = (userId?: string): ActiveTimerState | null => {
   try {
-    const raw = localStorage.getItem(ACTIVE_TIMER_STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed.mode === "string" && typeof parsed.status === "string") {
-      return parsed as ActiveTimerState;
+    const key = getActiveTimerStorageKey(userId);
+    const raw = localStorage.getItem(key);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed.mode === "string" && typeof parsed.status === "string") {
+        return parsed as ActiveTimerState;
+      }
+    }
+    // Fallback to legacy unpartitioned key if user key is not present yet
+    const legacyRaw = localStorage.getItem(ACTIVE_TIMER_STORAGE_KEY);
+    if (legacyRaw) {
+      const parsed = JSON.parse(legacyRaw);
+      if (parsed && typeof parsed.mode === "string" && typeof parsed.status === "string") {
+        return parsed as ActiveTimerState;
+      }
     }
   } catch (error) {
     console.error("Failed to load active timer state:", error);
@@ -63,12 +77,16 @@ export const loadActiveTimerState = (): ActiveTimerState | null => {
   return null;
 };
 
-export const saveActiveTimerState = (state: ActiveTimerState | null): void => {
+export const saveActiveTimerState = (
+  state: ActiveTimerState | null,
+  userId?: string
+): void => {
   try {
+    const key = getActiveTimerStorageKey(userId);
     if (!state) {
-      localStorage.removeItem(ACTIVE_TIMER_STORAGE_KEY);
+      localStorage.removeItem(key);
     } else {
-      localStorage.setItem(ACTIVE_TIMER_STORAGE_KEY, JSON.stringify(state));
+      localStorage.setItem(key, JSON.stringify(state));
     }
   } catch (error) {
     console.error("Failed to save active timer state:", error);

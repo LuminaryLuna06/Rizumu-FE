@@ -7,12 +7,13 @@ import {
 } from "@rizumu/constants/timer";
 import {
   getCurrentPresetId,
+  getPresets,
   initializePresets,
   saveCurrentPresetId,
 } from "@rizumu/utils/presets";
 import { getTimerSettings } from "@rizumu/utils/timerSettings";
 import {
-  ACTIVE_TIMER_STORAGE_KEY,
+  getActiveTimerStorageKey,
   calculateDisplayTime,
   calculateElapsedSeconds,
   formatTime,
@@ -28,20 +29,24 @@ import {
 } from "@rizumu/tanstack/api/hooks";
 import { useToast } from "@rizumu/utils/toast/toast";
 
-const TIMER_DIRECTION_KEY = "pomodoro_timer_direction";
+const getTimerDirectionKey = (userId?: string): string => {
+  return userId ? `pomodoro_timer_direction_${userId}` : "pomodoro_timer_direction_guest";
+};
 
-const getStoredTimerDirection = (): TimerDirection => {
+const getStoredTimerDirection = (userId?: string): TimerDirection => {
   try {
-    const stored = localStorage.getItem(TIMER_DIRECTION_KEY);
+    const key = getTimerDirectionKey(userId);
+    const stored = localStorage.getItem(key);
     return (stored as TimerDirection) || "countdown";
   } catch {
     return "countdown";
   }
 };
 
-const saveStoredTimerDirection = (direction: TimerDirection) => {
+const saveStoredTimerDirection = (direction: TimerDirection, userId?: string) => {
   try {
-    localStorage.setItem(TIMER_DIRECTION_KEY, direction);
+    const key = getTimerDirectionKey(userId);
+    localStorage.setItem(key, direction);
   } catch (error) {
     console.error("Failed to save timer direction:", error);
   }
@@ -64,29 +69,28 @@ export function usePomodoroTimer({
   playDing,
   initAudio,
 }: UsePomodoroTimerProps) {
+  const userId = user?._id || "";
+  const prevUserIdRef = useRef(userId);
+
   const toast = useToast();
   const createSession = useCreateSession();
   const updateSession = useUpdateSession();
 
   const [presets, setPresets] = useState<Preset[]>(() => {
-    try {
-      const stored = localStorage.getItem("pomodoro_presets");
-      if (stored) return JSON.parse(stored);
-    } catch {}
-    initializePresets();
-    return DEFAULT_PRESETS;
+    initializePresets(userId);
+    return getPresets(userId);
   });
 
   const [currentPresetId, setCurrentPresetId] = useState<number>(() =>
-    getCurrentPresetId()
+    getCurrentPresetId(userId)
   );
 
   const [timerDirection, setTimerDirection] = useState<TimerDirection>(() =>
-    getStoredTimerDirection()
+    getStoredTimerDirection(userId)
   );
 
   const [timerState, setTimerState] = useState<ActiveTimerState>(() => {
-    const loaded = loadActiveTimerState();
+    const loaded = loadActiveTimerState(userId);
     if (loaded) {
       // Khi mở web lại, nếu phiên trước đó vẫn đang ở trạng thái running (do tắt tab), tự động chuyển thành paused
       if (loaded.status === "running") {
@@ -96,13 +100,13 @@ export function usePomodoroTimer({
           lastResumedAt: null,
           expectedEndTime: null,
         };
-        saveActiveTimerState(pausedState);
+        saveActiveTimerState(pausedState, userId);
         return pausedState;
       }
       return loaded;
     }
-    const initialPresetId = getCurrentPresetId();
-    const direction = getStoredTimerDirection();
+    const initialPresetId = getCurrentPresetId(userId);
+    const direction = getStoredTimerDirection(userId);
     return getInitialActiveTimerState(DEFAULT_PRESETS, initialPresetId, direction);
   });
 
@@ -113,8 +117,8 @@ export function usePomodoroTimer({
   const stateRef = useRef<ActiveTimerState>(timerState);
   useEffect(() => {
     stateRef.current = timerState;
-    saveActiveTimerState(timerState);
-  }, [timerState]);
+    saveActiveTimerState(timerState, userId);
+  }, [timerState, userId]);
 
   const presetsRef = useRef<Preset[]>(presets);
   useEffect(() => {
@@ -135,16 +139,55 @@ export function usePomodoroTimer({
     }
   }, []);
 
+  // Xử lý chuyển đổi tài khoản (User A -> User B hoặc Logout/Login)
+  useEffect(() => {
+    if (prevUserIdRef.current !== userId) {
+      prevUserIdRef.current = userId;
+      clearTimerInterval();
+      setFocusMode(false);
+
+      const userPresets = getPresets(userId);
+      const userPresetId = getCurrentPresetId(userId);
+      const userDirection = getStoredTimerDirection(userId);
+
+      setPresets(userPresets);
+      setCurrentPresetId(userPresetId);
+      setTimerDirection(userDirection);
+
+      const loaded = loadActiveTimerState(userId);
+      if (loaded) {
+        if (loaded.status === "running") {
+          const pausedState: ActiveTimerState = {
+            ...loaded,
+            status: "paused",
+            lastResumedAt: null,
+            expectedEndTime: null,
+          };
+          saveActiveTimerState(pausedState, userId);
+          setTimerState(pausedState);
+          setDisplayTime(calculateDisplayTime(pausedState, Date.now()));
+        } else {
+          setTimerState(loaded);
+          setDisplayTime(calculateDisplayTime(loaded, Date.now()));
+        }
+      } else {
+        const initial = getInitialActiveTimerState(userPresets, userPresetId, userDirection);
+        setTimerState(initial);
+        setDisplayTime(calculateDisplayTime(initial, Date.now()));
+      }
+    }
+  }, [userId, clearTimerInterval, setFocusMode]);
+
   // Save direction
   useEffect(() => {
-    saveStoredTimerDirection(timerDirection);
+    saveStoredTimerDirection(timerDirection, userId);
     setTimerState((prev) => {
       if (prev.direction === timerDirection) return prev;
       const next = { ...prev, direction: timerDirection };
       setDisplayTime(calculateDisplayTime(next, Date.now()));
       return next;
     });
-  }, [timerDirection]);
+  }, [timerDirection, userId]);
 
   // Handle Session Completion
   const handleSessionComplete = useCallback(
@@ -195,7 +238,7 @@ export function usePomodoroTimer({
       }
 
       // Mode switching
-      const settings = getTimerSettings();
+      const settings = getTimerSettings(userId);
       let nextMode: TimerMode;
       let nextPomodoroCount = currentState.pomodoroCount;
 
@@ -297,6 +340,7 @@ export function usePomodoroTimer({
       updateSession,
       selectedTag?._id,
       createSession,
+      userId,
     ]
   );
 
@@ -342,10 +386,11 @@ export function usePomodoroTimer({
     };
   }, [handleSessionComplete]);
 
-  // Multi-tab Sync via Storage Event
+  // Multi-tab Sync via Storage Event (User-partitioned)
   useEffect(() => {
+    const activeKey = getActiveTimerStorageKey(userId);
     const handleStorage = (e: StorageEvent) => {
-      if (e.key === ACTIVE_TIMER_STORAGE_KEY && e.newValue) {
+      if (e.key === activeKey && e.newValue) {
         try {
           const syncedState = JSON.parse(e.newValue) as ActiveTimerState;
           if (syncedState) {
@@ -358,7 +403,7 @@ export function usePomodoroTimer({
 
     window.addEventListener("storage", handleStorage);
     return () => window.removeEventListener("storage", handleStorage);
-  }, []);
+  }, [userId]);
 
   // Tự động tạm dừng (pause) và lưu trạng thái vào localStorage khi người dùng đóng web / unload
   useEffect(() => {
@@ -382,7 +427,7 @@ export function usePomodoroTimer({
               : Math.min(current.targetDuration, updatedAccumulated),
         };
 
-        saveActiveTimerState(pausedState);
+        saveActiveTimerState(pausedState, userId);
       }
     };
 
@@ -402,7 +447,7 @@ export function usePomodoroTimer({
       window.removeEventListener("beforeunload", handleBeforeUnload);
       window.removeEventListener("pagehide", handleUnloadOrPageHide);
     };
-  }, []);
+  }, [userId]);
 
   // Toggle Start / Pause
   const toggleStartPause = useCallback(() => {
@@ -575,7 +620,7 @@ export function usePomodoroTimer({
     }
 
     // Switch mode for Pomodoro cycle
-    const settings = getTimerSettings();
+    const settings = getTimerSettings(userId);
     let nextMode: TimerMode;
     let nextPomodoroCount = current.pomodoroCount;
 
@@ -622,6 +667,7 @@ export function usePomodoroTimer({
     toast,
     updateSession,
     selectedTag?._id,
+    userId,
   ]);
 
   // Mode Change (User clicked Pomodoro, Short Break, Long Break, Stopwatch)
@@ -660,7 +706,7 @@ export function usePomodoroTimer({
       clearTimerInterval();
       setFocusMode(false);
       setCurrentPresetId(presetId);
-      saveCurrentPresetId(presetId);
+      saveCurrentPresetId(presetId, userId);
 
       const currentMode = stateRef.current.mode;
       const targetDuration = getPresetTargetDuration(

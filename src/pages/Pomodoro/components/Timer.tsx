@@ -50,11 +50,11 @@ function Timer({
     const ctx = audioCtxRef.current;
     if (!ctx) return;
 
-    const settings = getTimerSettings();
+    const settings = getTimerSettings(user?._id);
     if (settings.alarmEnabled) {
       playSound(settings.alarmSound, ctx, 1, settings.alarmVolume);
     }
-  }, []);
+  }, [user?._id]);
 
   const playClickSound = useCallback(() => {
     const ctx = audioCtxRef.current;
