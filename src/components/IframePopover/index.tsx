@@ -83,6 +83,39 @@ const FEATURED_PRESETS: LinkData[] = [
 ];
 
 /**
+ * Returns a normalized/canonical string representation of a media URL (stripping tracking query params like ?si=..., ?utm_source=...)
+ */
+function getCanonicalUrl(url: string, type: LinkData["type"]): string {
+  try {
+    const parsed = new URL(url);
+    if (type === "spotify" || type === "appleMusic" || type === "soundCloud") {
+      return `${parsed.origin}${parsed.pathname}`;
+    }
+    if (type === "youtube") {
+      const listId = parsed.searchParams.get("list");
+      if (listId) return `youtube_list_${listId}`;
+
+      let videoId = "";
+      if (url.includes("youtube.com/watch?v=")) {
+        videoId = url.split("v=")[1]?.split("&")[0];
+      } else if (url.includes("youtu.be/")) {
+        videoId = url.split("youtu.be/")[1]?.split("?")[0];
+      } else if (url.includes("youtube.com/shorts/")) {
+        videoId = url.split("shorts/")[1]?.split("?")[0];
+      } else if (url.includes("youtube.com/live/")) {
+        videoId = url.split("live/")[1]?.split("?")[0];
+      } else if (url.includes("youtube.com/embed/")) {
+        videoId = url.split("embed/")[1]?.split("?")[0];
+      }
+      if (videoId) return `youtube_video_${videoId}`;
+    }
+  } catch {
+    // fallback
+  }
+  return url.split("?")[0];
+}
+
+/**
  * Parses user input URL and returns embed URL + detected platform type
  */
 function parseMediaUrl(url: string): {
@@ -133,21 +166,23 @@ function parseMediaUrl(url: string): {
 
   // 2. Spotify (Supports track, playlist, album, artist, episode)
   if (trimmed.includes("spotify.com")) {
-    let embedUrl = trimmed;
-    if (trimmed.includes("open.spotify.com") && !trimmed.includes("/embed")) {
-      embedUrl = trimmed.replace("open.spotify.com", "open.spotify.com/embed");
+    const cleanUrl = trimmed.split("?")[0];
+    let embedUrl = cleanUrl;
+    if (cleanUrl.includes("open.spotify.com") && !cleanUrl.includes("/embed")) {
+      embedUrl = cleanUrl.replace("open.spotify.com", "open.spotify.com/embed");
     }
     return {
       type: "spotify",
-      embedUrl,
+      embedUrl: `${embedUrl}?utm_source=generator`,
     };
   }
 
   // 3. Apple Music
   if (trimmed.includes("music.apple.com")) {
-    let embedUrl = trimmed;
-    if (!trimmed.includes("embed.music.apple.com")) {
-      embedUrl = trimmed.replace("music.apple.com", "embed.music.apple.com");
+    const cleanUrl = trimmed.split("?")[0];
+    let embedUrl = cleanUrl;
+    if (!cleanUrl.includes("embed.music.apple.com")) {
+      embedUrl = cleanUrl.replace("music.apple.com", "embed.music.apple.com");
     }
     return {
       type: "appleMusic",
@@ -157,7 +192,8 @@ function parseMediaUrl(url: string): {
 
   // 4. SoundCloud
   if (trimmed.includes("soundcloud.com")) {
-    const encodedUrl = encodeURIComponent(trimmed);
+    const cleanUrl = trimmed.split("?")[0];
+    const encodedUrl = encodeURIComponent(cleanUrl);
     return {
       type: "soundCloud",
       embedUrl: `https://w.soundcloud.com/player/?url=${encodedUrl}&color=%23f59e0b&auto_play=true&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false`,
@@ -165,6 +201,47 @@ function parseMediaUrl(url: string): {
   }
 
   return { type: null, embedUrl: "" };
+}
+
+/**
+ * Extracts a readable title from media URL when oEmbed fails or is unavailable
+ */
+function extractTitleFromUrl(url: string, type: LinkData["type"]): string {
+  try {
+    const parsed = new URL(url);
+    const pathSegments = parsed.pathname.split("/").filter(Boolean);
+
+    if (type === "spotify") {
+      const category = pathSegments[0]
+        ? pathSegments[0].charAt(0).toUpperCase() + pathSegments[0].slice(1)
+        : "Media";
+      return `Spotify ${category}`;
+    }
+    if (type === "youtube") {
+      if (url.includes("list=")) {
+        return "YouTube Playlist";
+      }
+      return "YouTube Video";
+    }
+    if (type === "appleMusic") {
+      const nameSegment = pathSegments.find(
+        (s) => s !== "us" && s !== "playlist" && s !== "album" && s !== "artist" && !s.startsWith("pl.")
+      );
+      if (nameSegment) {
+        return nameSegment.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+      }
+      return "Apple Music Stream";
+    }
+    if (type === "soundCloud") {
+      const last = pathSegments[pathSegments.length - 1];
+      if (last) {
+        return last.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+      }
+    }
+  } catch {
+    // fallback
+  }
+  return "Music Stream";
 }
 
 function IframePopover() {
@@ -183,7 +260,19 @@ function IframePopover() {
       }
       const savedHistory = localStorage.getItem(STORAGE_KEY_HISTORY);
       if (savedHistory) {
-        setLinkHistory(JSON.parse(savedHistory));
+        const parsed: LinkData[] = JSON.parse(savedHistory);
+        // Deduplicate history by canonical URL (strip tracking params like ?si=...)
+        const uniqueHistory: LinkData[] = [];
+        const seenCanonical = new Set<string>();
+
+        for (const item of parsed) {
+          const canonical = getCanonicalUrl(item.url, item.type);
+          if (!seenCanonical.has(canonical)) {
+            seenCanonical.add(canonical);
+            uniqueHistory.push(item);
+          }
+        }
+        setLinkHistory(uniqueHistory);
       }
     } catch (e) {
       console.error("Failed to load music player state:", e);
@@ -199,7 +288,10 @@ function IframePopover() {
       localStorage.setItem(STORAGE_KEY_CURRENT, JSON.stringify(media));
 
       setLinkHistory((prev) => {
-        const filtered = prev.filter((item) => item.url !== media.url);
+        const mediaCanonical = getCanonicalUrl(media.url, media.type);
+        const filtered = prev.filter(
+          (item) => getCanonicalUrl(item.url, item.type) !== mediaCanonical
+        );
         const updated = [media, ...filtered].slice(0, MAX_HISTORY_ITEMS);
         localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(updated));
         return updated;
@@ -212,29 +304,40 @@ function IframePopover() {
   const handleApplyCustomUrl = async () => {
     if (!parsedInput.type || !parsedInput.embedUrl) return;
 
-    let title = "Custom Music Stream";
+    let title = extractTitleFromUrl(inputUrl, parsedInput.type);
     let thumbnail: string | undefined;
 
-    // Fast oEmbed / metadata fetch for YouTube & SoundCloud
-    if (parsedInput.type === "youtube") {
-      try {
+    try {
+      if (parsedInput.type === "youtube") {
         const res = await fetch(
           `https://www.youtube.com/oembed?url=${encodeURIComponent(inputUrl)}&format=json`
         );
         if (res.ok) {
           const data = await res.json();
-          title = data.title || "YouTube Video";
-          thumbnail = data.thumbnail_url;
+          if (data.title) title = data.title;
+          if (data.thumbnail_url) thumbnail = data.thumbnail_url;
         }
-      } catch {
-        title = "YouTube Stream";
+      } else if (parsedInput.type === "spotify") {
+        const res = await fetch(
+          `https://open.spotify.com/oembed?url=${encodeURIComponent(inputUrl)}`
+        );
+        if (res.ok) {
+          const data = await res.json();
+          if (data.title) title = data.title;
+          if (data.thumbnail_url) thumbnail = data.thumbnail_url;
+        }
+      } else if (parsedInput.type === "soundCloud") {
+        const res = await fetch(
+          `https://soundcloud.com/oembed?format=json&url=${encodeURIComponent(inputUrl)}`
+        );
+        if (res.ok) {
+          const data = await res.json();
+          if (data.title) title = data.title;
+          if (data.thumbnail_url) thumbnail = data.thumbnail_url;
+        }
       }
-    } else if (parsedInput.type === "spotify") {
-      title = "Spotify Music";
-    } else if (parsedInput.type === "appleMusic") {
-      title = "Apple Music";
-    } else if (parsedInput.type === "soundCloud") {
-      title = "SoundCloud Track";
+    } catch (e) {
+      console.warn("Failed to fetch oEmbed metadata:", e);
     }
 
     const newMedia: LinkData = {
@@ -364,14 +467,20 @@ function IframePopover() {
 
         {/* Content Body */}
         <div className="p-3 overflow-y-auto custom-scrollbar overscroll-contain">
-          {/* TAB 1: NOW PLAYING */}
-          {activeTab === "player" && currentMedia && (
-            <div className="flex flex-col gap-3">
+          {/* TAB 1: NOW PLAYING (Keep iframe mounted in DOM so audio does not stop when switching tabs) */}
+          {currentMedia && (
+            <div className={`flex flex-col gap-3 ${activeTab === "player" ? "block" : "hidden"}`}>
               <div className="flex items-center justify-between px-1">
                 <div className="flex items-center gap-2 min-w-0">
                   {renderPlatformIcon(currentMedia.type)}
                   <span className="text-xs font-medium text-white/80 truncate">
-                    {currentMedia.title || currentMedia.url}
+                    {currentMedia.title &&
+                    currentMedia.title !== "Spotify Music" &&
+                    currentMedia.title !== "Custom Music Stream" &&
+                    currentMedia.title !== "Apple Music" &&
+                    currentMedia.title !== "SoundCloud Track"
+                      ? currentMedia.title
+                      : extractTitleFromUrl(currentMedia.url, currentMedia.type)}
                   </span>
                 </div>
               </div>
@@ -449,44 +558,55 @@ function IframePopover() {
           {activeTab === "recent" && (
             <div className="flex flex-col gap-2">
               {linkHistory.length > 0 ? (
-                linkHistory.map((item, idx) => (
-                  <div
-                    key={idx}
-                    className="group flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer"
-                    onClick={() => handleSelectMedia(item)}
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
-                      <div className="w-9 h-9 rounded-lg bg-black/40 flex items-center justify-center shrink-0 border border-white/10 overflow-hidden">
-                        {item.thumbnail ? (
-                          <img
-                            src={item.thumbnail}
-                            alt=""
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          renderPlatformIcon(item.type)
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-medium text-white truncate group-hover:text-yellow-400 transition-colors">
-                          {item.title || item.url}
-                        </p>
-                        <span className="text-[10px] text-white/40 uppercase">
-                          {item.type}
-                        </span>
-                      </div>
-                    </div>
+                linkHistory.map((item, idx) => {
+                  const itemTitle =
+                    item.title &&
+                    item.title !== "Spotify Music" &&
+                    item.title !== "Custom Music Stream" &&
+                    item.title !== "Apple Music" &&
+                    item.title !== "SoundCloud Track"
+                      ? item.title
+                      : extractTitleFromUrl(item.url, item.type);
 
-                    <button
-                      type="button"
-                      onClick={(e) => handleDeleteHistory(e, idx)}
-                      className="p-1.5 rounded-lg text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100 cursor-pointer"
-                      title="Remove from history"
+                  return (
+                    <div
+                      key={idx}
+                      className="group flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer"
+                      onClick={() => handleSelectMedia(item)}
                     >
-                      <IconTrash size={14} />
-                    </button>
-                  </div>
-                ))
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-2">
+                        <div className="w-9 h-9 rounded-lg bg-black/40 flex items-center justify-center shrink-0 border border-white/10 overflow-hidden">
+                          {item.thumbnail ? (
+                            <img
+                              src={item.thumbnail}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            renderPlatformIcon(item.type)
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-medium text-white truncate group-hover:text-yellow-400 transition-colors">
+                            {itemTitle}
+                          </p>
+                          <span className="text-[10px] text-white/40 uppercase">
+                            {item.type}
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={(e) => handleDeleteHistory(e, idx)}
+                        className="p-1.5 rounded-lg text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100 cursor-pointer"
+                        title="Remove from history"
+                      >
+                        <IconTrash size={14} />
+                      </button>
+                    </div>
+                  );
+                })
               ) : (
                 <div className="py-8 text-center text-xs text-white/40">
                   No playback history yet.
@@ -499,7 +619,7 @@ function IframePopover() {
           {activeTab === "custom" && (
             <div className="flex flex-col gap-3 p-1">
               <p className="text-xs text-white/60">
-                Paste any link from <b>YouTube (Video/Live/Shorts/List)</b>, <b>Spotify</b>, <b>Apple Music</b>, or <b>SoundCloud</b>:
+                Paste any link from <b>YouTube</b>, <b>Spotify</b>, <b>Apple Music</b>, or <b>SoundCloud</b>:
               </p>
 
               <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl p-1.5 px-3 focus-within:border-yellow-400/60 transition-colors">
@@ -507,7 +627,7 @@ function IframePopover() {
                   type="text"
                   value={inputUrl}
                   onChange={(e) => setInputUrl(e.target.value)}
-                  placeholder="https://www.youtube.com/watch?v=..."
+                  placeholder="https://open.spotify.com/playlist/..."
                   className="w-full bg-transparent text-xs text-white placeholder-white/30 outline-none py-1.5"
                   autoFocus
                 />
